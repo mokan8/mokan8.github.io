@@ -40,12 +40,36 @@
     "vendor/font-awesome/fontawesome",
     "vendor/font-awesome/solid",
     "vendor/font-awesome/brands"
+;
 
-    .navbar .active a {
-      background: transparent;
-      border-bottom: 2px solid #007acc; /* subtle underline instead */
-      border-radius: 0;
+
+/* Remove oval and enforce professional underline */
+.navbar .active,
+.navbar .active a,
+.navbar .active::before,
+.navbar .active::after,
+.navbar .active a::before,
+.navbar .active a::after {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
-    
-;
+/* Add underline */
+.navbar .active a {
+  border-bottom: 2px solid #007acc !important;
+  transition: border-color 0.3s ease;
+}
+
+/* Dark mode adjustment */
+@media (prefers-color-scheme: dark) {
+  .navbar .active a {
+    border-bottom-color: #4fa3ff !important;
+  }
+}
+
+/* Optional hover effect */
+.navbar a:hover {
+  border-bottom: 2px solid #ff9900 !important;
+}

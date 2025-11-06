@@ -1,20 +1,11 @@
 ---
-title: "Teaching experience 2"
+title: "Teaching Assistant"
 collection: teaching
-type: "Workshop"
-permalink: /teaching/2015-spring-teaching-1
-venue: "University 1, Department"
-date: 2015-01-01
-location: "City, Country"
+type: "Undergraduate Courses"
+permalink: /teaching/ucsc
+venue: "University of California, Santa Cruz, Mathematics Department"
+date: 2023-09-01
+location: "Santa Cruz, California"
 ---
 
-This is a description of a teaching experience. You can use markdown like any other post.
-
-Heading 1
-======
-
-Heading 2
-======
-
-Heading 3
-======
+I taught many courses including real analysis, linear algebra, and calculus.
