@@ -1,6 +1,7 @@
 ---
 title: "Hausdorff vs. Gromov–Hausdorff Distances"
 collection: publications
+category: manuscripts
 permalink: /publication/hausdorff-vs-gromhausdorff
 excerpt: "A comparison of the Hausdorff and Gromov–Hausdorff distances, with discussion of their geometric implications."
 date: 2025-02-12
