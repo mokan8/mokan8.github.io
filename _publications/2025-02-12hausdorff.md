@@ -4,7 +4,7 @@ collection: publications
 permalink: /publication/hausd-vs-gromhausd
 excerpt: "A comparison of the Hausdorff and Gromov–Hausdorff distances, with discussion of their geometric implications."
 date: 2025-02-12
-venue: "Discrete & Computational Geometry"
+venue: 'Discrete & Computational Geometry'
 paperurl: "https://arxiv.org/abs/2309.16648"
 slidesurl: "http://academicpages.github.io/files/slides3.pdf"
 citation: "Henry Adams, et Al. (2025). <i>Hausdorff vs. Gromov–Hausdorff Distances</i>. <i>Discrete & Computational Geometry</i>. Available at <a href='https://arxiv.org/abs/2309.16648'>arXiv:2309.16648</a>."
