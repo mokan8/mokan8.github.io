@@ -2,12 +2,12 @@
 title: "Master’s Thesis: Topological Approaches to Manifold Learning and the UMAP Algorithm"
 collection: publications
 category: theses
-permalink: /publication/2024-09-01-masters-thesis-umap
+permalink: /publication/thesis
 excerpt: "This thesis develops a topological framework for understanding and extending the UMAP algorithm, with emphasis on simplicial complexes, manifold learning, and applications in geometric data analysis."
-date: 2025-12-13
+date: 2025-11-01
 venue: "University of California, Santa Cruz"
 paperurl: "https://nicholasmcbride.github.io/files/mcbride_masters_thesis.pdf"
-citation: "Nicholas McBride. (2024). <i>Master’s Thesis: Topological Approaches to Manifold Learning and the UMAP Algorithm</i>. University of California, Santa Cruz."
+citation: "Nicholas McBride. (2025). <i>Master’s Thesis: Topological Approaches to Manifold Learning and the UMAP Algorithm</i>. University of California, Santa Cruz."
 ---
 
 The contents above will be part of a list of publications, if the user clicks the link for the publication than the contents of section will be rendered as a full page, allowing you to provide more information about the paper for the reader. When publications are displayed as a single page, the contents of the above "citation" field will automatically be included below this section in a smaller font.
