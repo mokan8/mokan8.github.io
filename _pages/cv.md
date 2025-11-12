@@ -11,46 +11,32 @@ redirect_from:
 
 Education
 ======
-* Ph.D in Version Control Theory, GitHub University, 2018 (expected)
-* M.S. in Jekyll, GitHub University, 2014
-* B.S. in GitHub, GitHub University, 2012
+* M.A. in Mathematics, University of California, Santa Cruz, 2025
+* B.S. in Mathematics (and Philosophy), Colorado State University, 2023
 
 Work experience
 ======
-* Spring 2024: Academic Pages Collaborator
-  * GitHub University
-  * Duties includes: Updates and improvements to template
-  * Supervisor: The Users
+* Fall 2023 -- Summer 2025: Mathematics Teaching Assistant
+  * University of California Santa Cruz
+  * Duties includes: Teaching, grading, and course design
 
-* Fall 2015: Research Assistant
-  * GitHub University
-  * Duties included: Merging pull requests
-  * Supervisor: Professor Hub
-
-* Summer 2015: Research Assistant
-  * GitHub University
-  * Duties included: Tagging issues
-  * Supervisor: Professor Git
+* Spring 2024: Goodrun
+  * Startup
+  * Duties included: Full-stack development
+  * Mission: Connecting basketball players to courts
   
 Skills
 ======
-* Skill 1
-* Skill 2
-  * Sub-skill 2.1
-  * Sub-skill 2.2
-  * Sub-skill 2.3
-* Skill 3
+* Full stack developemnt
+* Data Analysis
+  * Thesis and research specialzes in topological data analysis
+  * Knowledeg of advanced probabiltiy and statistics
+* Independent Resarch and Learning
 
 Publications
 ======
   <ul>{% for post in site.publications reversed %}
     {% include archive-single-cv.html %}
-  {% endfor %}</ul>
-  
-Talks
-======
-  <ul>{% for post in site.talks reversed %}
-    {% include archive-single-talk-cv.html  %}
   {% endfor %}</ul>
   
 Teaching
@@ -61,4 +47,4 @@ Teaching
   
 Service and leadership
 ======
-* Currently signed in to 43 different slack teams
+* Mentored multiple undergraduate students through the Direted Reading Program at UCSC in topics such as cryptography, alebraic topology, and classical mechanics
