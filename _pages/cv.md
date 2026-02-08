@@ -30,7 +30,7 @@ Skills
 * Full stack developemnt
 * Data Analysis
   * Thesis and research specialzes in topological data analysis
-  * Knowledeg of advanced probabiltiy and statistics
+  * Knowledeg of advanced probabilty and statistics
 * Independent Resarch and Learning
 
 Publications
