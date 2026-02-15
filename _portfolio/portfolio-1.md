@@ -1,7 +1,19 @@
 ---
 title: "Pricing Project"
-excerpt: "Short description of portfolio item number 1<br/><img src='/images/under_cons.jpg'>"
+excerpt: "CWelcome! Use the form below to calculate option prices, Greeks, and implied volatility using my live Python backend."
 collection: portfolio
 ---
 
-This is an item in your portfolio. It can be have images or nice text. If you name the file .md, it will be parsed as markdown. If you name the file .html, it will be parsed as HTML. 
+# Option Pricer
+
+
+<p>Instructions:</p>
+<ul>
+  <li>Enter the current spot price, strike price, maturity (in years), and risk-free rate.</li>
+  <li>Optionally, enter volatility or a market price to compute implied volatility.</li>
+  <li>Choose Call or Put, and indicate if the option is American.</li>
+</ul>
+
+<iframe src="/frontend/index.html" style="width:100%; height:800px; border:none;"></iframe>
+
+<p>All calculations are powered by a live Python backend hosted on Render.</p>
