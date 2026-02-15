@@ -46,6 +46,18 @@ input[type="range"] {
   margin-right: 4px;
 }
 input:focus, select:focus { outline: none; border-color: #4f46e5; }
+button {
+  margin-top: 1rem;
+  padding: 10px 20px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+button:hover { background: #4338ca; }
+#randomBtn { background:#f59e0b; margin-top:10px; grid-column: span 2; }
 .output {
   margin-top: 2rem;
   background: #f9fafb;
@@ -85,6 +97,9 @@ canvas { margin-top: 1rem; border: 1px solid #ddd; border-radius: 6px; backgroun
   <div class="row"><label>Market</label><input type="number" step="0.01" name="market_price"></div>
   <div class="row"><label>Call / Put</label><select name="is_call"><option value="true">Call</option><option value="false">Put</option></select></div>
   <div class="row"><label>American</label><select name="is_american"><option value="false">No</option><option value="true">Yes</option></select></div>
+
+  <!-- Random Option Button -->
+  <div class="row"><button type="button" id="randomBtn">Random Option</button></div>
 </form>
 
 <div class="output" id="output">Adjust inputs to price.</div>
@@ -115,6 +130,7 @@ let bars=[];
 
 volSlider.addEventListener('input',()=>{ volDisplay.textContent=Number(volSlider.value).toFixed(2); priceOption(); });
 
+// Animate bars
 function drawGreeksAnimated(target){
   const margin=50, width=canvas.width-2*margin, height=canvas.height-2*margin;
   const greeks=['delta','gamma','vega','theta','rho'];
@@ -128,10 +144,10 @@ function drawGreeksAnimated(target){
   ctx.moveTo(margin,margin+height); ctx.lineTo(margin+width,margin+height); ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(margin,margin); ctx.lineTo(margin,margin+height); ctx.stroke();
-  ctx.fillStyle='#333'; ctx.font='12px sans-serif';
+  ctx.fillStyle='#333';
+  ctx.font='12px sans-serif';
   ctx.fillText("Greeks", margin+width/2-20, margin+height+30);
-  ctx.save(); ctx.translate(10,margin+height/2+20); ctx.rotate(-Math.PI/2);
-  ctx.fillText("Value",0,0); ctx.restore();
+  ctx.save(); ctx.translate(10,margin+height/2+20); ctx.rotate(-Math.PI/2); ctx.fillText("Value",0,0); ctx.restore();
 
   function step(){
     ctx.clearRect(margin,margin,width,height);
@@ -147,8 +163,8 @@ function drawGreeksAnimated(target){
       if(Math.abs(delta)>0.001) currentValues[g]+=delta;
       const x=margin+i*width/greeks.length + width/greeks.length*0.2;
 
-      // Exaggerate 10x but cap at 90% canvas height
-      const rawHeight = Math.abs(currentValues[g]/maxVal*height*10);
+      // Exaggerate 20x but cap at 90% canvas height
+      const rawHeight = Math.abs(currentValues[g]/maxVal*height*20);
       const barHeight = Math.min(rawHeight, height*0.9);
 
       const y=currentValues[g]>=0?margin+height-barHeight:margin+height;
@@ -160,6 +176,7 @@ function drawGreeksAnimated(target){
 
       bars[i]={x:x,y:y,barWidth:barWidth,height:barHeight,greek:g,value:currentValues[g]};
     });
+
     if(Math.max(...Object.values(target).map((v,i)=>Math.abs(target[greeks[i]]-currentValues[greeks[i]])))>0.001){
       requestAnimationFrame(step);
     }
@@ -186,6 +203,7 @@ canvas.addEventListener('mousemove',(e)=>{
 });
 canvas.addEventListener('mouseleave',()=>{ tooltip.style.display='none'; });
 
+// Price function
 async function priceOption(){
   const formData=new FormData(form); const data={};
   formData.forEach((value,key)=>{ if(key==='is_call'||key==='is_american') data[key]=value==='true'; else if(value!=='') data[key]=parseFloat(value); });
@@ -214,6 +232,31 @@ ${r.implied_vol!==null?`<div class="section"><strong>Implied Vol:</strong> ${r.i
   }catch(err){ output.innerHTML=`<p style="color:red">${err}</p>`; }
 }
 
+// Random Option
+const randomBtn = document.getElementById('randomBtn');
+function randomOption() {
+  const S = (Math.random()*200 + 50).toFixed(2);
+  const K = (Math.random()*200 + 50).toFixed(2);
+  const T = (Math.random()*2 + 0.1).toFixed(2);
+  const r = (Math.random()*0.1).toFixed(4);
+  const sigma = (Math.random()*0.5 + 0.05).toFixed(2);
+  const is_call = Math.random() < 0.5;
+  const is_american = Math.random() < 0.3;
+
+  form.querySelector('[name="S"]').value = S;
+  form.querySelector('[name="K"]').value = K;
+  form.querySelector('[name="T"]').value = T;
+  form.querySelector('[name="r"]').value = r;
+  form.querySelector('[name="sigma"]').value = sigma;
+  volDisplay.textContent = sigma;
+  form.querySelector('[name="is_call"]').value = is_call.toString();
+  form.querySelector('[name="is_american"]').value = is_american.toString();
+
+  priceOption();
+}
+randomBtn.addEventListener('click', randomOption);
+
+// Live recalculation
 form.querySelectorAll('input, select').forEach(el=>{ el.addEventListener('input',priceOption); });
 priceOption();
 </script>
