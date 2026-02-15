@@ -20,28 +20,31 @@ h1 { text-align: center; margin-bottom: 1rem; }
   max-width: 900px;
   margin: auto;
 }
-.row {
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 2rem;
+}
+.form-grid .row {
   display: flex;
   align-items: center;
-  margin-bottom: 0.6rem;
-  flex-wrap: wrap;
 }
 label {
-  width: 160px;
+  width: 80px;
   font-weight: 600;
-  margin-right: 8px;
+  margin-right: 6px;
 }
 input[type="number"], select {
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  width: 140px;
-  margin-right: 20px;
+  width: 100px;
+  margin-right: 0;
 }
 input[type="range"] {
-  width: 120px; /* ultra compact */
+  width: 100px; /* compact */
   accent-color: #4f46e5;
-  margin-right: 6px;
+  margin-right: 4px;
 }
 input:focus, select:focus { outline: none; border-color: #4f46e5; }
 .output {
@@ -64,37 +67,44 @@ canvas { margin-top: 1rem; border: 1px solid #ddd; border-radius: 6px; backgroun
 
 <h1>Option Pricer</h1>
 
-<form id="optionForm">
-<div class="row">
-<label>Spot (S)</label><input type="number" step="0.01" name="S" value="100">
-<label>Strike (K)</label><input type="number" step="0.01" name="K" value="100">
-</div>
+<form id="optionForm" class="form-grid">
+  <!-- Left column -->
+  <div class="row">
+    <label>Spot (S)</label><input type="number" step="0.01" name="S" value="100">
+  </div>
+  <div class="row">
+    <label>Strike (K)</label><input type="number" step="0.01" name="K" value="100">
+  </div>
 
-<div class="row">
-<label>Maturity (T)</label><input type="number" step="0.01" name="T" value="1">
-<label>Rate (r)</label><input type="number" step="0.0001" name="r" value="0.05">
-</div>
+  <div class="row">
+    <label>Maturity (T)</label><input type="number" step="0.01" name="T" value="1">
+  </div>
+  <div class="row">
+    <label>Rate (r)</label><input type="number" step="0.0001" name="r" value="0.05">
+  </div>
 
-<div class="row">
-<label>Volatility σ</label>
-<input type="range" min="0.01" max="1" step="0.01" name="sigma" value="0.2">
-<span id="volDisplay" style="width:30px; display:inline-block;">0.20</span>
-<label>Market Price</label><input type="number" step="0.01" name="market_price">
-</div>
+  <div class="row">
+    <label>Vol σ</label><input type="range" min="0.01" max="1" step="0.01" name="sigma" value="0.2">
+    <span id="volDisplay" style="width:30px; display:inline-block;">0.20</span>
+  </div>
+  <div class="row">
+    <label>Market</label><input type="number" step="0.01" name="market_price">
+  </div>
 
-<div class="row">
-<label>Call / Put</label>
-<select name="is_call">
-<option value="true">Call</option>
-<option value="false">Put</option>
-</select>
-
-<label>American</label>
-<select name="is_american">
-<option value="false">No</option>
-<option value="true">Yes</option>
-</select>
-</div>
+  <div class="row">
+    <label>Call / Put</label>
+    <select name="is_call">
+      <option value="true">Call</option>
+      <option value="false">Put</option>
+    </select>
+  </div>
+  <div class="row">
+    <label>American</label>
+    <select name="is_american">
+      <option value="false">No</option>
+      <option value="true">Yes</option>
+    </select>
+  </div>
 </form>
 
 <div class="output" id="output">Adjust inputs to price.</div>
@@ -103,6 +113,7 @@ canvas { margin-top: 1rem; border: 1px solid #ddd; border-radius: 6px; backgroun
 <h3>Payoff Diagram</h3>
 <canvas id="payoffCanvas"></canvas>
 </div>
+
 </div>
 
 <script>
@@ -123,29 +134,20 @@ function drawPayoff(data, r){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const margin=40, width=canvas.width-2*margin, height=canvas.height-2*margin;
   const Smin=data.S*0.5, Smax=data.S*1.5, n=100;
-  let payoffs=[], greekValues=[];
+  let payoffs=[];
   for(let i=0;i<=n;i++){
     const S=Smin + i*(Smax-Smin)/n;
     const payoff = data.is_call? Math.max(S-data.K,0):Math.max(data.K-S,0);
     payoffs.push(payoff);
-    greekValues.push({
-      delta: r.delta,
-      gamma: r.gamma,
-      vega: r.vega,
-      theta: r.theta,
-      rho: r.rho
-    });
   }
   const maxY=Math.max(...payoffs,r.bs_price||0)+0.1*Math.max(...payoffs);
+
   // axes
   ctx.strokeStyle='#333';
   ctx.beginPath();
-  ctx.moveTo(margin,margin+height); ctx.lineTo(margin+width,margin+height);
-  ctx.stroke();
+  ctx.moveTo(margin,margin+height); ctx.lineTo(margin+width,margin+height); ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(margin,margin); ctx.lineTo(margin,margin+height);
-  ctx.stroke();
-  // labels
+  ctx.moveTo(margin,margin); ctx.lineTo(margin,margin+height); ctx.stroke();
   ctx.fillStyle='#333'; ctx.font='12px sans-serif';
   ctx.fillText("Spot Price (S)", margin+width/2-30, margin+height+30);
   ctx.save(); ctx.translate(10,margin+height/2+30); ctx.rotate(-Math.PI/2);
@@ -160,7 +162,7 @@ function drawPayoff(data, r){
   }
   ctx.stroke();
 
-  // overlay BS price line
+  // BS line
   if(r.bs_price){
     ctx.strokeStyle='#e11d48'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
     const y=margin+height - r.bs_price/maxY*height;
@@ -168,7 +170,7 @@ function drawPayoff(data, r){
     ctx.setLineDash([]);
   }
 
-  // overlay Greeks as dots (normalized)
+  // overlay Greeks at spot
   const colors={delta:'#10b981',gamma:'#facc15',vega:'#3b82f6',theta:'#f97316',rho:'#a855f7'};
   ['delta','gamma','vega','theta','rho'].forEach(g=>{
     const val=r[g]/maxY*height;
