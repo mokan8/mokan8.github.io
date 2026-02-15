@@ -1,10 +1,8 @@
 ---
-title: "Pricing Project"
+title: "Option Pricer"
 excerpt: "Welcome! Use the form below to calculate option prices, Greeks, and implied volatility using my live Python backend."
 collection: portfolio
 ---
-
-# Option Pricer
 
 
 <p>Instructions:</p>
