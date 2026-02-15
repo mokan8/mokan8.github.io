@@ -1,6 +1,6 @@
 ---
 title: "Pricing Project"
-excerpt: "CWelcome! Use the form below to calculate option prices, Greeks, and implied volatility using my live Python backend."
+excerpt: "Welcome! Use the form below to calculate option prices, Greeks, and implied volatility using my live Python backend."
 collection: portfolio
 ---
 
