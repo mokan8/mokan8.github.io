@@ -39,10 +39,9 @@ input[type="number"], select {
   border-radius: 6px;
   border: 1px solid #ccc;
   width: 100px;
-  margin-right: 0;
 }
 input[type="range"] {
-  width: 100px; /* compact */
+  width: 100px;
   accent-color: #4f46e5;
   margin-right: 4px;
 }
@@ -68,50 +67,21 @@ canvas { margin-top: 1rem; border: 1px solid #ddd; border-radius: 6px; backgroun
 <h1>Option Pricer</h1>
 
 <form id="optionForm" class="form-grid">
-  <!-- Left column -->
-  <div class="row">
-    <label>Spot (S)</label><input type="number" step="0.01" name="S" value="100">
-  </div>
-  <div class="row">
-    <label>Strike (K)</label><input type="number" step="0.01" name="K" value="100">
-  </div>
-
-  <div class="row">
-    <label>Maturity (T)</label><input type="number" step="0.01" name="T" value="1">
-  </div>
-  <div class="row">
-    <label>Rate (r)</label><input type="number" step="0.0001" name="r" value="0.05">
-  </div>
-
-  <div class="row">
-    <label>Vol σ</label><input type="range" min="0.01" max="1" step="0.01" name="sigma" value="0.2">
-    <span id="volDisplay" style="width:30px; display:inline-block;">0.20</span>
-  </div>
-  <div class="row">
-    <label>Market</label><input type="number" step="0.01" name="market_price">
-  </div>
-
-  <div class="row">
-    <label>Call / Put</label>
-    <select name="is_call">
-      <option value="true">Call</option>
-      <option value="false">Put</option>
-    </select>
-  </div>
-  <div class="row">
-    <label>American</label>
-    <select name="is_american">
-      <option value="false">No</option>
-      <option value="true">Yes</option>
-    </select>
-  </div>
+  <div class="row"><label>Spot (S)</label><input type="number" step="0.01" name="S" value="100"></div>
+  <div class="row"><label>Strike (K)</label><input type="number" step="0.01" name="K" value="100"></div>
+  <div class="row"><label>Maturity (T)</label><input type="number" step="0.01" name="T" value="1"></div>
+  <div class="row"><label>Rate (r)</label><input type="number" step="0.0001" name="r" value="0.05"></div>
+  <div class="row"><label>Vol σ</label><input type="range" min="0.01" max="1" step="0.01" name="sigma" value="0.2"><span id="volDisplay" style="width:30px; display:inline-block;">0.20</span></div>
+  <div class="row"><label>Market</label><input type="number" step="0.01" name="market_price"></div>
+  <div class="row"><label>Call / Put</label><select name="is_call"><option value="true">Call</option><option value="false">Put</option></select></div>
+  <div class="row"><label>American</label><select name="is_american"><option value="false">No</option><option value="true">Yes</option></select></div>
 </form>
 
 <div class="output" id="output">Adjust inputs to price.</div>
 
 <div class="section">
-<h3>Payoff Diagram</h3>
-<canvas id="payoffCanvas"></canvas>
+<h3>Greeks Visual</h3>
+<canvas id="greeksCanvas"></canvas>
 </div>
 
 </div>
@@ -121,63 +91,55 @@ const form = document.getElementById('optionForm');
 const output = document.getElementById('output');
 const volSlider = form.querySelector('[name="sigma"]');
 const volDisplay = document.getElementById('volDisplay');
-const canvas = document.getElementById('payoffCanvas');
+const canvas = document.getElementById('greeksCanvas');
 const ctx = canvas.getContext('2d');
 
-function resizeCanvas(){ canvas.width = canvas.clientWidth; canvas.height=300;}
+function resizeCanvas(){ canvas.width = canvas.clientWidth; canvas.height=300; }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
+let currentValues = {delta:0,gamma:0,vega:0,theta:0,rho:0};
+
 volSlider.addEventListener('input',()=>{ volDisplay.textContent=Number(volSlider.value).toFixed(2); priceOption(); });
 
-function drawPayoff(data, r){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const margin=40, width=canvas.width-2*margin, height=canvas.height-2*margin;
-  const Smin=data.S*0.5, Smax=data.S*1.5, n=100;
-  let payoffs=[];
-  for(let i=0;i<=n;i++){
-    const S=Smin + i*(Smax-Smin)/n;
-    const payoff = data.is_call? Math.max(S-data.K,0):Math.max(data.K-S,0);
-    payoffs.push(payoff);
-  }
-  const maxY=Math.max(...payoffs,r.bs_price||0)+0.1*Math.max(...payoffs);
+function drawGreeksAnimated(target){
+  const margin=50, width=canvas.width-2*margin, height=canvas.height-2*margin;
+  const greeks=['delta','gamma','vega','theta','rho'];
+  const colors=['#10b981','#facc15','#3b82f6','#f97316','#a855f7'];
+  const maxVal=Math.max(...Object.values(target).map(v=>Math.abs(v)))*1.1||1;
 
   // axes
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle='#333';
   ctx.beginPath();
   ctx.moveTo(margin,margin+height); ctx.lineTo(margin+width,margin+height); ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(margin,margin); ctx.lineTo(margin,margin+height); ctx.stroke();
   ctx.fillStyle='#333'; ctx.font='12px sans-serif';
-  ctx.fillText("Spot Price (S)", margin+width/2-30, margin+height+30);
-  ctx.save(); ctx.translate(10,margin+height/2+30); ctx.rotate(-Math.PI/2);
-  ctx.fillText("Payoff / Value",0,0); ctx.restore();
+  ctx.fillText("Greeks", margin+width/2-20, margin+height+30);
+  ctx.save(); ctx.translate(10,margin+height/2+20); ctx.rotate(-Math.PI/2);
+  ctx.fillText("Value",0,0); ctx.restore();
 
-  // payoff line
-  ctx.strokeStyle='#4f46e5'; ctx.lineWidth=2; ctx.beginPath();
-  for(let i=0;i<=n;i++){
-    const x=margin+(i/n)*width;
-    const y=margin+height - payoffs[i]/maxY*height;
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  // animate
+  let done=false;
+  function step(){
+    done=true;
+    greeks.forEach((g,i)=>{
+      const delta=(target[g]-currentValues[g])*0.1;
+      if(Math.abs(delta)>0.001){ done=false; currentValues[g]+=delta; }
+      const x=margin+i*width/greeks.length + width/greeks.length*0.2;
+      const barWidth=width/greeks.length*0.6;
+      const y=margin+height/2 - currentValues[g]/maxVal*height/2;
+      const barHeight=Math.abs(currentValues[g]/maxVal*height/2);
+      ctx.fillStyle=colors[i];
+      ctx.fillRect(x,currentValues[g]>=0?y-barHeight:y,barWidth,barHeight);
+      ctx.fillStyle='#000';
+      ctx.font='12px sans-serif';
+      ctx.fillText(g.charAt(0).toUpperCase()+g.slice(1), x, margin+height+15);
+    });
+    if(!done) requestAnimationFrame(step);
   }
-  ctx.stroke();
-
-  // BS line
-  if(r.bs_price){
-    ctx.strokeStyle='#e11d48'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
-    const y=margin+height - r.bs_price/maxY*height;
-    ctx.beginPath(); ctx.moveTo(margin,y); ctx.lineTo(margin+width,y); ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // overlay Greeks at spot
-  const colors={delta:'#10b981',gamma:'#facc15',vega:'#3b82f6',theta:'#f97316',rho:'#a855f7'};
-  ['delta','gamma','vega','theta','rho'].forEach(g=>{
-    const val=r[g]/maxY*height;
-    const x=margin + width/2;
-    const y=margin+height - val;
-    ctx.fillStyle=colors[g]; ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fill();
-  });
+  step();
 }
 
 async function priceOption(){
@@ -204,7 +166,7 @@ async function priceOption(){
 </div></div>
 ${r.implied_vol!==null?`<div class="section"><strong>Implied Vol:</strong> ${r.implied_vol.toFixed(4)}</div>`:''}
 `;
-    drawPayoff(data,r);
+    drawGreeksAnimated(r);
   }catch(err){ output.innerHTML=`<p style="color:red">${err}</p>`; }
 }
 
