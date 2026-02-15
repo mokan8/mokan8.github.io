@@ -8,7 +8,6 @@ collection: portfolio
 <p>Instructions:</p>
 <ul>
   <li>Enter the current spot price, strike price, maturity (in years), and risk-free rate.</li>
-  <li>Optionally, enter volatility or a market price to compute implied volatility.</li>
   <li>Choose Call or Put, and indicate if the option is American.</li>
 </ul>
 
