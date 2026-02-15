@@ -47,24 +47,13 @@ input, select {
   margin-right: 20px;
 }
 
+input[type=range] {
+  width: 300px;
+}
+
 input:focus, select:focus {
   outline: none;
   border-color: #4f46e5;
-}
-
-button {
-  margin-top: 1rem;
-  padding: 10px 20px;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-button:hover {
-  background: #4338ca;
 }
 
 .output {
@@ -75,11 +64,21 @@ button:hover {
   border: 1px solid #e5e7eb;
 }
 
+.section {
+  margin-top: 1rem;
+}
+
 .metric {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.4rem;
   font-size: 15px;
+}
+
+.greeks {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem 2rem;
 }
 
 .metric strong {
@@ -97,17 +96,20 @@ button:hover {
 <form id="optionForm">
 
 <div class="row">
-<label>Spot (S)</label><input type="number" step="0.01" name="S" value="100" required>
-<label>Strike (K)</label><input type="number" step="0.01" name="K" value="100" required>
+<label>Spot (S)</label><input type="number" step="0.01" name="S" value="100">
+<label>Strike (K)</label><input type="number" step="0.01" name="K" value="100">
 </div>
 
 <div class="row">
-<label>Maturity (T)</label><input type="number" step="0.01" name="T" value="1" required>
-<label>Rate (r)</label><input type="number" step="0.0001" name="r" value="0.05" required>
+<label>Maturity (T)</label><input type="number" step="0.01" name="T" value="1">
+<label>Rate (r)</label><input type="number" step="0.0001" name="r" value="0.05">
 </div>
 
 <div class="row">
-<label>Volatility σ</label><input type="number" step="0.01" name="sigma">
+<label>Volatility σ</label>
+<input type="range" min="0.01" max="1" step="0.01" name="sigma" value="0.2">
+<span id="volDisplay">0.20</span>
+
 <label>Market Price</label><input type="number" step="0.01" name="market_price">
 </div>
 
@@ -125,21 +127,23 @@ button:hover {
 </select>
 </div>
 
-<button type="submit">Calculate</button>
-
 </form>
 
-<div class="output" id="output"></div>
+<div class="output" id="output">Adjust inputs to price.</div>
 
 </div>
 
 <script>
 const form = document.getElementById('optionForm');
 const output = document.getElementById('output');
+const volSlider = form.querySelector('[name="sigma"]');
+const volDisplay = document.getElementById('volDisplay');
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+volSlider.addEventListener('input', () => {
+  volDisplay.textContent = Number(volSlider.value).toFixed(2);
+});
 
+async function priceOption() {
   const formData = new FormData(form);
   const data = {};
 
@@ -151,8 +155,6 @@ form.addEventListener('submit', async (e) => {
     }
   });
 
-  output.innerHTML = "<p>Calculating...</p>";
-
   try {
     const response = await fetch('https://option-pricer-kjbi.onrender.com/price', {
       method: 'POST',
@@ -160,30 +162,39 @@ form.addEventListener('submit', async (e) => {
       body: JSON.stringify(data)
     });
 
-    const result = await response.json();
+    const r = await response.json();
 
     output.innerHTML = `
-<h2>Results</h2>
+<h2>Prices</h2>
 
-<div class="metric"><strong>Black–Scholes</strong><span>${result.bs_price.toFixed(4)}</span></div>
-<div class="metric"><strong>Monte Carlo</strong><span>${result.mc_price.toFixed(4)}</span></div>
-<div class="metric"><strong>Binomial Tree</strong><span>${result.binomial_price.toFixed(4)}</span></div>
+<div class="metric"><strong>Black–Scholes</strong><span>${r.bs_price.toFixed(4)}</span></div>
+<div class="metric"><strong>Monte Carlo</strong><span>${r.mc_price.toFixed(4)}</span></div>
+<div class="metric"><strong>Binomial Tree</strong><span>${r.binomial_price.toFixed(4)}</span></div>
 
-<hr>
+<div class="section">
+<h3>Greeks</h3>
+<div class="greeks">
+<div class="metric"><strong>Delta</strong><span>${r.delta.toFixed(4)}</span></div>
+<div class="metric"><strong>Gamma</strong><span>${r.gamma.toFixed(4)}</span></div>
+<div class="metric"><strong>Vega</strong><span>${r.vega.toFixed(4)}</span></div>
+<div class="metric"><strong>Theta</strong><span>${r.theta.toFixed(4)}</span></div>
+<div class="metric"><strong>Rho</strong><span>${r.rho.toFixed(4)}</span></div>
+</div>
+</div>
 
-<div class="metric"><strong>Delta</strong><span>${result.delta.toFixed(4)}</span></div>
-<div class="metric"><strong>Gamma</strong><span>${result.gamma.toFixed(4)}</span></div>
-<div class="metric"><strong>Vega</strong><span>${result.vega.toFixed(4)}</span></div>
-<div class="metric"><strong>Theta</strong><span>${result.theta.toFixed(4)}</span></div>
-<div class="metric"><strong>Rho</strong><span>${result.rho.toFixed(4)}</span></div>
-
-${result.implied_vol !== null ? `<hr><div class="metric"><strong>Implied Vol</strong><span>${result.implied_vol.toFixed(4)}</span></div>` : ''}
+${r.implied_vol !== null ? `<div class="section"><strong>Implied Vol:</strong> ${r.implied_vol.toFixed(4)}</div>` : ''}
 `;
 
   } catch (err) {
     output.innerHTML = `<p style="color:red">${err}</p>`;
   }
+}
+
+form.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('input', priceOption);
 });
+
+priceOption();
 </script>
 
 </body>
