@@ -57,7 +57,17 @@ input:focus, select:focus { outline: none; border-color: #4f46e5; }
 .metric { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 15px; }
 .greeks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem 2rem; }
 .metric strong { color: #333; }
-canvas { margin-top: 1rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; width: 100%; max-width: 700px; height: 300px; }
+canvas { margin-top: 1rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; width: 100%; max-width: 700px; height: 300px; position: relative; }
+.tooltip {
+  position: absolute;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  font-size: 12px;
+  display: none;
+}
 </style>
 </head>
 
@@ -82,6 +92,7 @@ canvas { margin-top: 1rem; border: 1px solid #ddd; border-radius: 6px; backgroun
 <div class="section">
 <h3>Greeks Visual</h3>
 <canvas id="greeksCanvas"></canvas>
+<div class="tooltip" id="tooltip"></div>
 </div>
 
 </div>
@@ -93,12 +104,14 @@ const volSlider = form.querySelector('[name="sigma"]');
 const volDisplay = document.getElementById('volDisplay');
 const canvas = document.getElementById('greeksCanvas');
 const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
 
 function resizeCanvas(){ canvas.width = canvas.clientWidth; canvas.height=300; }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 let currentValues = {delta:0,gamma:0,vega:0,theta:0,rho:0};
+let bars=[];
 
 volSlider.addEventListener('input',()=>{ volDisplay.textContent=Number(volSlider.value).toFixed(2); priceOption(); });
 
@@ -106,8 +119,9 @@ function drawGreeksAnimated(target){
   const margin=50, width=canvas.width-2*margin, height=canvas.height-2*margin;
   const greeks=['delta','gamma','vega','theta','rho'];
   const colors=['#10b981','#facc15','#3b82f6','#f97316','#a855f7'];
-  const maxVal=Math.max(...Object.values(target).map(v=>Math.abs(v)))*1.1||1;
+  const maxVal=Math.max(...Object.values(target).map(v=>Math.abs(v)))*0.8||1; // exaggerate height
 
+  bars=[];
   // axes
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle='#333';
@@ -121,26 +135,52 @@ function drawGreeksAnimated(target){
   ctx.fillText("Value",0,0); ctx.restore();
 
   // animate
-  let done=false;
   function step(){
-    done=true;
+    ctx.clearRect(margin,margin,width,height);
+    ctx.strokeStyle='#333';
+    ctx.beginPath();
+    ctx.moveTo(margin,margin+height); ctx.lineTo(margin+width,margin+height); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(margin,margin); ctx.lineTo(margin,margin+height); ctx.stroke();
+    const barWidth = width/greeks.length*0.6;
     greeks.forEach((g,i)=>{
       const delta=(target[g]-currentValues[g])*0.1;
-      if(Math.abs(delta)>0.001){ done=false; currentValues[g]+=delta; }
+      if(Math.abs(delta)>0.001) currentValues[g]+=delta;
       const x=margin+i*width/greeks.length + width/greeks.length*0.2;
-      const barWidth=width/greeks.length*0.6;
-      const y=margin+height/2 - currentValues[g]/maxVal*height/2;
-      const barHeight=Math.abs(currentValues[g]/maxVal*height/2);
+      const barHeight=Math.abs(currentValues[g]/maxVal*height);
+      const y=currentValues[g]>=0?margin+height-barHeight:margin+height;
       ctx.fillStyle=colors[i];
-      ctx.fillRect(x,currentValues[g]>=0?y-barHeight:y,barWidth,barHeight);
+      ctx.fillRect(x,y,barWidth,barHeight*(currentValues[g]>=0?1:-1));
       ctx.fillStyle='#000';
       ctx.font='12px sans-serif';
       ctx.fillText(g.charAt(0).toUpperCase()+g.slice(1), x, margin+height+15);
+      bars[i]={x:x,y:y,barWidth:barWidth,height:barHeight,greek:g,value:currentValues[g]};
     });
-    if(!done) requestAnimationFrame(step);
+    if(Math.max(...Object.values(target).map((v,i)=>Math.abs(target[greeks[i]]-currentValues[greeks[i]])))>0.001){
+      requestAnimationFrame(step);
+    }
   }
   step();
 }
+
+// tooltip
+canvas.addEventListener('mousemove',(e)=>{
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left;
+  const my=e.clientY-rect.top;
+  let found=false;
+  bars.forEach(b=>{
+    if(mx>=b.x && mx<=b.x+b.barWidth && my>=b.y && my<=b.y+b.y+b.height){
+      tooltip.style.display='block';
+      tooltip.style.left=(e.pageX+10)+'px';
+      tooltip.style.top=(e.pageY+10)+'px';
+      tooltip.textContent=`${b.greek}: ${b.value.toFixed(4)}`;
+      found=true;
+    }
+  });
+  if(!found) tooltip.style.display='none';
+});
+canvas.addEventListener('mouseleave',()=>{ tooltip.style.display='none'; });
 
 async function priceOption(){
   const formData=new FormData(form); const data={};
