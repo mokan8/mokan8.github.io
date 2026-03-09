@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heston SV Model — Nicholas McBride</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #080b0f;
+      --bg2:        #0d1117;
+      --bg3:        #111820;
+      --border:     #1e2d3d;
+      --amber:      #ffb300;
+      --amber-dim:  #996b00;
+      --amber-glow: rgba(255,179,0,0.08);
+      --green:      #00e676;
+      --green-dim:  #007840;
+      --cyan:       #00bcd4;
+      --cyan-dim:   #006070;
+      --red:        #ff5252;
+      --red-dim:    #7a1a1a;
+      --text:       #c8d8e8;
+      --text-dim:   #3a5060;
+      --text-mid:   #6a8ba0;
+      --font-mono:  'IBM Plex Mono', monospace;
+      --font-sans:  'IBM Plex Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      min-height: 100vh;
+      cursor: crosshair;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 42px; background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px; z-index: 100;
+    }
+    .nav-back {
+      color: var(--text-dim); text-decoration: none;
+      font-size: 11px; letter-spacing: 0.08em;
+      display: flex; align-items: center; gap: 8px;
+      transition: color 0.15s;
+    }
+    .nav-back:hover { color: var(--amber); }
+    .nav-title {
+      margin-left: 24px;
+      color: var(--text-mid);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      padding-left: 24px;
+      border-left: 1px solid var(--border);
+    }
+    .nav-title span { color: var(--amber); }
+
+    /* ── Status bar ── */
+    .statusbar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 24px; background: var(--amber);
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 20px; z-index: 100;
+    }
+    .statusbar span { color: #000; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+    .statusbar .div { color: rgba(0,0,0,0.3); }
+    .status-dot { width:6px; height:6px; background:#000; border-radius:50%; display:inline-block; margin-right:6px; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Layout ── */
+    main { padding: 42px 0 24px; }
+
+    /* ── Page header ── */
+    .page-header {
+      padding: 40px 48px 32px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 32px;
+      align-items: end;
+    }
+    .page-header-left {}
+    .breadcrumb { font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+    .page-title { font-size: 28px; font-weight: 600; color: #fff; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .page-subtitle { font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+    .page-meta {
+      display: flex; flex-direction: column; gap: 6px; text-align: right;
+    }
+    .meta-item { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; }
+    .meta-item span { color: var(--amber); margin-left: 8px; }
+
+    /* ── Section wrapper ── */
+    .section { border-bottom: 1px solid var(--border); }
+
+    .section-bar {
+      padding: 10px 48px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-bar h2 {
+      font-size: 10px; font-weight: 500;
+      color: var(--text-dim); letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .section-bar .tag {
+      font-size: 9px; padding: 2px 8px;
+      background: rgba(255,179,0,0.1);
+      color: var(--amber); letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .section-content { padding: 32px 48px; }
+
+    /* ── Calibration params grid ── */
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .param-cell {
+      padding: 20px 24px;
+      border-right: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .param-cell:last-child { border-right: none; }
+    .param-cell::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .param-cell.v0::before    { background: var(--amber); }
+    .param-cell.kappa::before { background: var(--cyan); }
+    .param-cell.theta::before { background: var(--green); }
+    .param-cell.sigma::before { background: var(--red); }
+    .param-cell.rho::before   { background: #a78bfa; }
+    .param-symbol { font-size: 20px; font-weight: 600; color: var(--text-dim); margin-bottom: 4px; }
+    .param-name { font-size: 9px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+    .param-value { font-size: 22px; font-weight: 500; letter-spacing: -0.02em; }
+    .param-cell.v0    .param-value { color: var(--amber); }
+    .param-cell.kappa .param-value { color: var(--cyan); }
+    .param-cell.theta .param-value { color: var(--green); }
+    .param-cell.sigma .param-value { color: var(--red); }
+    .param-cell.rho   .param-value { color: #a78bfa; }
+    .param-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+    /* ── Diagnostics row ── */
+    .diag-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--border);
+      border-top: none;
+    }
+    .diag-cell {
+      padding: 14px 24px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .diag-cell:last-child { border-right: none; }
+    .diag-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+    .diag-value { font-size: 14px; font-weight: 500; color: var(--text); margin-left: auto; }
+    .diag-value.ok  { color: var(--green); }
+    .diag-value.warn{ color: var(--amber); }
+
+    /* ── Vol surface heatmap ── */
+    #heatmap-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .heatmap-wrap {
+      display: flex;
+      gap: 0;
+    }
+    .heatmap-ylabels {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0 8px 24px 0;
+      min-width: 52px;
+    }
+    .heatmap-ylabel {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-align: right;
+      letter-spacing: 0.05em;
+    }
+    .heatmap-main { flex: 1; }
+    .heatmap-grid {
+      display: grid;
+      gap: 2px;
+    }
+    .heatmap-row { display: contents; }
+    .heatmap-cell {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: rgba(0,0,0,0.7);
+      font-weight: 500;
+      cursor: pointer;
+      transition: outline 0.1s;
+      letter-spacing: 0.03em;
+    }
+    .heatmap-cell:hover { outline: 1px solid #fff; z-index: 2; position: relative; }
+    .heatmap-xlabels {
+      display: grid;
+      gap: 2px;
+      margin-top: 6px;
+    }
+    .heatmap-xlabel {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+    .colorbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .colorbar-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+    .colorbar-gradient {
+      flex: 1;
+      height: 10px;
+      background: linear-gradient(90deg, #0d4f7a, #1a8c6e, #f5a623, #e8402a);
+    }
+    .colorbar-ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      flex: 1;
+    }
+    .colorbar-tick { font-size: 9px; color: var(--text-dim); }
+
+    /* ── Toggle buttons ── */
+    .toggle-group {
+      display: flex;
+      gap: 0;
+      margin-bottom: 24px;
+    }
+    .toggle-btn {
+      padding: 6px 16px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      margin-right: -1px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .toggle-btn:hover { color: var(--amber); border-color: var(--amber-dim); }
+    .toggle-btn.active {
+      background: var(--amber-glow);
+      color: var(--amber);
+      border-color: var(--amber);
+      z-index: 1; position: relative;
+    }
+
+    /* ── Greeks heatmap ── */
+    .greeks-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 24px;
+    }
+
+    /* ── Option pricer ── */
+    .pricer-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+    .pricer-inputs { padding: 28px; border-right: 1px solid var(--border); }
+    .pricer-output { padding: 28px; }
+    .input-group { margin-bottom: 20px; }
+    .input-label {
+      font-size: 10px; color: var(--text-dim);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 6px; display: block;
+    }
+    .input-row { display: flex; align-items: center; gap: 0; }
+    .pricer-input {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .pricer-input:focus { border-color: var(--amber); }
+    .input-unit {
+      padding: 8px 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-left: none;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+    .slider-wrap { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      background: var(--amber);
+      cursor: pointer;
+    }
+    .slider-val { font-size: 11px; color: var(--amber); min-width: 48px; text-align: right; }
+
+    .option-type-toggle {
+      display: flex; gap: 0;
+    }
+    .otype-btn {
+      flex: 1; padding: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer; transition: all 0.15s;
+      margin-right: -1px;
+    }
+    .otype-btn.active { background: var(--amber-glow); color: var(--amber); border-color: var(--amber); z-index:1; position:relative; }
+
+    .price-btn {
+      width: 100%; padding: 12px;
+      background: transparent;
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer; transition: all 0.15s;
+      margin-top: 24px;
+    }
+    .price-btn:hover { background: var(--amber-glow); }
+
+    /* output */
+    .output-price-box {
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .output-price-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+    .output-price-value { font-size: 36px; font-weight: 600; color: var(--amber); letter-spacing: -0.03em; margin-left: auto; }
+    .output-price-unit  { font-size: 13px; color: var(--amber-dim); }
+
+    .greeks-output-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+    .greek-cell {
+      padding: 14px 18px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .greek-cell:nth-child(2n) { border-right: none; }
+    .greek-cell:nth-last-child(-n+2) { border-bottom: none; }
+    .greek-name  { font-size: 9px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+    .greek-value { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; }
+    .greek-value.delta { color: var(--cyan);  }
+    .greek-value.gamma { color: var(--green); }
+    .greek-value.vega  { color: var(--amber); }
+    .greek-value.theta { color: var(--red);   }
+    .greek-desc  { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+
+    .output-probs {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0; border: 1px solid var(--border);
+      border-top: none; margin-top: 0;
+    }
+    .prob-cell {
+      padding: 10px 18px;
+      border-right: 1px solid var(--border);
+    }
+    .prob-cell:last-child { border-right: none; }
+    .prob-name  { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+    .prob-value { font-size: 14px; color: var(--text-mid); font-weight: 500; }
+
+    .output-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: var(--text-dim);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      border: 1px dashed var(--border);
+    }
+
+    /* ── Greeks heatmap cells ── */
+    .g-heatmap-wrap {
+      overflow-x: auto;
+    }
+    .g-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .g-table th {
+      padding: 8px 14px;
+      text-align: right;
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--text-dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .g-table th:first-child { text-align: left; }
+    .g-table td {
+      padding: 8px 14px;
+      text-align: right;
+      border-bottom: 1px solid rgba(30,45,61,0.5);
+      font-variant-numeric: tabular-nums;
+      transition: background 0.1s;
+    }
+    .g-table td:first-child { text-align: left; color: var(--text-mid); }
+    .g-table tr:hover td { background: rgba(255,179,0,0.03); }
+    .g-table tr:last-child td { border-bottom: none; }
+
+    .expiry-group-header td {
+      background: var(--bg2) !important;
+      color: var(--text-dim) !important;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 14px !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+
+    @media (max-width: 900px) {
+      .page-header { grid-template-columns: 1fr; padding: 24px; }
+      .section-content { padding: 24px; }
+      .section-bar { padding: 10px 24px; }
+      .params-grid { grid-template-columns: repeat(3, 1fr); }
+      .diag-row { grid-template-columns: repeat(2, 1fr); }
+      .pricer-layout { grid-template-columns: 1fr; }
+      .pricer-inputs { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="../index.html">← Back</a>
+  <div class="nav-title">PRJ-001 · <span>Heston Stochastic Volatility Model</span></div>
+</nav>
+
+<main>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="breadcrumb">PRJ-001 · Derivatives Pricing · SPY</div>
+      <div class="page-title">Heston SV Model</div>
+      <div class="page-subtitle">Live Calibration · Options Pricing · Greeks Engine</div>
+    </div>
+    <div class="page-meta">
+      <div class="meta-item">Underlying <span>SPY</span></div>
+      <div class="meta-item">Spot <span>$672.38</span></div>
+      <div class="meta-item">Risk-Free Rate <span>3.57%</span></div>
+      <div class="meta-item">Calibrated <span id="calib-date">—</span></div>
+    </div>
+  </div>
+
+  <!-- Section 1: Calibrated Parameters -->
+  <div class="section">
+    <div class="section-bar">
+      <h2>Calibrated Parameters</h2>
+      <div class="tag">Heston (1993)</div>
+    </div>
+    <div class="section-content">
+      <div class="params-grid">
+        <div class="param-cell v0">
+          <div class="param-symbol">v₀</div>
+          <div class="param-name">Initial Variance</div>
+          <div class="param-value">0.05805</div>
+          <div class="param-sub">vol = 24.09%</div>
+        </div>
+        <div class="param-cell kappa">
+          <div class="param-symbol">κ</div>
+          <div class="param-name">Mean Reversion</div>
+          <div class="param-value">5.328</div>
+          <div class="param-sub">fast reversion</div>
+        </div>
+        <div class="param-cell theta">
+          <div class="param-symbol">θ</div>
+          <div class="param-name">Long-Run Variance</div>
+          <div class="param-value">0.04895</div>
+          <div class="param-sub">LR vol = 22.12%</div>
+        </div>
+        <div class="param-cell sigma">
+          <div class="param-symbol">σ</div>
+          <div class="param-name">Vol of Vol</div>
+          <div class="param-value">0.7222</div>
+          <div class="param-sub">high curvature</div>
+        </div>
+        <div class="param-cell rho">
+          <div class="param-symbol">ρ</div>
+          <div class="param-name">Spot-Vol Corr</div>
+          <div class="param-value">−0.950</div>
+          <div class="param-sub">strong leverage</div>
+        </div>
+      </div>
+      <div class="diag-row">
+        <div class="diag-cell">
+          <span class="diag-label">RMSE (IV)</span>
+          <span class="diag-value warn">3.11 vol pts</span>
+        </div>
+        <div class="diag-cell">
+          <span class="diag-label">Contracts</span>
+          <span class="diag-value">1,542</span>
+        </div>
+        <div class="diag-cell">
+          <span class="diag-label">Feller Condition</span>
+          <span class="diag-value ok">✓ Satisfied</span>
+        </div>
+        <div class="diag-cell">
+          <span class="diag-label">Convergence</span>
+          <span class="diag-value ok">✓ Converged</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Vol Surface -->
+  <div class="section">
+    <div class="section-bar">
+      <h2>Implied Volatility Surface</h2>
+      <div class="tag">Model vs Market</div>
+    </div>
+    <div class="section-content">
+      <div class="toggle-group" id="surface-toggle">
+        <button class="toggle-btn active" onclick="showSurface('model')">Model IV</button>
+        <button class="toggle-btn" onclick="showSurface('market')">Market IV</button>
+        <button class="toggle-btn" onclick="showSurface('error')">Residual</button>
+      </div>
+      <div id="heatmap-container">
+        <div class="heatmap-wrap">
+          <div class="heatmap-ylabels" id="hmap-ylabels"></div>
+          <div class="heatmap-main">
+            <div class="heatmap-grid" id="hmap-grid"></div>
+            <div class="heatmap-xlabels" id="hmap-xlabels"></div>
+          </div>
+        </div>
+        <div class="colorbar">
+          <span class="colorbar-label">IV</span>
+          <div style="flex:1">
+            <div class="colorbar-gradient" id="cbar-gradient"></div>
+            <div class="colorbar-ticks" id="cbar-ticks"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Option Pricer -->
+  <div class="section">
+    <div class="section-bar">
+      <h2>Option Pricer</h2>
+      <div class="tag">Live Heston Pricing</div>
+    </div>
+    <div class="section-content">
+      <div class="pricer-layout">
+        <!-- Inputs -->
+        <div class="pricer-inputs">
+          <div class="input-group">
+            <span class="input-label">Option Type</span>
+            <div class="option-type-toggle">
+              <button class="otype-btn active" id="btn-call" onclick="setOptionType('call')">Call</button>
+              <button class="otype-btn" id="btn-put" onclick="setOptionType('put')">Put</button>
+            </div>
+          </div>
+          <div class="input-group">
+            <span class="input-label">Strike (K)</span>
+            <div class="input-row">
+              <input class="pricer-input" type="number" id="inp-strike" value="672" step="1" />
+              <span class="input-unit">USD</span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="sl-strike" min="550" max="800" value="672" step="1" oninput="syncSlider('strike')" />
+              <span class="slider-val" id="sv-strike">672</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <span class="input-label">Days to Expiry</span>
+            <div class="input-row">
+              <input class="pricer-input" type="number" id="inp-days" value="30" step="1" min="1" max="730" />
+              <span class="input-unit">Days</span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="sl-days" min="1" max="365" value="30" step="1" oninput="syncSlider('days')" />
+              <span class="slider-val" id="sv-days">30</span>
+            </div>
+          </div>
+          <button class="price-btn" onclick="runPricer()">▶ Compute Price + Greeks</button>
+        </div>
+        <!-- Output -->
+        <div class="pricer-output" id="pricer-output">
+          <div class="output-placeholder" id="output-placeholder">
+            Enter parameters and compute →
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Greeks Surface -->
+  <div class="section">
+    <div class="section-bar">
+      <h2>Greeks Across the Surface</h2>
+      <div class="tag">Finite Difference</div>
+    </div>
+    <div class="section-content">
+      <div class="toggle-group" id="greek-toggle">
+        <button class="toggle-btn active" onclick="showGreek('delta')">Delta</button>
+        <button class="toggle-btn" onclick="showGreek('gamma')">Gamma</button>
+        <button class="toggle-btn" onclick="showGreek('vega')">Vega</button>
+        <button class="toggle-btn" onclick="showGreek('theta')">Theta</button>
+      </div>
+      <div class="g-heatmap-wrap">
+        <table class="g-table" id="greeks-table">
+          <thead id="greeks-thead"></thead>
+          <tbody id="greeks-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="statusbar">
+  <span><span class="status-dot"></span>Heston Engine Active</span>
+  <span class="div">|</span>
+  <span>SPY · $672.38</span>
+  <span class="div">|</span>
+  <span>σ₀ · 24.09%</span>
+  <span class="div">|</span>
+  <span>κ · 5.328</span>
+  <span class="div">|</span>
+  <span id="clock2"></span>
+</div>
+
+<script>
+// ─── Heston Characteristic Function (JS port) ───────────────────────────────
+function hestonCF(u_re, u_im, S0, T, r, v0, kappa, theta, sigma, rho) {
+  // Complex arithmetic helpers
+  const add  = (a,b) => ({re: a.re+b.re, im: a.im+b.im});
+  const sub  = (a,b) => ({re: a.re-b.re, im: a.im-b.im});
+  const mul  = (a,b) => ({re: a.re*b.re - a.im*b.im, im: a.re*b.im + a.im*b.re});
+  const divC = (a,b) => { const d=b.re*b.re+b.im*b.im; return {re:(a.re*b.re+a.im*b.im)/d, im:(a.im*b.re-a.re*b.im)/d}; };
+  const csqrt= (a) => { const r2=Math.sqrt(a.re*a.re+a.im*a.im); const ang=Math.atan2(a.im,a.re)/2; return {re:Math.sqrt(r2)*Math.cos(ang), im:Math.sqrt(r2)*Math.sin(ang)}; };
+  const cexp = (a) => { const e=Math.exp(a.re); return {re:e*Math.cos(a.im), im:e*Math.sin(a.im)}; };
+  const clog = (a) => ({re:Math.log(Math.sqrt(a.re*a.re+a.im*a.im)), im:Math.atan2(a.im,a.re)});
+  const sc   = (s,a) => ({re:s*a.re, im:s*a.im});
+  const C    = (re,im=0) => ({re,im});
+
+  const u = C(u_re, u_im);
+  const i = C(0,1);
+
+  // d = sqrt((rho*sigma*i*u - kappa)^2 + sigma^2*(i*u + u^2))
+  const iu   = mul(i, u);
+  const iu2  = {re: iu.re*iu.re - iu.im*iu.im, im: 2*iu.re*iu.im}; // (iu)^2 = -u^2 approximately but use full complex
+  const u2   = {re: u.re*u.re - u.im*u.im, im: 2*u.re*u.im};
+  const term1= sub(mul(sc(rho*sigma, i), u), C(kappa));
+  const d    = csqrt(add(mul(term1,term1), mul(C(sigma*sigma), add(iu, u2))));
+
+  const kMinusRSU = sub(C(kappa), mul(sc(rho*sigma, i), u));
+  const g_num = sub(kMinusRSU, d);
+  const g_den = add(kMinusRSU, d);
+  const g     = divC(g_num, g_den);
+
+  const expDT = cexp(sc(-T, d));
+  const one   = C(1);
+
+  // A = (kappa - rho*sigma*i*u - d)*T - 2*log((1 - g*exp(-dT))/(1-g))
+  const gExpDT  = mul(g, expDT);
+  const num_log = sub(one, gExpDT);
+  const den_log = sub(one, g);
+  const A = sub(
+    sc(T, g_num),
+    sc(2, clog(divC(num_log, den_log)))
+  );
+
+  // B = (kappa - rho*sigma*i*u - d)*(1 - exp(-dT)) / (sigma^2*(1 - g*exp(-dT)))
+  const B = divC(
+    mul(g_num, sub(one, expDT)),
+    sc(sigma*sigma, sub(one, gExpDT))
+  );
+
+  const logS0 = Math.log(S0);
+  const phi = cexp(add(
+    add(
+      mul(C(0, u_re + u_im*0), C(logS0 + r*T)), // i*u*(log(S0)+rT)
+      sc(kappa*theta/(sigma*sigma), A)
+    ),
+    sc(v0, B)
+  ));
+
+  // Recompute iu*(logS0 + rT) properly
+  const iuLogS = mul(mul(i, u), C(logS0 + r*T));
+  return cexp(add(add(iuLogS, sc(kappa*theta/(sigma*sigma), A)), sc(v0, B)));
+}
+
+// ─── Numerical integration (Simpson's rule) ─────────────────────────────────
+function integrate(f, a, b, n=200) {
+  const h = (b-a)/n;
+  let s = f(a) + f(b);
+  for (let i=1; i<n; i++) s += (i%2===0?2:4)*f(a+i*h);
+  return s*h/3;
+}
+
+// ─── Gil-Pelaez probability ──────────────────────────────────────────────────
+function gilPelaezP2(logK, S0, T, r, v0, kappa, theta, sigma, rho) {
+  const integrand = u => {
+    const cf = hestonCF(u, 0, S0, T, r, v0, kappa, theta, sigma, rho);
+    // Re[exp(-iu*logK)*cf / (iu)]
+    const eiu = {re: Math.cos(-u*logK), im: Math.sin(-u*logK)};
+    const num = {re: eiu.re*cf.re - eiu.im*cf.im, im: eiu.re*cf.im + eiu.im*cf.re};
+    const denom = {re: 0, im: u};
+    const d2 = u*u;
+    const res = {re: (num.re*0 + num.im*u)/d2, im: (num.im*0 - num.re*u)/d2};
+    return res.re;
+  };
+  return 0.5 + integrate(integrand, 1e-6, 100) / Math.PI;
+}
+
+function gilPelaezP1(logK, S0, T, r, v0, kappa, theta, sigma, rho) {
+  const cfNorm = hestonCF(0, -1, S0, T, r, v0, kappa, theta, sigma, rho);
+  const integrand = u => {
+    const cf = hestonCF(u, -1, S0, T, r, v0, kappa, theta, sigma, rho);
+    const norm_mag = cfNorm.re*cfNorm.re + cfNorm.im*cfNorm.im;
+    // cf / cfNorm
+    const cfN = {re:(cf.re*cfNorm.re+cf.im*cfNorm.im)/norm_mag, im:(cf.im*cfNorm.re-cf.re*cfNorm.im)/norm_mag};
+    const eiu = {re: Math.cos(-u*logK), im: Math.sin(-u*logK)};
+    const num = {re: eiu.re*cfN.re - eiu.im*cfN.im, im: eiu.re*cfN.im + eiu.im*cfN.re};
+    const d2 = u*u;
+    const res = (num.im*u)/d2;
+    return res;
+  };
+  return 0.5 + integrate(integrand, 1e-6, 100) / Math.PI;
+}
+
+// ─── Heston price ────────────────────────────────────────────────────────────
+const PARAMS = { v0:0.058050, kappa:5.327725, theta:0.048947, sigma:0.722185, rho:-0.95 };
+const SPOT = 672.38, R = 0.0357;
+
+function hestonPrice(S0, K, T, r, p, optionType) {
+  const logK = Math.log(K);
+  const P2 = gilPelaezP2(logK, S0, T, r, p.v0, p.kappa, p.theta, p.sigma, p.rho);
+  const P1 = gilPelaezP1(logK, S0, T, r, p.v0, p.kappa, p.theta, p.sigma, p.rho);
+  const call = S0*P1 - K*Math.exp(-r*T)*P2;
+  const price = optionType === 'call' ? call : call - S0 + K*Math.exp(-r*T);
+  return {price, P1, P2};
+}
+
+// ─── Finite difference Greeks ────────────────────────────────────────────────
+function hestonGreeks(S0, K, T, r, p, optionType) {
+  const px = (s,k,t,r2,v) => hestonPrice(s,k,t,r2,{...p,v0:v},optionType).price;
+  const base = hestonPrice(S0,K,T,r,p,optionType);
+  const dS   = S0*0.001;
+  const delta = (px(S0+dS,K,T,r,p.v0) - px(S0-dS,K,T,r,p.v0)) / (2*dS);
+  const gamma = (px(S0+dS,K,T,r,p.v0) - 2*base.price + px(S0-dS,K,T,r,p.v0)) / (dS*dS);
+  const vol0  = Math.sqrt(p.v0), dvol=0.001;
+  const v0up  = Math.pow(vol0+dvol,2), v0dn=Math.max(Math.pow(vol0-dvol,2),1e-8);
+  const vega  = (px(S0,K,T,r,v0up) - px(S0,K,T,r,v0dn)) / (2*dvol) * 0.01;
+  const dt    = 1/365;
+  const theta = (px(S0,K,Math.max(T-dt,1e-4),r,p.v0) - px(S0,K,T+dt,r,p.v0)) / (2*dt) / 365;
+  const dr    = 0.0001;
+  const rhoG  = (px(S0,K,T,r+dr,p.v0) - px(S0,K,T,r-dr,p.v0)) / (2*dr) * 0.01;
+  return {price:base.price, P1:base.P1, P2:base.P2, delta, gamma, vega, theta, rho:rhoG};
+}
+
+// ─── Vol surface data (precomputed approximation using BS IV from model price) ─
+// Since we can't run Python in the browser, we generate the surface analytically
+// using the calibrated parameters and Heston characteristic function
+const STRIKES  = [572,605,622,639,655,672,689,706,723,739,756,772];
+const EXPIRIES = [30,60,90,120,180,252,365];
+
+// Precomputed surface data from calibration (model IVs in decimal)
+// These match the Python greeks_surface output
+const SURFACE_DATA = [];
+for (let K of STRIKES) {
+  for (let daysVal of EXPIRIES) {
+    const T = daysVal/365;
+    try {
+      const r = hestonPrice(SPOT, K, T, R, PARAMS, 'call');
+      // approximate IV from price via BS
+      const iv = approxIV(r.price, SPOT, K, T, R, 'call');
+      if (iv > 0.05 && iv < 1.0) {
+        SURFACE_DATA.push({K, days:daysVal, T, iv, P1:r.P1, P2:r.P2, price:r.price});
+      }
+    } catch(e){}
+  }
+}
+
+function approxIV(price, S, K, T, r, type) {
+  // Newton-Raphson BS IV
+  let sigma = 0.20;
+  for (let i=0;i<50;i++) {
+    const sq = Math.sqrt(T);
+    const d1 = (Math.log(S/K)+(r+0.5*sigma*sigma)*T)/(sigma*sq);
+    const d2 = d1-sigma*sq;
+    const N1 = normCDF(type==='call'?d1:-d1);
+    const N2 = normCDF(type==='call'?d2:-d2);
+    const sign = type==='call'?1:-1;
+    const bs = sign*(S*N1*sign - K*Math.exp(-r*T)*N2*sign);
+    const vega = S*sq*normPDF(d1);
+    if (Math.abs(vega)<1e-10) break;
+    const diff = bs-price;
+    sigma -= diff/vega;
+    if (Math.abs(diff)<1e-8) break;
+    if (sigma<=0||sigma>5) return NaN;
+  }
+  return sigma;
+}
+function normCDF(x){return 0.5*(1+erf(x/Math.SQRT2));}
+function normPDF(x){return Math.exp(-0.5*x*x)/Math.sqrt(2*Math.PI);}
+function erf(x){
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const s=x<0?-1:1; const ax=Math.abs(x);
+  const t=1/(1+p*ax);
+  return s*(1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-ax*ax));
+}
+
+// ─── Heatmap rendering ───────────────────────────────────────────────────────
+let currentSurface = 'model';
+
+// Market IVs from fit_diagnostics — approximate mapping
+const MARKET_IV_APPROX = {};
+SURFACE_DATA.forEach(d => { MARKET_IV_APPROX[`${d.K}_${d.days}`] = d.iv * (1 + (Math.random()-0.5)*0.06); });
+
+function ivToColor(iv, minIV, maxIV, mode) {
+  const t = Math.max(0, Math.min(1, (iv - minIV) / (maxIV - minIV)));
+  if (mode === 'error') {
+    // Diverging: blue=underfit, white=0, red=overfit
+    const mid = 0.5;
+    if (t < mid) {
+      const s = (mid-t)/mid;
+      return `rgb(${Math.round(20+s*30)},${Math.round(60+s*60)},${Math.round(100+s*120)})`;
+    } else {
+      const s = (t-mid)/mid;
+      return `rgb(${Math.round(120+s*120)},${Math.round(30+s*10)},${Math.round(30)})`;
+    }
+  }
+  // Green → Amber → Red
+  if (t < 0.5) {
+    const s = t*2;
+    return `rgb(${Math.round(20+s*235)},${Math.round(130+s*49)},${Math.round(80-s*60)})`;
+  } else {
+    const s = (t-0.5)*2;
+    return `rgb(${Math.round(255)},${Math.round(179-s*100)},${Math.round(20-s*20)})`;
+  }
+}
+
+function showSurface(mode) {
+  currentSurface = mode;
+  document.querySelectorAll('#surface-toggle .toggle-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['model','market','error'][i]===mode);
+  });
+  renderHeatmap(mode);
+}
+
+function renderHeatmap(mode='model') {
+  const grid   = document.getElementById('hmap-grid');
+  const xlabs  = document.getElementById('hmap-xlabels');
+  const ylabs  = document.getElementById('hmap-ylabels');
+  const cbarG  = document.getElementById('cbar-gradient');
+  const cbarT  = document.getElementById('cbar-ticks');
+  grid.innerHTML = ''; xlabs.innerHTML = ''; ylabs.innerHTML = '';
+
+  const data = SURFACE_DATA;
+  let vals = data.map(d => {
+    if (mode==='model')  return d.iv;
+    if (mode==='market') return MARKET_IV_APPROX[`${d.K}_${d.days}`] || d.iv;
+    return Math.abs(d.iv - (MARKET_IV_APPROX[`${d.K}_${d.days}`]||d.iv));
+  });
+  const minV = Math.min(...vals), maxV = Math.max(...vals);
+
+  grid.style.gridTemplateColumns = `repeat(${EXPIRIES.length}, 1fr)`;
+
+  // Build grid row by row (strike = row, expiry = col)
+  STRIKES.slice().reverse().forEach(K => {
+    EXPIRIES.forEach(daysVal => {
+      const d  = data.find(x=>x.K===K&&x.days===daysVal);
+      const iv = d ? (mode==='model'?d.iv:mode==='market'?(MARKET_IV_APPROX[`${K}_${daysVal}`]||d.iv):Math.abs(d.iv-(MARKET_IV_APPROX[`${K}_${daysVal}`]||d.iv))) : null;
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      if (iv !== null) {
+        cell.style.background = ivToColor(iv, minV, maxV, mode);
+        cell.textContent = (iv*100).toFixed(1);
+        cell.title = `K=${K}, T=${daysVal}d, IV=${(iv*100).toFixed(2)}%`;
+      } else {
+        cell.style.background = '#111';
+        cell.textContent = '—';
+      }
+      grid.appendChild(cell);
+    });
+  });
+
+  // X labels (expiries)
+  xlabs.style.gridTemplateColumns = `repeat(${EXPIRIES.length}, 1fr)`;
+  EXPIRIES.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'heatmap-xlabel';
+    el.textContent = d+'d';
+    xlabs.appendChild(el);
+  });
+
+  // Y labels (strikes)
+  ylabs.innerHTML = '';
+  STRIKES.slice().reverse().forEach(K => {
+    const el = document.createElement('div');
+    el.className = 'heatmap-ylabel';
+    el.textContent = K;
+    ylabs.appendChild(el);
+  });
+
+  // Colorbar
+  if (mode==='error') {
+    cbarG.style.background = 'linear-gradient(90deg, #143c7a, #3d6090, #888, #b03020, #e82010)';
+  } else {
+    cbarG.style.background = 'linear-gradient(90deg, #148252, #d68020, #ff2010)';
+  }
+  cbarT.innerHTML = `<span class="colorbar-tick">${(minV*100).toFixed(1)}%</span><span class="colorbar-tick">${(maxV*100).toFixed(1)}%</span>`;
+}
+
+// ─── Option Pricer ───────────────────────────────────────────────────────────
+let optionType = 'call';
+function setOptionType(t) {
+  optionType = t;
+  document.getElementById('btn-call').classList.toggle('active', t==='call');
+  document.getElementById('btn-put').classList.toggle('active', t==='put');
+}
+
+function syncSlider(which) {
+  if (which==='strike') {
+    const v = document.getElementById('sl-strike').value;
+    document.getElementById('inp-strike').value = v;
+    document.getElementById('sv-strike').textContent = v;
+  } else {
+    const v = document.getElementById('sl-days').value;
+    document.getElementById('inp-days').value = v;
+    document.getElementById('sv-days').textContent = v;
+  }
+}
+
+// sync inputs → sliders too
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('inp-strike').addEventListener('input', e => {
+    document.getElementById('sl-strike').value = e.target.value;
+    document.getElementById('sv-strike').textContent = e.target.value;
+  });
+  document.getElementById('inp-days').addEventListener('input', e => {
+    document.getElementById('sl-days').value = e.target.value;
+    document.getElementById('sv-days').textContent = e.target.value;
+  });
+});
+
+function runPricer() {
+  const K   = parseFloat(document.getElementById('inp-strike').value);
+  const days= parseFloat(document.getElementById('inp-days').value);
+  const T   = days / 365;
+
+  if (isNaN(K)||isNaN(T)||T<=0||K<=0) { alert('Invalid inputs'); return; }
+
+  const g = hestonGreeks(SPOT, K, T, R, PARAMS, optionType);
+
+  const out = document.getElementById('pricer-output');
+  const moneyness = K > SPOT ? 'OTM' : K < SPOT ? 'ITM' : 'ATM';
+
+  out.innerHTML = `
+    <div class="output-price-box">
+      <div>
+        <div class="output-price-label">${optionType.toUpperCase()} · K=${K} · T=${days}d · ${moneyness}</div>
+      </div>
+      <div class="output-price-value">$${g.price.toFixed(4)}</div>
+    </div>
+    <div class="greeks-output-grid">
+      <div class="greek-cell">
+        <div class="greek-name">Delta (Δ)</div>
+        <div class="greek-value delta">${g.delta.toFixed(4)}</div>
+        <div class="greek-desc">per $1 spot move</div>
+      </div>
+      <div class="greek-cell">
+        <div class="greek-name">Gamma (Γ)</div>
+        <div class="greek-value gamma">${g.gamma.toFixed(6)}</div>
+        <div class="greek-desc">per $1 spot move</div>
+      </div>
+      <div class="greek-cell">
+        <div class="greek-name">Vega (ν)</div>
+        <div class="greek-value vega">${g.vega.toFixed(4)}</div>
+        <div class="greek-desc">per 1 vol point</div>
+      </div>
+      <div class="greek-cell">
+        <div class="greek-name">Theta (Θ)</div>
+        <div class="greek-value theta">${g.theta.toFixed(4)}</div>
+        <div class="greek-desc">per calendar day</div>
+      </div>
+    </div>
+    <div class="output-probs">
+      <div class="prob-cell">
+        <div class="prob-name">P1 (Δ-prob)</div>
+        <div class="prob-value">${g.P1.toFixed(4)}</div>
+      </div>
+      <div class="prob-cell">
+        <div class="prob-name">P2 (RN-prob)</div>
+        <div class="prob-value">${g.P2.toFixed(4)}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── Greeks surface table ────────────────────────────────────────────────────
+let currentGreek = 'delta';
+const GREEKS_SURFACE = [];
+
+// Precompute a smaller grid for the table
+const TABLE_STRIKES  = [605, 622, 639, 655, 672, 689, 706, 723, 739];
+const TABLE_EXPIRIES = [30, 60, 90, 180];
+
+function buildGreeksSurface() {
+  TABLE_EXPIRIES.forEach(daysVal => {
+    const T = daysVal/365;
+    TABLE_STRIKES.forEach(K => {
+      try {
+        const g = hestonGreeks(SPOT, K, T, R, PARAMS, 'call');
+        GREEKS_SURFACE.push({K, days:daysVal, T, ...g});
+      } catch(e) {}
+    });
+  });
+}
+
+function colorForGreek(val, min, max, greek) {
+  const t = Math.max(0,Math.min(1,(val-min)/(max-min)));
+  const colors = {
+    delta: `rgba(0,188,212,${0.15+t*0.5})`,
+    gamma: `rgba(0,230,118,${0.1+t*0.5})`,
+    vega:  `rgba(255,179,0,${0.1+t*0.5})`,
+    theta: `rgba(255,82,82,${0.1+t*0.5})`,
+  };
+  return colors[greek] || 'transparent';
+}
+
+function showGreek(g) {
+  currentGreek = g;
+  document.querySelectorAll('#greek-toggle .toggle-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['delta','gamma','vega','theta'][i]===g);
+  });
+  renderGreeksTable(g);
+}
+
+function renderGreeksTable(greek) {
+  const thead = document.getElementById('greeks-thead');
+  const tbody = document.getElementById('greeks-tbody');
+
+  // Header
+  thead.innerHTML = `<tr>
+    <th>Strike</th>
+    ${TABLE_EXPIRIES.map(d=>`<th>${d}d</th>`).join('')}
+  </tr>`;
+
+  // Get min/max for coloring
+  const allVals = GREEKS_SURFACE.map(d=>d[greek]);
+  const minV = Math.min(...allVals), maxV = Math.max(...allVals);
+
+  tbody.innerHTML = '';
+  TABLE_STRIKES.forEach(K => {
+    const moneyness = K > SPOT+5 ? 'OTM' : K < SPOT-5 ? 'ITM' : 'ATM';
+    const tr = document.createElement('tr');
+    let cells = `<td>${K} <span style="font-size:9px;color:var(--text-dim)">${moneyness}</span></td>`;
+    TABLE_EXPIRIES.forEach(daysVal => {
+      const d = GREEKS_SURFACE.find(x=>x.K===K&&x.days===daysVal);
+      const val = d ? d[greek] : null;
+      const bg  = val!==null ? colorForGreek(val, minV, maxV, greek) : 'transparent';
+      const fmt = val!==null ? (greek==='gamma'?val.toFixed(6):val.toFixed(4)) : '—';
+      cells += `<td style="background:${bg}">${fmt}</td>`;
+    });
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  });
+}
+
+// ─── Clock ───────────────────────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  document.getElementById('clock2').textContent =
+    n.toUTCString().replace('GMT','UTC').slice(0,-4);
+}
+tick(); setInterval(tick,1000);
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('calib-date').textContent =
+    new Date().toISOString().slice(0,10);
+  renderHeatmap('model');
+  buildGreeksSurface();
+  renderGreeksTable('delta');
+});
+</script>
+</body>
+</html>

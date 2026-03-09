@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nicholas McBride — Quantitative Research</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080b0f;
+      --bg2:       #0d1117;
+      --bg3:       #111820;
+      --border:    #1e2d3d;
+      --amber:     #ffb300;
+      --amber-dim: #996b00;
+      --green:     #00e676;
+      --green-dim: #007840;
+      --cyan:      #00bcd4;
+      --red:       #ff5252;
+      --text:      #c8d8e8;
+      --text-dim:  #4a6070;
+      --text-mid:  #7a9bb0;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100vh;
+      cursor: crosshair;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 42px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 0;
+      z-index: 100;
+    }
+
+    .nav-logo {
+      color: var(--amber);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-right: auto;
+    }
+
+    .nav-logo span { color: var(--text-dim); font-weight: 300; }
+
+    .nav-links { display: flex; gap: 0; }
+
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0 16px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      border-left: 1px solid var(--border);
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--amber); background: rgba(255,179,0,0.04); }
+
+    /* ── Status bar ── */
+    .statusbar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 24px;
+      background: var(--amber);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 24px;
+      z-index: 100;
+    }
+
+    .statusbar span {
+      color: #000;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .statusbar .divider { color: rgba(0,0,0,0.3); }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      background: #000;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Main layout ── */
+    main {
+      padding: 42px 0 24px;
+      min-height: 100vh;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 48px 60px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 40%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        rgba(30,45,61,0.3) 40px,
+        rgba(30,45,61,0.3) 41px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 40px,
+        rgba(30,45,61,0.3) 40px,
+        rgba(30,45,61,0.3) 41px
+      );
+      pointer-events: none;
+    }
+
+    .hero-tag {
+      color: var(--amber);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-tag::before {
+      content: '';
+      width: 24px; height: 1px;
+      background: var(--amber);
+    }
+
+    .hero-name {
+      font-family: var(--font-mono);
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: clamp(13px, 2vw, 16px);
+      color: var(--text-dim);
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    .hero-bio {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      color: var(--text-mid);
+      max-width: 560px;
+      line-height: 1.8;
+      font-weight: 300;
+    }
+
+    .hero-bio strong { color: var(--text); font-weight: 500; }
+
+    .hero-links {
+      display: flex;
+      gap: 0;
+      margin-top: 40px;
+    }
+
+    .hero-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      border: 1px solid var(--border);
+      margin-right: -1px;
+      transition: all 0.15s;
+    }
+
+    .hero-links a:hover {
+      color: var(--amber);
+      border-color: var(--amber);
+      background: rgba(255,179,0,0.05);
+      z-index: 1;
+      position: relative;
+    }
+
+    /* ── Section header ── */
+    .section-header {
+      padding: 20px 48px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .section-header h2 {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .section-header::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Project cards ── */
+    .projects {
+      padding: 0 48px 80px;
+    }
+
+    .project-card {
+      border: 1px solid var(--border);
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      transition: border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .project-card:hover { border-color: var(--amber); }
+    .project-card:hover .project-arrow { color: var(--amber); }
+    .project-card:hover .project-main { background: rgba(255,179,0,0.02); }
+
+    .project-main { padding: 32px; }
+
+    .project-id {
+      font-size: 10px;
+      color: var(--amber-dim);
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+    }
+
+    .project-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .project-subtitle {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .project-desc {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.7;
+      max-width: 560px;
+      font-weight: 300;
+    }
+
+    .project-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .tag {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    .tag.highlight {
+      border-color: var(--amber-dim);
+      color: var(--amber);
+    }
+
+    .project-sidebar {
+      border-left: 1px solid var(--border);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--green);
+      letter-spacing: -0.02em;
+    }
+
+    .metric-value.amber { color: var(--amber); }
+    .metric-value.cyan  { color: var(--cyan);  }
+
+    .project-arrow {
+      margin-top: auto;
+      font-size: 20px;
+      color: var(--text-dim);
+      transition: color 0.15s;
+      align-self: flex-end;
+    }
+
+    /* ── Skills grid ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border);
+    }
+
+    .skill-cell {
+      padding: 24px 32px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .skill-cell:nth-child(4n) { border-right: none; }
+
+    .skill-category {
+      font-size: 9px;
+      color: var(--amber);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .skill-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .skill-list li {
+      font-size: 11px;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .skill-list li::before {
+      content: '—';
+      color: var(--text-dim);
+      font-size: 9px;
+    }
+
+    /* ── Animations ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in:nth-child(2) { animation-delay: 0.2s; }
+    .fade-in:nth-child(3) { animation-delay: 0.3s; }
+    .fade-in:nth-child(4) { animation-delay: 0.4s; }
+
+    @media (max-width: 768px) {
+      .hero { padding: 48px 24px 40px; }
+      .projects { padding: 0 24px 60px; }
+      .section-header { padding: 16px 24px; }
+      .project-card { grid-template-columns: 1fr; }
+      .project-sidebar { border-left: none; border-top: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; }
+      .skills-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo">NM <span>/ Portfolio</span></div>
+    <div class="nav-links">
+      <a href="#projects">Projects</a>
+      <a href="#skills">Skills</a>
+      <a href="mailto:">Contact</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-tag">Quantitative Research</div>
+      <div class="hero-name fade-in">Nicholas<br/>McBride</div>
+      <div class="hero-title fade-in">M.S. Mathematics · UC Santa Cruz · Quantitative Research</div>
+      <p class="hero-bio fade-in">
+        Mathematician turned quant researcher. My graduate work at UC Santa Cruz focused on
+        <strong>algebraic topology</strong>, culminating in a thesis extending
+        <strong>UMAP</strong> — a manifold learning algorithm grounded in topological data analysis.
+        I now apply that foundation to <strong>derivatives pricing</strong> and volatility modeling,
+        building end-to-end research infrastructure from raw market data to calibrated stochastic models.
+      </p>
+      <div class="hero-links fade-in">
+        <a href="https://github.com" target="_blank">GitHub</a>
+        <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+        <a href="resume.pdf" target="_blank">Résumé</a>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    <div class="section-header" id="projects">
+      <h2>Research Projects</h2>
+    </div>
+
+    <section class="projects">
+      <a class="project-card" href="heston/index.html">
+        <div class="project-main">
+          <div class="project-id">PRJ-001 · Derivatives Pricing</div>
+          <div class="project-title">Heston Stochastic Volatility Model</div>
+          <div class="project-subtitle">Live Calibration · SPY Options Chain · Greeks Engine</div>
+          <p class="project-desc">
+            End-to-end derivatives research platform calibrated to live SPY options data.
+            Fits the five Heston parameters to 1,542 market contracts via differential
+            evolution and Nelder-Mead refinement, then prices arbitrary options and
+            computes full Greeks across the volatility surface.
+          </p>
+          <div class="project-tags">
+            <span class="tag highlight">Heston Model</span>
+            <span class="tag highlight">Vol Surface</span>
+            <span class="tag">Fourier Pricing</span>
+            <span class="tag">Greeks Engine</span>
+            <span class="tag">Live Market Data</span>
+            <span class="tag">Python</span>
+          </div>
+        </div>
+        <div class="project-sidebar">
+          <div class="metric">
+            <span class="metric-label">RMSE (IV)</span>
+            <span class="metric-value">3.11</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Init Vol</span>
+            <span class="metric-value amber">24.09%</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Contracts</span>
+            <span class="metric-value cyan">1,542</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Expiries</span>
+            <span class="metric-value cyan">19</span>
+          </div>
+          <div class="project-arrow">→</div>
+        </div>
+      </a>
+    </section>
+
+    <!-- Technical Stack -->
+    <div class="section-header" id="skills">
+      <h2>Technical Stack</h2>
+    </div>
+
+    <div class="skills-grid">
+      <div class="skill-cell">
+        <div class="skill-category">Mathematics</div>
+        <ul class="skill-list">
+          <li>Algebraic Topology</li>
+          <li>Topological Data Analysis</li>
+          <li>Manifold Learning</li>
+          <li>UMAP (thesis extension)</li>
+          <li>Stochastic Calculus</li>
+        </ul>
+      </div>
+      <div class="skill-cell">
+        <div class="skill-category">Machine Learning</div>
+        <ul class="skill-list">
+          <li>Dimensionality Reduction</li>
+          <li>Unsupervised Learning</li>
+          <li>Monte Carlo Methods</li>
+          <li>Numerical Optimization</li>
+        </ul>
+      </div>
+      <div class="skill-cell">
+        <div class="skill-category">Programming</div>
+        <ul class="skill-list">
+          <li>Python</li>
+          <li>NumPy · SciPy</li>
+          <li>Pandas</li>
+          <li>Data Pipeline Design</li>
+        </ul>
+      </div>
+      <div class="skill-cell">
+        <div class="skill-category">Quant Finance</div>
+        <ul class="skill-list">
+          <li>Heston SV Model</li>
+          <li>Options Pricing</li>
+          <li>Implied Volatility</li>
+          <li>Greeks & Risk Sensitivities</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <div class="statusbar">
+    <span><span class="status-dot"></span>System Online</span>
+    <span class="divider">|</span>
+    <span id="clock"></span>
+    <span class="divider">|</span>
+    <span>SPY · $672.38</span>
+    <span class="divider">|</span>
+    <span>VIX · 24.09</span>
+    <span class="divider">|</span>
+    <span>RFR · 3.57%</span>
+  </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent =
+        now.toUTCString().replace('GMT','UTC').slice(0,-4);
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>

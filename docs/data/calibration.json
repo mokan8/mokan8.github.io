@@ -1,0 +1,15 @@
+{
+  "v0": 0.05805,
+  "kappa": 5.327725,
+  "theta": 0.048947,
+  "sigma": 0.722185,
+  "rho": -1.0,
+  "rmse": 0.031132,
+  "feller_ok": true,
+  "feller_ratio": 1.0,
+  "converged": true,
+  "n_contracts": 144,
+  "initial_vol_pct": 24.0937,
+  "longrun_vol_pct": 22.1239,
+  "calibration_time": 4693.71
+}
