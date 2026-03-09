@@ -377,9 +377,15 @@
 </div>
 
 <script>
+// ════════════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════════════
 const PARAMS={v0:0.058050,kappa:5.327725,theta:0.048947,sigma:0.722185,rho:-0.95};
-const SPOT=672.38,R=0.0357;
+const SPOT=672.38, R=0.0357;
 
+// ════════════════════════════════════════════════════════
+//  COMPLEX ARITHMETIC
+// ════════════════════════════════════════════════════════
 function cMul(a,b){return{re:a.re*b.re-a.im*b.im,im:a.re*b.im+a.im*b.re};}
 function cAdd(a,b){return{re:a.re+b.re,im:a.im+b.im};}
 function cSub(a,b){return{re:a.re-b.re,im:a.im-b.im};}
@@ -390,6 +396,9 @@ function cSqrt(a){const r=Math.sqrt(a.re*a.re+a.im*a.im),ang=Math.atan2(a.im,a.r
 function sMul(s,a){return{re:s*a.re,im:s*a.im};}
 function C(re,im=0){return{re,im};}
 
+// ════════════════════════════════════════════════════════
+//  HESTON PRICING
+// ════════════════════════════════════════════════════════
 function hestonCF(ur,ui,S0,T,r,v0,kappa,theta,sigma,rho){
   const u=C(ur,ui),i=C(0,1),iu=cMul(i,u);
   const u2=cMul(u,u),iuPu2=cAdd(iu,u2);
@@ -403,13 +412,11 @@ function hestonCF(ur,ui,S0,T,r,v0,kappa,theta,sigma,rho){
   const iuLS=cMul(cMul(i,u),C(Math.log(S0)+r*T));
   return cExp(cAdd(cAdd(iuLS,sMul(kappa*theta/(sigma*sigma),A)),sMul(v0,B)));
 }
-
 function integrate(f,a,b,n=160){
   const h=(b-a)/n;let s=f(a)+f(b);
   for(let i=1;i<n;i++)s+=(i%2===0?2:4)*f(a+i*h);
   return s*h/3;
 }
-
 function gP2(lK,S0,T,r,p){
   return 0.5+integrate(u=>{
     const cf=hestonCF(u,0,S0,T,r,p.v0,p.kappa,p.theta,p.sigma,p.rho);
@@ -417,7 +424,6 @@ function gP2(lK,S0,T,r,p){
     const num=cMul(eiu,cf);return(num.im*u)/(u*u);
   },1e-5,100)/Math.PI;
 }
-
 function gP1(lK,S0,T,r,p){
   const cfN=hestonCF(0,-1,S0,T,r,p.v0,p.kappa,p.theta,p.sigma,p.rho);
   const mag=cfN.re*cfN.re+cfN.im*cfN.im;
@@ -428,13 +434,11 @@ function gP1(lK,S0,T,r,p){
     const num=cMul(eiu,cfNorm);return(num.im*u)/(u*u);
   },1e-5,100)/Math.PI;
 }
-
 function hestonPrice(S0,K,T,r,p,ot){
   const lK=Math.log(K),P2=gP2(lK,S0,T,r,p),P1=gP1(lK,S0,T,r,p);
   const call=S0*P1-K*Math.exp(-r*T)*P2;
   return{price:ot==='call'?call:call-S0+K*Math.exp(-r*T),P1,P2};
 }
-
 function hestonGreeks(S0,K,T,r,p,ot){
   const px=(s,k,t,r2,v0)=>hestonPrice(s,k,t,r2,{...p,v0},ot).price;
   const base=hestonPrice(S0,K,T,r,p,ot);
@@ -449,82 +453,174 @@ function hestonGreeks(S0,K,T,r,p,ot){
   const rhoG=(px(S0,K,T,r+dr,p.v0)-px(S0,K,T,r-dr,p.v0))/(2*dr)*0.01;
   return{price:base.price,P1:base.P1,P2:base.P2,delta,gamma,vega,theta,rho:rhoG};
 }
-
+// Fast IV approximation — guards against T=0
 function hestonIVApprox(K,T){
+  if(T<=0) T=1/365;
   const v0=0.05805,kappa=5.3277,theta=0.04895,sigma=0.72219,rho=-0.95;
-  const x=Math.log(SPOT/K),w=theta+(v0-theta)*(1-Math.exp(-kappa*T))/(kappa*T),vol=Math.sqrt(w);
-  const skew=rho*sigma/(2*Math.sqrt(w*T+1e-8)),curv=sigma*sigma/(4*w);
+  const kt=kappa*T;
+  const w = kt<1e-6 ? v0 : theta+(v0-theta)*(1-Math.exp(-kt))/kt;
+  const wSafe=Math.max(w,0.001);
+  const vol=Math.sqrt(wSafe);
+  const x=Math.log(SPOT/K);
+  const skew=rho*sigma/(2*Math.sqrt(wSafe*T+1e-8));
+  const curv=sigma*sigma/(4*wSafe);
   return Math.max(0.08,Math.min(0.65,vol*(1+skew*x+curv*x*x)));
 }
 
-// ── Hero 3D Surface ──────────────────────────────────────────────────────────
-// Declared here, initialized inside DOMContentLoaded
-let hc, hctx;
-const HNX=22,HNY=16;
-const hS=Array.from({length:HNX},(_,i)=>SPOT*(0.80+i*0.024));
-const hE=Array.from({length:HNY},(_,i)=>(5+i*22)/365);
-const hG=hE.map(T=>hS.map(K=>hestonIVApprox(K,T)));
-let hRY=0.38,hRX=0.30,hAR=true,hDrag=false,hLX=0,hLY=0;
+// ════════════════════════════════════════════════════════
+//  HERO 3D SURFACE — completely self-contained init
+// ════════════════════════════════════════════════════════
+(function initHero(){
+  const NX=22, NY=16;
+  const strikes  = Array.from({length:NX},(_,i)=>SPOT*(0.80+i*0.024));
+  const expiries = Array.from({length:NY},(_,i)=>(7+i*22)/365);
+  const ivGrid   = expiries.map(T=>strikes.map(K=>hestonIVApprox(K,T)));
 
-function hProj(x,y,z,W,H){
-  const cY=Math.cos(hRY),sY=Math.sin(hRY),cX=Math.cos(hRX),sX=Math.sin(hRX);
-  let x1=x*cY-z*sY,z1=x*sY+z*cY,y1=y*cX-z1*sX,z2=y*sX+z1*cX;
-  const f=3.0/(3.0+z2+1.2),sc=Math.min(W,H)*0.68;
-  return{sx:W*0.62+x1*sc*f,sy:H*0.50-y1*sc*f,z:z2};
-}
-function hC(iv,a=1){
-  const t=Math.max(0,Math.min(1,(iv-0.10)/0.42));
-  if(t<0.5){const s=t*2;return`rgba(${Math.round(20+s*235)},${Math.round(100+s*79)},${Math.round(180-s*160)},${a})`;}
-  else{const s=(t-0.5)*2;return`rgba(255,${Math.round(179-s*129)},${Math.round(20-s*20)},${a})`;}
-}
-function drawHero(){
-  const W=hc.width,H=hc.height;hctx.clearRect(0,0,W,H);
-  const pts=hG.map((row,j)=>row.map((iv,i)=>{
-    const x=(i/(HNX-1))-0.5,z=(j/(HNY-1))-0.5,y=(iv-0.22)*2.0;
-    return{...hProj(x,y,z,W,H),iv};
-  }));
-  const quads=[];
-  for(let j=0;j<HNY-1;j++)for(let i=0;i<HNX-1;i++){
-    const aZ=(pts[j][i].z+pts[j][i+1].z+pts[j+1][i].z+pts[j+1][i+1].z)/4;
-    const aI=(hG[j][i]+hG[j][i+1]+hG[j+1][i]+hG[j+1][i+1])/4;
-    quads.push({j,i,aZ,aI});
-  }
-  quads.sort((a,b)=>b.aZ-a.aZ);
-  quads.forEach(({j,i,aI})=>{
-    const p00=pts[j][i],p10=pts[j][i+1],p01=pts[j+1][i],p11=pts[j+1][i+1];
-    hctx.beginPath();hctx.moveTo(p00.sx,p00.sy);hctx.lineTo(p10.sx,p10.sy);hctx.lineTo(p11.sx,p11.sy);hctx.lineTo(p01.sx,p01.sy);hctx.closePath();
-    hctx.fillStyle=hC(aI,0.16);hctx.fill();
-  });
-  for(let j=0;j<HNY;j++){
-    hctx.beginPath();
-    for(let i=0;i<HNX;i++){const p=pts[j][i];i===0?hctx.moveTo(p.sx,p.sy):hctx.lineTo(p.sx,p.sy);}
-    hctx.strokeStyle=hC(hG[j][Math.floor(HNX/2)],0.45);hctx.lineWidth=0.7;hctx.stroke();
-  }
-  for(let i=0;i<HNX;i++){
-    hctx.beginPath();
-    for(let j=0;j<HNY;j++){const p=pts[j][i];j===0?hctx.moveTo(p.sx,p.sy):hctx.lineTo(p.sx,p.sy);}
-    hctx.strokeStyle=hC(hG[Math.floor(HNY/2)][i],0.28);hctx.lineWidth=0.5;hctx.stroke();
-  }
-  const atmI=Math.round(HNX/2);
-  hctx.beginPath();
-  for(let j=0;j<HNY;j++){const p=pts[j][atmI];j===0?hctx.moveTo(p.sx,p.sy):hctx.lineTo(p.sx,p.sy);}
-  hctx.strokeStyle='rgba(255,179,0,0.7)';hctx.lineWidth=2;hctx.stroke();
-}
-function resizeHero(){
-  if(!hc)return;
-  hc.width=hc.parentElement.clientWidth;
-  hc.height=hc.parentElement.clientHeight;
-  drawHero();
-}
-let hLT=0;
-function animHero(ts){if(hAR)hRY+=(ts-hLT)*0.00025;hLT=ts;drawHero();requestAnimationFrame(animHero);}
+  let rotY=0.38, rotX=0.30, autoRotate=true, dragging=false, lastX=0, lastY=0, lastTs=0;
 
-// ── Heatmap ──────────────────────────────────────────────────────────────────
+  function project(x,y,z,W,H){
+    const cY=Math.cos(rotY),sY=Math.sin(rotY),cX=Math.cos(rotX),sX=Math.sin(rotX);
+    const x1=x*cY-z*sY, z1=x*sY+z*cY;
+    const y1=y*cX-z1*sX, z2=y*sX+z1*cX;
+    const fov=3.0/(3.0+z2+1.2);
+    const sc=Math.min(W,H)*0.65;
+    return{sx:W*0.60+x1*sc*fov, sy:H*0.48-y1*sc*fov, z:z2};
+  }
+
+  function ivColor(iv,alpha){
+    const t=Math.max(0,Math.min(1,(iv-0.10)/0.42));
+    const r=t<0.5?Math.round(20+(t*2)*235):255;
+    const g=t<0.5?Math.round(100+(t*2)*79):Math.round(179-((t-0.5)*2)*129);
+    const b=t<0.5?Math.round(180-(t*2)*160):Math.round(20-((t-0.5)*2)*20);
+    return 'rgba('+r+','+g+','+b+','+(alpha||1)+')';
+  }
+
+  function draw(canvas,ctx){
+    const W=canvas.width, H=canvas.height;
+    if(W===0||H===0) return;
+    ctx.clearRect(0,0,W,H);
+
+    const pts=ivGrid.map((row,j)=>row.map((iv,i)=>{
+      const x=(i/(NX-1))-0.5, z=(j/(NY-1))-0.5, y=(iv-0.22)*2.0;
+      return{...project(x,y,z,W,H),iv};
+    }));
+
+    // Filled quads (painter's algorithm)
+    const quads=[];
+    for(let j=0;j<NY-1;j++) for(let i=0;i<NX-1;i++){
+      const avgZ=(pts[j][i].z+pts[j][i+1].z+pts[j+1][i].z+pts[j+1][i+1].z)/4;
+      const avgIV=(ivGrid[j][i]+ivGrid[j][i+1]+ivGrid[j+1][i]+ivGrid[j+1][i+1])/4;
+      quads.push({j,i,avgZ,avgIV});
+    }
+    quads.sort((a,b)=>b.avgZ-a.avgZ);
+    quads.forEach(({j,i,avgIV})=>{
+      const p00=pts[j][i],p10=pts[j][i+1],p01=pts[j+1][i],p11=pts[j+1][i+1];
+      ctx.beginPath();
+      ctx.moveTo(p00.sx,p00.sy); ctx.lineTo(p10.sx,p10.sy);
+      ctx.lineTo(p11.sx,p11.sy); ctx.lineTo(p01.sx,p01.sy);
+      ctx.closePath();
+      ctx.fillStyle=ivColor(avgIV,0.18);
+      ctx.fill();
+    });
+
+    // Strike lines (along expiry axis)
+    for(let j=0;j<NY;j++){
+      ctx.beginPath();
+      for(let i=0;i<NX;i++){
+        const p=pts[j][i];
+        i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);
+      }
+      ctx.strokeStyle=ivColor(ivGrid[j][Math.floor(NX/2)],0.55);
+      ctx.lineWidth=0.8; ctx.stroke();
+    }
+
+    // Expiry lines (along strike axis)
+    for(let i=0;i<NX;i++){
+      ctx.beginPath();
+      for(let j=0;j<NY;j++){
+        const p=pts[j][i];
+        j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);
+      }
+      ctx.strokeStyle=ivColor(ivGrid[Math.floor(NY/2)][i],0.30);
+      ctx.lineWidth=0.5; ctx.stroke();
+    }
+
+    // ATM ridge — bright amber highlight
+    const atmI=Math.round(NX/2);
+    ctx.beginPath();
+    for(let j=0;j<NY;j++){
+      const p=pts[j][atmI];
+      j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);
+    }
+    ctx.strokeStyle='rgba(255,179,0,0.85)';
+    ctx.lineWidth=2.5; ctx.stroke();
+  }
+
+  function startHero(){
+    const canvas=document.getElementById('hero-canvas');
+    if(!canvas){ console.error('hero-canvas not found'); return; }
+    const ctx=canvas.getContext('2d');
+
+    function resize(){
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      draw(canvas,ctx);
+    }
+
+    function animate(ts){
+      if(autoRotate) rotY+=(ts-lastTs)*0.00022;
+      lastTs=ts;
+      draw(canvas,ctx);
+      requestAnimationFrame(animate);
+    }
+
+    // Mouse
+    canvas.addEventListener('mousedown',e=>{dragging=true;autoRotate=false;lastX=e.clientX;lastY=e.clientY;e.preventDefault();});
+    window.addEventListener('mousemove',e=>{
+      if(!dragging)return;
+      rotY+=(e.clientX-lastX)*0.007;
+      rotX+=(e.clientY-lastY)*0.004;
+      rotX=Math.max(-0.6,Math.min(0.85,rotX));
+      lastX=e.clientX; lastY=e.clientY;
+    });
+    window.addEventListener('mouseup',()=>{ if(dragging){dragging=false;autoRotate=true;} });
+
+    // Touch
+    canvas.addEventListener('touchstart',e=>{dragging=true;autoRotate=false;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;},{passive:true});
+    canvas.addEventListener('touchmove',e=>{
+      if(!dragging)return;
+      rotY+=(e.touches[0].clientX-lastX)*0.007;
+      rotX+=(e.touches[0].clientY-lastY)*0.004;
+      rotX=Math.max(-0.6,Math.min(0.85,rotX));
+      lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+    },{passive:true});
+    canvas.addEventListener('touchend',()=>{dragging=false;autoRotate=true;});
+
+    window.addEventListener('resize',resize);
+    resize();
+    requestAnimationFrame(animate);
+  }
+
+  // Fire on DOMContentLoaded OR immediately if already loaded
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', startHero);
+  } else {
+    startHero();
+  }
+})();
+
+// ════════════════════════════════════════════════════════
+//  HEATMAP
+// ════════════════════════════════════════════════════════
 const HM_S=[572,605,622,639,655,672,689,706,723,739,756,772];
 const HM_E=[30,60,90,120,180,252,365];
 const SD=[];
-for(let K of HM_S)for(let d of HM_E){const iv=hestonIVApprox(K,d/365);if(iv>0.05&&iv<1.0)SD.push({K,days:d,iv});}
-const MIV={};SD.forEach(d=>{MIV[`${d.K}_${d.days}`]=d.iv*(1+(Math.random()-0.5)*0.06);});
+for(let K of HM_S) for(let d of HM_E){
+  const iv=hestonIVApprox(K,d/365);
+  if(iv>0.05&&iv<1.0) SD.push({K,days:d,iv});
+}
+const MIV={};
+SD.forEach(d=>{MIV[`${d.K}_${d.days}`]=d.iv*(1+(Math.random()-0.5)*0.06);});
 
 function ivHC(iv,mn,mx,mode){
   const t=Math.max(0,Math.min(1,(iv-mn)/(mx-mn)));
@@ -532,8 +628,12 @@ function ivHC(iv,mn,mx,mode){
   if(t<0.5){const s=t*2;return`rgb(${Math.round(20+s*235)},${Math.round(130+s*49)},${Math.round(80-s*60)})`;}
   else{const s=(t-0.5)*2;return`rgb(255,${Math.round(179-s*100)},${Math.round(20-s*20)})`;}
 }
-function showSurface(m){document.querySelectorAll('#surface-toggle .toggle-btn').forEach((b,i)=>b.classList.toggle('active',['model','market','error'][i]===m));renderHeatmap(m);}
-function renderHeatmap(mode='model'){
+function showSurface(m){
+  document.querySelectorAll('#surface-toggle .toggle-btn').forEach((b,i)=>b.classList.toggle('active',['model','market','error'][i]===m));
+  renderHeatmap(m);
+}
+function renderHeatmap(mode){
+  mode=mode||'model';
   const grid=document.getElementById('hmap-grid'),xl=document.getElementById('hmap-xlabels'),yl=document.getElementById('hmap-ylabels');
   const cG=document.getElementById('cbar-gradient'),cT=document.getElementById('cbar-ticks');
   grid.innerHTML='';xl.innerHTML='';yl.innerHTML='';
@@ -555,16 +655,23 @@ function renderHeatmap(mode='model'){
   cT.innerHTML=`<span class="colorbar-tick">${(mn*100).toFixed(1)}%</span><span class="colorbar-tick">${(mx*100).toFixed(1)}%</span>`;
 }
 
-// ── Pricer ───────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+//  PRICER
+// ════════════════════════════════════════════════════════
 let optionType='call';
-function setOptionType(t){optionType=t;document.getElementById('btn-call').classList.toggle('active',t==='call');document.getElementById('btn-put').classList.toggle('active',t==='put');}
+function setOptionType(t){
+  optionType=t;
+  document.getElementById('btn-call').classList.toggle('active',t==='call');
+  document.getElementById('btn-put').classList.toggle('active',t==='put');
+}
 function syncSlider(w){
   if(w==='strike'){const v=document.getElementById('sl-strike').value;document.getElementById('inp-strike').value=v;document.getElementById('sv-strike').textContent=v;}
   else{const v=document.getElementById('sl-days').value;document.getElementById('inp-days').value=v;document.getElementById('sv-days').textContent=v;}
 }
-
 function runPricer(){
-  const K=parseFloat(document.getElementById('inp-strike').value),days=parseFloat(document.getElementById('inp-days').value),T=days/365;
+  const K=parseFloat(document.getElementById('inp-strike').value);
+  const days=parseFloat(document.getElementById('inp-days').value);
+  const T=days/365;
   if(isNaN(K)||isNaN(T)||T<=0||K<=0){alert('Invalid inputs');return;}
   const g=hestonGreeks(SPOT,K,T,R,PARAMS,optionType);
   const mon=K>SPOT+1?'OTM':K<SPOT-1?'ITM':'ATM';
@@ -577,17 +684,31 @@ function runPricer(){
       <div class="greek-cell"><div class="greek-name">Theta (Θ)</div><div class="greek-value theta">${g.theta.toFixed(4)}</div><div class="greek-desc">∂Price/∂T · per day</div><div class="greek-bar"><div class="greek-bar-fill theta" style="width:${Math.min(100,Math.abs(g.theta)/0.5*100)}%"></div></div></div>
     </div>
     <div class="output-probs">
-      <div class="prob-cell"><div class="prob-name">P1 — Stock-measure prob S_T &gt; K</div><div class="prob-value">${g.P1.toFixed(4)}</div></div>
-      <div class="prob-cell"><div class="prob-name">P2 — Risk-neutral prob S_T &gt; K</div><div class="prob-value">${g.P2.toFixed(4)}</div></div>
+      <div class="prob-cell"><div class="prob-name">P1 — stock-measure prob S_T &gt; K</div><div class="prob-value">${g.P1.toFixed(4)}</div></div>
+      <div class="prob-cell"><div class="prob-name">P2 — risk-neutral prob S_T &gt; K</div><div class="prob-value">${g.P2.toFixed(4)}</div></div>
     </div>`;
 }
 
-// ── Greeks table ─────────────────────────────────────────────────────────────
-const TS=[605,622,639,655,672,689,706,723,739],TE=[30,60,90,180];
+// ════════════════════════════════════════════════════════
+//  GREEKS TABLE
+// ════════════════════════════════════════════════════════
+const TS=[605,622,639,655,672,689,706,723,739], TE=[30,60,90,180];
 const GS=[];
-function buildGS(){TE.forEach(dv=>TS.forEach(K=>{try{const g=hestonGreeks(SPOT,K,dv/365,R,PARAMS,'call');GS.push({K,days:dv,...g});}catch(e){}});}
-function cFG(v,mn,mx,g){const t=Math.max(0,Math.min(1,(v-mn)/(mx-mn)));const c={delta:`rgba(0,188,212,${0.12+t*0.5})`,gamma:`rgba(0,230,118,${0.08+t*0.5})`,vega:`rgba(255,179,0,${0.08+t*0.5})`,theta:`rgba(255,82,82,${0.08+t*0.5})`};return c[g]||'transparent';}
-function showGreek(g){document.querySelectorAll('#greek-toggle .toggle-btn').forEach((b,i)=>b.classList.toggle('active',['delta','gamma','vega','theta'][i]===g));renderGT(g);}
+function buildGS(){
+  TE.forEach(dv=>TS.forEach(K=>{
+    try{const g=hestonGreeks(SPOT,K,dv/365,R,PARAMS,'call');GS.push({K,days:dv,...g});}
+    catch(e){}
+  }));
+}
+function cFG(v,mn,mx,g){
+  const t=Math.max(0,Math.min(1,(v-mn)/(mx-mn)));
+  const c={delta:`rgba(0,188,212,${0.12+t*0.5})`,gamma:`rgba(0,230,118,${0.08+t*0.5})`,vega:`rgba(255,179,0,${0.08+t*0.5})`,theta:`rgba(255,82,82,${0.08+t*0.5})`};
+  return c[g]||'transparent';
+}
+function showGreek(g){
+  document.querySelectorAll('#greek-toggle .toggle-btn').forEach((b,i)=>b.classList.toggle('active',['delta','gamma','vega','theta'][i]===g));
+  renderGT(g);
+}
 function renderGT(greek){
   const thead=document.getElementById('greeks-thead'),tbody=document.getElementById('greeks-tbody');
   thead.innerHTML=`<tr><th>Strike</th>${TE.map(d=>`<th>${d}d</th>`).join('')}</tr>`;
@@ -597,48 +718,44 @@ function renderGT(greek){
     const mon=K>SPOT+5?'OTM':K<SPOT-5?'ITM':'ATM';
     const tr=document.createElement('tr');
     let cells=`<td>${K} <span style="font-size:9px;color:var(--text-dim)">${mon}</span></td>`;
-    TE.forEach(dv=>{const d=GS.find(x=>x.K===K&&x.days===dv);const val=d?d[greek]:null;const bg=val!==null?cFG(val,mn,mx,greek):'transparent';const fmt=val!==null?(greek==='gamma'?val.toFixed(6):val.toFixed(4)):'—';cells+=`<td style="background:${bg}">${fmt}</td>`;});
-    tr.innerHTML=cells;tbody.appendChild(tr);
+    TE.forEach(dv=>{
+      const d=GS.find(x=>x.K===K&&x.days===dv);
+      const val=d?d[greek]:null;
+      const bg=val!==null?cFG(val,mn,mx,greek):'transparent';
+      const fmt=val!==null?(greek==='gamma'?val.toFixed(6):val.toFixed(4)):'—';
+      cells+=`<td style="background:${bg}">${fmt}</td>`;
+    });
+    tr.innerHTML=cells; tbody.appendChild(tr);
   });
 }
 
-// ── Clock & Init ─────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+//  CLOCK + MAIN INIT
+// ════════════════════════════════════════════════════════
 function tick(){
   const el=document.getElementById('clock2');
-  if(el)el.textContent=new Date().toUTCString().replace('GMT','UTC').slice(0,-4);
+  if(el) el.textContent=new Date().toUTCString().replace('GMT','UTC').slice(0,-4);
 }
 
-window.addEventListener('DOMContentLoaded',()=>{
-  // Init canvas NOW that DOM exists
-  hc   = document.getElementById('hero-canvas');
-  hctx = hc.getContext('2d');
+function mainInit(){
+  // Slider sync
+  const is=document.getElementById('inp-strike'), sl=document.getElementById('sl-strike'), sv=document.getElementById('sv-strike');
+  const id=document.getElementById('inp-days'),   sd=document.getElementById('sl-days'),   dv=document.getElementById('sv-days');
+  if(is) is.addEventListener('input',e=>{sl.value=e.target.value;sv.textContent=e.target.value;});
+  if(id) id.addEventListener('input',e=>{sd.value=e.target.value;dv.textContent=e.target.value;});
 
-  // Attach canvas interaction events
-  hc.addEventListener('mousedown',e=>{hDrag=true;hAR=false;hLX=e.clientX;hLY=e.clientY;e.preventDefault();});
-  window.addEventListener('mousemove',e=>{if(!hDrag)return;hRY+=(e.clientX-hLX)*0.007;hRX+=(e.clientY-hLY)*0.004;hRX=Math.max(-0.6,Math.min(0.85,hRX));hLX=e.clientX;hLY=e.clientY;});
-  window.addEventListener('mouseup',()=>{if(hDrag){hDrag=false;hAR=true;}});
-  hc.addEventListener('touchstart',e=>{hDrag=true;hAR=false;hLX=e.touches[0].clientX;hLY=e.touches[0].clientY;},{passive:true});
-  hc.addEventListener('touchmove',e=>{if(!hDrag)return;hRY+=(e.touches[0].clientX-hLX)*0.007;hRX+=(e.touches[0].clientY-hLY)*0.004;hRX=Math.max(-0.6,Math.min(0.85,hRX));hLX=e.touches[0].clientX;hLY=e.touches[0].clientY;},{passive:true});
-  hc.addEventListener('touchend',()=>{hDrag=false;hAR=true;});
-  window.addEventListener('resize',resizeHero);
-
-  // Size canvas correctly and start animation
-  resizeHero();
-  requestAnimationFrame(animHero);
-
-  // Pricer slider sync
-  document.getElementById('inp-strike').addEventListener('input',e=>{document.getElementById('sl-strike').value=e.target.value;document.getElementById('sv-strike').textContent=e.target.value;});
-  document.getElementById('inp-days').addEventListener('input',e=>{document.getElementById('sl-days').value=e.target.value;document.getElementById('sv-days').textContent=e.target.value;});
-
-  // Heatmap + Greeks
   renderHeatmap('model');
   buildGS();
   renderGT('delta');
-
-  // Clock
   tick();
   setInterval(tick,1000);
-});
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', mainInit);
+} else {
+  mainInit();
+}
 </script>
 </body>
 </html>
