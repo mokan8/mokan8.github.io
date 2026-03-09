@@ -458,7 +458,8 @@ function hestonIVApprox(K,T){
 }
 
 // ── Hero 3D Surface ──────────────────────────────────────────────────────────
-const hc=document.getElementById('hero-canvas'),hctx=hc.getContext('2d');
+// Declared here, initialized inside DOMContentLoaded
+let hc, hctx;
 const HNX=22,HNY=16;
 const hS=Array.from({length:HNX},(_,i)=>SPOT*(0.80+i*0.024));
 const hE=Array.from({length:HNY},(_,i)=>(5+i*22)/365);
@@ -509,16 +510,14 @@ function drawHero(){
   for(let j=0;j<HNY;j++){const p=pts[j][atmI];j===0?hctx.moveTo(p.sx,p.sy):hctx.lineTo(p.sx,p.sy);}
   hctx.strokeStyle='rgba(255,179,0,0.7)';hctx.lineWidth=2;hctx.stroke();
 }
-function resizeHero(){hc.width=hc.parentElement.clientWidth;hc.height=hc.parentElement.clientHeight;drawHero();}
+function resizeHero(){
+  if(!hc)return;
+  hc.width=hc.parentElement.clientWidth;
+  hc.height=hc.parentElement.clientHeight;
+  drawHero();
+}
 let hLT=0;
 function animHero(ts){if(hAR)hRY+=(ts-hLT)*0.00025;hLT=ts;drawHero();requestAnimationFrame(animHero);}
-hc.addEventListener('mousedown',e=>{hDrag=true;hAR=false;hLX=e.clientX;hLY=e.clientY;e.preventDefault();});
-window.addEventListener('mousemove',e=>{if(!hDrag)return;hRY+=(e.clientX-hLX)*0.007;hRX+=(e.clientY-hLY)*0.004;hRX=Math.max(-0.6,Math.min(0.85,hRX));hLX=e.clientX;hLY=e.clientY;});
-window.addEventListener('mouseup',()=>{if(hDrag){hDrag=false;hAR=true;}});
-hc.addEventListener('touchstart',e=>{hDrag=true;hAR=false;hLX=e.touches[0].clientX;hLY=e.touches[0].clientY;},{passive:true});
-hc.addEventListener('touchmove',e=>{if(!hDrag)return;hRY+=(e.touches[0].clientX-hLX)*0.007;hRX+=(e.touches[0].clientY-hLY)*0.004;hRX=Math.max(-0.6,Math.min(0.85,hRX));hLX=e.touches[0].clientX;hLY=e.touches[0].clientY;},{passive:true});
-hc.addEventListener('touchend',()=>{hDrag=false;hAR=true;});
-window.addEventListener('resize',resizeHero);
 
 // ── Heatmap ──────────────────────────────────────────────────────────────────
 const HM_S=[572,605,622,639,655,672,689,706,723,739,756,772];
@@ -563,10 +562,7 @@ function syncSlider(w){
   if(w==='strike'){const v=document.getElementById('sl-strike').value;document.getElementById('inp-strike').value=v;document.getElementById('sv-strike').textContent=v;}
   else{const v=document.getElementById('sl-days').value;document.getElementById('inp-days').value=v;document.getElementById('sv-days').textContent=v;}
 }
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('inp-strike').addEventListener('input',e=>{document.getElementById('sl-strike').value=e.target.value;document.getElementById('sv-strike').textContent=e.target.value;});
-  document.getElementById('inp-days').addEventListener('input',e=>{document.getElementById('sl-days').value=e.target.value;document.getElementById('sv-days').textContent=e.target.value;});
-});
+
 function runPricer(){
   const K=parseFloat(document.getElementById('inp-strike').value),days=parseFloat(document.getElementById('inp-days').value),T=days/365;
   if(isNaN(K)||isNaN(T)||T<=0||K<=0){alert('Invalid inputs');return;}
@@ -607,11 +603,41 @@ function renderGT(greek){
 }
 
 // ── Clock & Init ─────────────────────────────────────────────────────────────
-function tick(){document.getElementById('clock2').textContent=new Date().toUTCString().replace('GMT','UTC').slice(0,-4);}
-tick();setInterval(tick,1000);
-document.addEventListener('DOMContentLoaded',()=>{
-  resizeHero();requestAnimationFrame(animHero);
-  renderHeatmap('model');buildGS();renderGT('delta');
+function tick(){
+  const el=document.getElementById('clock2');
+  if(el)el.textContent=new Date().toUTCString().replace('GMT','UTC').slice(0,-4);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  // Init canvas NOW that DOM exists
+  hc   = document.getElementById('hero-canvas');
+  hctx = hc.getContext('2d');
+
+  // Attach canvas interaction events
+  hc.addEventListener('mousedown',e=>{hDrag=true;hAR=false;hLX=e.clientX;hLY=e.clientY;e.preventDefault();});
+  window.addEventListener('mousemove',e=>{if(!hDrag)return;hRY+=(e.clientX-hLX)*0.007;hRX+=(e.clientY-hLY)*0.004;hRX=Math.max(-0.6,Math.min(0.85,hRX));hLX=e.clientX;hLY=e.clientY;});
+  window.addEventListener('mouseup',()=>{if(hDrag){hDrag=false;hAR=true;}});
+  hc.addEventListener('touchstart',e=>{hDrag=true;hAR=false;hLX=e.touches[0].clientX;hLY=e.touches[0].clientY;},{passive:true});
+  hc.addEventListener('touchmove',e=>{if(!hDrag)return;hRY+=(e.touches[0].clientX-hLX)*0.007;hRX+=(e.touches[0].clientY-hLY)*0.004;hRX=Math.max(-0.6,Math.min(0.85,hRX));hLX=e.touches[0].clientX;hLY=e.touches[0].clientY;},{passive:true});
+  hc.addEventListener('touchend',()=>{hDrag=false;hAR=true;});
+  window.addEventListener('resize',resizeHero);
+
+  // Size canvas correctly and start animation
+  resizeHero();
+  requestAnimationFrame(animHero);
+
+  // Pricer slider sync
+  document.getElementById('inp-strike').addEventListener('input',e=>{document.getElementById('sl-strike').value=e.target.value;document.getElementById('sv-strike').textContent=e.target.value;});
+  document.getElementById('inp-days').addEventListener('input',e=>{document.getElementById('sl-days').value=e.target.value;document.getElementById('sv-days').textContent=e.target.value;});
+
+  // Heatmap + Greeks
+  renderHeatmap('model');
+  buildGS();
+  renderGT('delta');
+
+  // Clock
+  tick();
+  setInterval(tick,1000);
 });
 </script>
 </body>
