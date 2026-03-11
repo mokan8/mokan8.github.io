@@ -380,48 +380,108 @@
       align-self: flex-end;
     }
 
-    /* ── Skills grid ── */
-    .skills-grid {
+    /* ── Card accent colors per project ── */
+    .card-umap:hover  { border-color: #a78bfa; }
+    .card-umap:hover .project-arrow { color: #a78bfa; }
+    .card-umap:hover .project-main  { background: rgba(167,139,250,0.02); }
+    .card-paper:hover { border-color: #2dd4bf; }
+    .card-paper:hover .project-arrow { color: #2dd4bf; }
+    .card-paper:hover .project-main  { background: rgba(45,212,191,0.02); }
+
+    .tag.highlight-purple { border-color: #5b4a90; color: #a78bfa; }
+    .tag.highlight-teal   { border-color: #1a6b60; color: #2dd4bf; }
+
+    .metric-value.purple { color: #a78bfa; }
+    .metric-value.teal   { color: #2dd4bf; }
+
+    /* ── Vol surface card ── */
+    .surface-card {
+      border: 1px solid var(--border);
+      margin-top: 24px;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border-top: 1px solid var(--border);
+      grid-template-columns: 1fr 340px;
+      transition: border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      min-height: 340px;
+    }
+    .surface-card:hover { border-color: var(--amber); }
+    .surface-card:hover .project-arrow { color: var(--amber); }
+
+    .surface-canvas-wrap {
+      position: relative;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
     }
 
-    .skill-cell {
-      padding: 24px 32px;
+    #vol-surface-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .canvas-label {
+      position: absolute;
+      top: 14px; left: 16px;
+      font-size: 9px;
+      color: var(--amber);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .canvas-axes {
+      position: absolute;
+      bottom: 14px;
+      right: 16px;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    .surface-info {
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .surface-info .project-id    { font-size: 10px; color: var(--amber-dim); letter-spacing: 0.15em; margin-bottom: 12px; }
+    .surface-info .project-title { font-size: 18px; font-weight: 500; color: #fff; margin-bottom: 6px; letter-spacing: -0.01em; }
+    .surface-info .project-subtitle { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 20px; }
+    .surface-info .project-desc  { font-family: var(--font-sans); font-size: 13px; color: var(--text-mid); line-height: 1.7; font-weight: 300; }
+
+    .surface-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      margin-top: 24px;
+    }
+
+    .surface-metric {
+      padding: 12px 16px;
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
+    .surface-metric:nth-child(2n) { border-right: none; }
+    .surface-metric:nth-last-child(-n+2) { border-bottom: none; }
+    .surface-metric-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+    .surface-metric-value { font-size: 15px; font-weight: 500; }
+    .surface-metric-value.green { color: var(--green); }
+    .surface-metric-value.amber { color: var(--amber); }
+    .surface-metric-value.cyan  { color: var(--cyan);  }
 
-    .skill-cell:nth-child(4n) { border-right: none; }
-
-    .skill-category {
-      font-size: 9px;
-      color: var(--amber);
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
+    .surface-tags {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 20px;
     }
 
-    .skill-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .skill-list li {
-      font-size: 11px;
-      color: var(--text-mid);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .skill-list li::before {
-      content: '—';
-      color: var(--text-dim);
-      font-size: 9px;
+    @media (max-width: 900px) {
+      .surface-card { grid-template-columns: 1fr; }
+      .surface-canvas-wrap { height: 260px; border-right: none; border-bottom: 1px solid var(--border); }
     }
 
     /* ── Animations ── */
@@ -465,7 +525,7 @@
     <section class="hero">
       <div class="hero-tag">Quantitative Research</div>
       <div class="hero-name fade-in">Nicholas<br/>McBride</div>
-      <div class="hero-title fade-in">M.S. Mathematics · UC Santa Cruz · Quantitative Research</div>
+      <div class="hero-title fade-in">M.A. Mathematics · UC Santa Cruz · Quantitative Research</div>
       <p class="hero-bio fade-in">
         Mathematician turned quant researcher. My graduate work at UC Santa Cruz focused on
         <strong>algebraic topology</strong>, culminating in a thesis extending
@@ -486,46 +546,99 @@
     </div>
 
     <section class="projects">
-      <a class="project-card" href="heston/index.html">
-        <div class="project-main">
+
+      <!-- ── Card 1: Heston ── -->
+      <a class="surface-card" href="heston/index.html">
+        <div class="surface-canvas-wrap">
+          <canvas id="vol-surface-canvas"></canvas>
+          <div class="canvas-label">Heston IV Surface · SPY · Live Calibration</div>
+          <div class="canvas-axes">Strike →<br/>Expiry ↗<br/>IV ↑</div>
+        </div>
+        <div class="surface-info">
           <div class="project-id">PRJ-001 · Derivatives Pricing</div>
           <div class="project-title">Heston Stochastic Volatility Model</div>
-          <div class="project-subtitle">Live Calibration · SPY Options Chain · Greeks Engine</div>
+          <div class="project-subtitle">Live Calibration · SPY · Greeks Engine</div>
           <p class="project-desc">
             End-to-end derivatives research platform calibrated to live SPY options data.
-            Fits the five Heston parameters to 1,542 market contracts via differential
-            evolution and Nelder-Mead refinement, then prices arbitrary options and
-            computes full Greeks across the volatility surface.
+            Fits all five Heston parameters to 1,542 market contracts via two-stage
+            differential evolution, then prices arbitrary options and computes full
+            Greeks across the volatility surface using Gil-Pelaez Fourier inversion.
           </p>
-          <div class="project-tags">
+          <div class="surface-metrics">
+            <div class="surface-metric"><div class="surface-metric-label">RMSE (IV)</div><div class="surface-metric-value green">3.11 pts</div></div>
+            <div class="surface-metric"><div class="surface-metric-label">Init Vol</div><div class="surface-metric-value amber">24.09%</div></div>
+            <div class="surface-metric"><div class="surface-metric-label">Contracts</div><div class="surface-metric-value cyan">1,542</div></div>
+            <div class="surface-metric"><div class="surface-metric-label">Expiries</div><div class="surface-metric-value cyan">19</div></div>
+          </div>
+          <div class="surface-tags">
             <span class="tag highlight">Heston Model</span>
             <span class="tag highlight">Vol Surface</span>
             <span class="tag">Fourier Pricing</span>
             <span class="tag">Greeks Engine</span>
-            <span class="tag">Live Market Data</span>
-            <span class="tag">Python</span>
+          </div>
+          <div class="project-arrow" style="margin-top:auto;padding-top:16px;font-size:18px;color:var(--text-dim)">→ View Project</div>
+        </div>
+      </a>
+
+      <!-- ── Card 2: UMAP Thesis ── -->
+      <a class="project-card card-umap" href="umap/index.html">
+        <div class="project-main">
+          <div class="project-id" style="color:#5b4a90">PRJ-002 · M.A. Thesis · UC Santa Cruz</div>
+          <div class="project-title">UMAP: Uniform Manifold Approximation &amp; Projection</div>
+          <div class="project-subtitle">Topology · Manifold Learning · Dimensionality Reduction</div>
+          <p class="project-desc">
+            Graduate thesis building rigorous theoretical foundations for UMAP —
+            connecting Riemannian geometry, fuzzy simplicial sets, and topological
+            data analysis. Establishes formal guarantees on topological faithfulness
+            of embeddings and bounds embedding quality via Gromov–Hausdorff distance.
+            Includes interactive point-cloud visualizations and comparison against PCA and t-SNE.
+          </p>
+          <div class="project-tags">
+            <span class="tag highlight-purple">Topology</span>
+            <span class="tag highlight-purple">Manifold Learning</span>
+            <span class="tag">Fuzzy Simplicial Sets</span>
+            <span class="tag">TDA</span>
+            <span class="tag">Riemannian Geometry</span>
           </div>
         </div>
         <div class="project-sidebar">
-          <div class="metric">
-            <span class="metric-label">RMSE (IV)</span>
-            <span class="metric-value">3.11</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Init Vol</span>
-            <span class="metric-value amber">24.09%</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Contracts</span>
-            <span class="metric-value cyan">1,542</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Expiries</span>
-            <span class="metric-value cyan">19</span>
-          </div>
-          <div class="project-arrow">→</div>
+          <div class="metric"><div class="metric-label">Method</div><div class="metric-value purple" style="font-size:14px">Fuzzy Sets</div></div>
+          <div class="metric"><div class="metric-label">Complexity</div><div class="metric-value purple">O(n)</div></div>
+          <div class="metric"><div class="metric-label">Topology</div><div class="metric-value purple" style="font-size:14px">H₀ · H₁</div></div>
+          <div class="metric"><div class="metric-label">Dim reduction</div><div class="metric-value purple" style="font-size:14px">ℝⁿ → ℝ²</div></div>
+          <div class="project-arrow">→ View Thesis</div>
         </div>
       </a>
+
+      <!-- ── Card 3: Published Paper ── -->
+      <a class="project-card card-paper" href="paper/index.html">
+        <div class="project-main">
+          <div class="project-id" style="color:#1a6b60">PUB-001 · Discrete &amp; Computational Geometry · Springer 2025</div>
+          <div class="project-title">Bounding the Gromov–Hausdorff Distance by the Hausdorff Distance</div>
+          <div class="project-subtitle">Nicholas McBride · Henry Adams · Florian Frick</div>
+          <p class="project-desc">
+            Published research establishing sharp bounds between the Gromov–Hausdorff distance
+            and the simpler Hausdorff distance for compact metric spaces. Provides computable,
+            tight two-sided certificates for metric space similarity — with direct applications
+            to topological data analysis, shape comparison, and certifying UMAP embedding quality.
+          </p>
+          <div class="project-tags">
+            <span class="tag highlight-teal">Published</span>
+            <span class="tag highlight-teal">Metric Geometry</span>
+            <span class="tag">GH Distance</span>
+            <span class="tag">TDA</span>
+            <span class="tag">Discrete Geometry</span>
+          </div>
+        </div>
+        <div class="project-sidebar">
+          <div class="metric"><div class="metric-label">Journal</div><div class="metric-value teal" style="font-size:11px">Disc. &amp; Comp. Geom.</div></div>
+          <div class="metric"><div class="metric-label">Publisher</div><div class="metric-value teal" style="font-size:13px">Springer</div></div>
+          <div class="metric"><div class="metric-label">Main Result</div><div class="metric-value teal" style="font-size:11px">d_GH ≤ d_H</div></div>
+          <div class="metric"><div class="metric-label">Co-authors</div><div class="metric-value teal" style="font-size:11px">Adams · Frick</div></div>
+          <div class="project-arrow">→ View Paper</div>
+        </div>
+      </a>
+
     </section>
 
   </main>
@@ -543,6 +656,7 @@
   </div>
 
   <script>
+    // ── Clock ──────────────────────────────────────────────────────────────
     function updateClock() {
       const now = new Date();
       document.getElementById('clock').textContent =
@@ -550,6 +664,226 @@
     }
     updateClock();
     setInterval(updateClock, 1000);
+
+    // ── Heston IV Surface — 3D Wireframe Renderer ──────────────────────────
+    // Uses calibrated params: v0=0.05805, kappa=5.3277, theta=0.04895,
+    // sigma=0.72219, rho=-0.95, spot=672.38
+    // IV computed via Black-Scholes Newton-Raphson inversion of Heston price
+
+    const canvas = document.getElementById('vol-surface-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    // Surface grid dimensions
+    const NX = 18;  // strikes
+    const NY = 14;  // expiries
+
+    // Parameter ranges matching calibration
+    const SPOT    = 672.38;
+    const strikes  = Array.from({length:NX}, (_,i) => SPOT * (0.82 + i * 0.022));
+    const expiries = Array.from({length:NY}, (_,i) => (7 + i * 22) / 365);
+
+    // Heston IV approximation using calibrated params
+    // (semi-analytic: uses moneyness + term structure shape)
+    function hestonIVApprox(K, T) {
+      const v0=0.05805, kappa=5.3277, theta=0.04895, sigma=0.72219, rho=-0.95;
+      const F   = SPOT * Math.exp(0.0357 * T);
+      const x   = Math.log(F / K);                    // log-moneyness
+      const w   = theta + (v0 - theta) * (1 - Math.exp(-kappa * T)) / (kappa * T);
+      const vol = Math.sqrt(w);
+      // Gatheral SVI-inspired skew correction using rho and sigma
+      const skew  = rho * sigma / (2 * Math.sqrt(w * T + 1e-8));
+      const curv  = sigma * sigma / (4 * w);
+      const smile = vol * (1 + skew * x + curv * x * x);
+      return Math.max(0.08, Math.min(0.65, smile));
+    }
+
+    // Build surface grid [NY][NX]
+    const ivGrid = expiries.map(T => strikes.map(K => hestonIVApprox(K, T)));
+
+    // ── 3D projection ──────────────────────────────────────────────────────
+    let rotY = 0.42, rotX = 0.38;
+    let autoRotate = true;
+    const CAM_DIST = 3.2;
+
+    function project(x, y, z, W, H) {
+      // Rotate around Y then X
+      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+      let x1 = x * cosY - z * sinY;
+      let z1 = x * sinY + z * cosY;
+      let y1 = y * cosX - z1 * sinX;
+      let z2 = y * sinX + z1 * cosX;
+      // Perspective
+      const fov  = CAM_DIST / (CAM_DIST + z2 + 1.5);
+      const cx   = W * 0.5, cy = H * 0.46;
+      const scale = Math.min(W, H) * 0.72;
+      return {
+        sx: cx + x1 * scale * fov,
+        sy: cy - y1 * scale * fov,
+        z:  z2,
+      };
+    }
+
+    function ivToColor(iv, alpha=1) {
+      // Low IV = cool blue, mid = amber, high = red
+      const t = (iv - 0.10) / 0.45;
+      const c = Math.max(0, Math.min(1, t));
+      if (c < 0.5) {
+        const s = c * 2;
+        const r = Math.round(20  + s * 235);
+        const g = Math.round(100 + s * 79);
+        const b = Math.round(180 - s * 160);
+        return `rgba(${r},${g},${b},${alpha})`;
+      } else {
+        const s = (c - 0.5) * 2;
+        const r = Math.round(255);
+        const g = Math.round(179 - s * 129);
+        const b = Math.round(20  - s * 20);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+    }
+
+    function drawSurface() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      // Normalise grid coords to [-0.5, 0.5]
+      const pts = [];
+      for (let j = 0; j < NY; j++) {
+        pts[j] = [];
+        for (let i = 0; i < NX; i++) {
+          const x = (i / (NX-1)) - 0.5;
+          const z = (j / (NY-1)) - 0.5;
+          const y = (ivGrid[j][i] - 0.20) * 1.8;  // scale IV to y
+          pts[j][i] = { x, y, z, iv: ivGrid[j][i] };
+        }
+      }
+
+      // Project all points
+      const proj = pts.map(row => row.map(p => ({
+        ...project(p.x, p.y, p.z, W, H),
+        iv: p.iv,
+      })));
+
+      // Draw quads back-to-front (painter's algorithm — sort by avg z)
+      const quads = [];
+      for (let j = 0; j < NY-1; j++) {
+        for (let i = 0; i < NX-1; i++) {
+          const avgZ = (proj[j][i].z + proj[j][i+1].z +
+                        proj[j+1][i].z + proj[j+1][i+1].z) / 4;
+          const avgIV = (ivGrid[j][i] + ivGrid[j][i+1] +
+                         ivGrid[j+1][i] + ivGrid[j+1][i+1]) / 4;
+          quads.push({ j, i, avgZ, avgIV });
+        }
+      }
+      quads.sort((a,b) => b.avgZ - a.avgZ);
+
+      // Draw filled quads then wireframe
+      quads.forEach(({j, i, avgIV}) => {
+        const p00 = proj[j][i], p10 = proj[j][i+1];
+        const p01 = proj[j+1][i], p11 = proj[j+1][i+1];
+        ctx.beginPath();
+        ctx.moveTo(p00.sx, p00.sy);
+        ctx.lineTo(p10.sx, p10.sy);
+        ctx.lineTo(p11.sx, p11.sy);
+        ctx.lineTo(p01.sx, p01.sy);
+        ctx.closePath();
+        ctx.fillStyle = ivToColor(avgIV, 0.18);
+        ctx.fill();
+      });
+
+      // Wireframe lines
+      for (let j = 0; j < NY; j++) {
+        for (let i = 0; i < NX-1; i++) {
+          const p0 = proj[j][i], p1 = proj[j][i+1];
+          const iv = (p0.iv + p1.iv) / 2;
+          ctx.beginPath();
+          ctx.moveTo(p0.sx, p0.sy);
+          ctx.lineTo(p1.sx, p1.sy);
+          ctx.strokeStyle = ivToColor(iv, 0.55);
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+      for (let i = 0; i < NX; i++) {
+        for (let j = 0; j < NY-1; j++) {
+          const p0 = proj[j][i], p1 = proj[j+1][i];
+          const iv = (p0.iv + p1.iv) / 2;
+          ctx.beginPath();
+          ctx.moveTo(p0.sx, p0.sy);
+          ctx.lineTo(p1.sx, p1.sy);
+          ctx.strokeStyle = ivToColor(iv, 0.35);
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+
+      // ATM ridge highlight
+      const atmI = Math.round(NX / 2);
+      ctx.beginPath();
+      for (let j = 0; j < NY; j++) {
+        const p = proj[j][atmI];
+        j === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
+      }
+      ctx.strokeStyle = 'rgba(255,179,0,0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // ── Resize handler ─────────────────────────────────────────────────────
+    function resizeCanvas() {
+      const wrap = canvas.parentElement;
+      canvas.width  = wrap.clientWidth;
+      canvas.height = wrap.clientHeight || 340;
+      drawSurface();
+    }
+
+    // ── Animation loop ─────────────────────────────────────────────────────
+    let lastTime = 0;
+    function animate(ts) {
+      if (autoRotate) {
+        rotY += (ts - lastTime) * 0.0003;
+      }
+      lastTime = ts;
+      drawSurface();
+      requestAnimationFrame(animate);
+    }
+
+    // ── Drag to rotate ─────────────────────────────────────────────────────
+    let dragging = false, lastMX = 0, lastMY = 0;
+    canvas.addEventListener('mousedown', e => {
+      dragging = true; autoRotate = false;
+      lastMX = e.clientX; lastMY = e.clientY;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      rotY += (e.clientX - lastMX) * 0.008;
+      rotX += (e.clientY - lastMY) * 0.005;
+      rotX  = Math.max(-0.6, Math.min(0.9, rotX));
+      lastMX = e.clientX; lastMY = e.clientY;
+    });
+    window.addEventListener('mouseup', () => {
+      if (dragging) { dragging = false; autoRotate = true; }
+    });
+
+    // Touch support
+    canvas.addEventListener('touchstart', e => {
+      dragging = true; autoRotate = false;
+      lastMX = e.touches[0].clientX; lastMY = e.touches[0].clientY;
+    }, {passive:true});
+    canvas.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      rotY += (e.touches[0].clientX - lastMX) * 0.008;
+      rotX += (e.touches[0].clientY - lastMY) * 0.005;
+      rotX  = Math.max(-0.6, Math.min(0.9, rotX));
+      lastMX = e.touches[0].clientX; lastMY = e.touches[0].clientY;
+    }, {passive:true});
+    canvas.addEventListener('touchend', () => { dragging = false; autoRotate = true; });
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>

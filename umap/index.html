@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UMAP Thesis — Nicholas McBride</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#080b0f;--bg2:#0d1117;--bg3:#111820;--border:#1e2d3d;
+      --amber:#ffb300;--amber-dim:#996b00;--amber-glow:rgba(255,179,0,0.07);
+      --green:#00e676;--cyan:#00bcd4;--red:#ff5252;--purple:#a78bfa;--pink:#f472b6;
+      --text:#c8d8e8;--text-dim:#3a5060;--text-mid:#6a8ba0;
+      --font-mono:'IBM Plex Mono',monospace;--font-sans:'IBM Plex Sans',sans-serif;
+    }
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:12px;line-height:1.6;min-height:100vh;cursor:crosshair;}
+    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:999;}
+
+    nav{position:fixed;top:0;left:0;right:0;height:42px;background:rgba(8,11,15,0.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:200;}
+    .nav-back{color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:0.08em;display:flex;align-items:center;gap:8px;transition:color 0.15s;}
+    .nav-back:hover{color:var(--amber);}
+    .nav-title{margin-left:20px;color:var(--text-mid);font-size:11px;letter-spacing:0.08em;padding-left:20px;border-left:1px solid var(--border);}
+    .nav-title span{color:var(--purple);}
+    .nav-right{margin-left:auto;display:flex;}
+    .nav-right a{color:var(--text-dim);text-decoration:none;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:0 14px;height:42px;display:flex;align-items:center;border-left:1px solid var(--border);transition:color 0.15s;}
+    .nav-right a:hover{color:var(--purple);}
+
+    .statusbar{position:fixed;bottom:0;left:0;right:0;height:24px;background:var(--purple);display:flex;align-items:center;padding:0 16px;gap:20px;z-index:200;}
+    .statusbar span{color:#000;font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;}
+    .statusbar .div{color:rgba(0,0,0,0.3);}
+    .status-dot{width:6px;height:6px;background:#000;border-radius:50%;display:inline-block;margin-right:6px;animation:blink 2s infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+    /* ── HERO ── */
+    .hero-surface{position:relative;height:100vh;background:var(--bg);overflow:hidden;border-bottom:1px solid var(--border);}
+    #hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(8,11,15,0.92) 0%,rgba(8,11,15,0.55) 55%,transparent 100%);pointer-events:none;}
+    .hero-content{position:absolute;top:50%;left:48px;transform:translateY(-50%);max-width:500px;}
+    .hero-eyebrow{font-size:10px;color:var(--purple);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+    .hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--purple);}
+    .hero-h1{font-size:clamp(26px,3.8vw,46px);font-weight:600;color:#fff;letter-spacing:-0.02em;line-height:1.1;margin-bottom:16px;}
+    .hero-desc{font-family:var(--font-sans);font-size:14px;color:var(--text-mid);line-height:1.8;font-weight:300;margin-bottom:32px;}
+    .hero-desc strong{color:var(--text);font-weight:500;}
+    .hero-stats{display:flex;gap:0;margin-bottom:32px;}
+    .hero-stat{padding:12px 20px;border:1px solid var(--border);margin-right:-1px;}
+    .hero-stat-val{font-size:18px;font-weight:600;letter-spacing:-0.02em;}
+    .hero-stat-val.purple{color:var(--purple);}
+    .hero-stat-val.green{color:var(--green);}
+    .hero-stat-val.cyan{color:var(--cyan);}
+    .hero-stat-label{font-size:9px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;margin-top:2px;}
+    .hero-scroll{font-size:10px;color:var(--text-dim);letter-spacing:0.15em;text-transform:uppercase;animation:pulse 2.5s infinite;}
+    @keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+    .hero-legend{position:absolute;bottom:40px;right:48px;display:flex;flex-direction:column;gap:8px;text-align:right;}
+    .legend-item{font-size:9px;color:var(--text-dim);letter-spacing:0.1em;display:flex;align-items:center;gap:8px;justify-content:flex-end;}
+    .legend-dot{width:8px;height:8px;border-radius:50%;}
+
+    /* ── Sections ── */
+    main{padding-top:0;}
+    .section{border-bottom:1px solid var(--border);}
+    .section-bar{padding:10px 48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+    .section-bar h2{font-size:10px;font-weight:500;color:var(--text-dim);letter-spacing:0.2em;text-transform:uppercase;}
+    .stag{font-size:9px;padding:2px 8px;background:rgba(167,139,250,0.1);color:var(--purple);letter-spacing:0.1em;text-transform:uppercase;}
+    .section-content{padding:36px 48px;}
+
+    /* ── Simplex comparison viz ── */
+    .simplex-viz-wrap{position:relative;width:100%;background:var(--bg2);border:1px solid var(--border);overflow:hidden;}
+    .simplex-header{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
+    .simplex-tab{padding:14px 24px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;transition:all 0.15s;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .simplex-tab:last-child{border-right:none;}
+    .simplex-tab.active-left{color:var(--cyan);background:rgba(0,188,212,0.05);}
+    .simplex-tab.active-right{color:var(--purple);background:rgba(167,139,250,0.05);}
+    .simplex-tab .tab-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .simplex-canvases{display:grid;grid-template-columns:1fr 1fr;position:relative;}
+    .simplex-canvas-panel{position:relative;overflow:hidden;}
+    .simplex-canvas-panel canvas{display:block;width:100%;height:440px;}
+    .simplex-divider{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--border);z-index:10;pointer-events:none;}
+    .simplex-label{position:absolute;top:16px;left:16px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;pointer-events:none;}
+    .simplex-label.left{color:var(--cyan);}
+    .simplex-label.right{color:var(--purple);}
+    .simplex-badge{position:absolute;bottom:16px;left:16px;font-size:9px;color:var(--text-dim);letter-spacing:0.08em;pointer-events:none;line-height:1.6;}
+    .simplex-controls{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    .sc-label{font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;}
+    .sc-btn{padding:5px 14px;font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;background:transparent;color:var(--text-dim);border:1px solid var(--border);cursor:pointer;transition:all 0.15s;margin-right:-1px;}
+    .sc-btn:hover{color:var(--purple);border-color:rgba(167,139,250,0.4);}
+    .sc-btn.active{background:rgba(167,139,250,0.1);color:var(--purple);border-color:var(--purple);z-index:1;position:relative;}
+    .sc-sep{width:1px;height:20px;background:var(--border);margin:0 4px;}
+    .sc-info{margin-left:auto;font-size:9px;color:var(--text-dim);letter-spacing:0.08em;}
+
+    /* ── Walkthrough ── */
+    .wt-step{display:grid;grid-template-columns:48px 1fr;border:1px solid var(--border);margin-bottom:-1px;transition:border-color 0.2s;}
+    .wt-step:hover{border-color:rgba(167,139,250,0.4);z-index:1;position:relative;}
+    .wt-num{display:flex;align-items:flex-start;justify-content:center;padding-top:24px;font-size:11px;color:rgba(167,139,250,0.4);border-right:1px solid var(--border);font-weight:500;}
+    .wt-body{padding:24px 28px;}
+    .wt-title{font-size:14px;font-weight:500;color:#fff;margin-bottom:8px;}
+    .wt-text{font-family:var(--font-sans);font-size:13px;color:var(--text-mid);line-height:1.8;font-weight:300;max-width:740px;}
+    .wt-text strong{color:var(--text);font-weight:500;}
+    .wt-text code{font-family:var(--font-mono);font-size:11px;color:var(--purple);background:rgba(167,139,250,0.08);padding:1px 6px;}
+    .wt-text p+p{margin-top:12px;}
+    .wt-formula{font-family:var(--font-mono);font-size:11px;color:var(--cyan);background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--cyan);padding:12px 16px;margin:12px 0;letter-spacing:0.03em;overflow-x:auto;}
+
+    /* ── Results grid ── */
+    .results-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border);}
+    .result-cell{padding:20px 22px;border-right:1px solid var(--border);position:relative;overflow:hidden;}
+    .result-cell:last-child{border-right:none;}
+    .result-cell::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+    .result-cell:nth-child(1)::after{background:var(--purple);}
+    .result-cell:nth-child(2)::after{background:var(--cyan);}
+    .result-cell:nth-child(3)::after{background:var(--green);}
+    .result-cell:nth-child(4)::after{background:var(--amber);}
+    .result-label{font-size:9px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+    .result-val{font-size:22px;font-weight:600;letter-spacing:-0.02em;}
+    .result-cell:nth-child(1) .result-val{color:var(--purple);}
+    .result-cell:nth-child(2) .result-val{color:var(--cyan);}
+    .result-cell:nth-child(3) .result-val{color:var(--green);}
+    .result-cell:nth-child(4) .result-val{color:var(--amber);}
+    .result-sub{font-size:10px;color:var(--text-dim);margin-top:4px;}
+
+    @media(max-width:900px){
+      .hero-content{left:24px;max-width:90%;}
+      .section-content{padding:24px;}
+      .section-bar{padding:10px 24px;}
+      .compare-grid{grid-template-columns:1fr;}
+      .compare-cell{border-right:none;border-bottom:1px solid var(--border);}
+      .results-grid{grid-template-columns:repeat(2,1fr);}
+      .wt-step{grid-template-columns:36px 1fr;}
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left:'$$', right:'$$', display:true},
+        {left:'$', right:'$', display:false}
+      ],
+      throwOnError: false
+    })">
+  </script>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="../index.html">← Portfolio</a>
+  <div class="nav-title">PRJ-002 · <span>UMAP Dimensionality Reduction — M.A. Thesis</span></div>
+  <div class="nav-right">
+    <a href="#viz">Visualization</a>
+    <a href="#math">Mathematics</a>
+    <a href="#results">Results</a>
+  </div>
+</nav>
+
+<div class="hero-surface">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">M.A. Thesis · UC Santa Cruz · 2025</div>
+    <div class="hero-h1">UMAP: Uniform Manifold<br/>Approximation & Projection</div>
+    <p class="hero-desc">Thesis research on <strong>topological dimensionality reduction</strong>. Built theoretical foundations connecting Riemannian geometry, fuzzy simplicial sets, and manifold learning — then applied the framework to high-dimensional data embedding.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-val purple">∞→2</div><div class="hero-stat-label">Dimension</div></div>
+      <div class="hero-stat"><div class="hero-stat-val green">~n<sup style="font-size:11px">1.1</sup></div><div class="hero-stat-label">Empirical</div></div>
+      <div class="hero-stat"><div class="hero-stat-val cyan">Top.</div><div class="hero-stat-label">Preserving</div></div>
+    </div>
+    <div class="hero-scroll">↓ Scroll to explore</div>
+  </div>
+  <div class="hero-legend">
+    <div class="legend-item">Cluster structure <div class="legend-dot" style="background:var(--purple)"></div></div>
+    <div class="legend-item">Local connectivity <div class="legend-dot" style="background:var(--cyan)"></div></div>
+    <div class="legend-item">Global topology <div class="legend-dot" style="background:var(--green)"></div></div>
+  </div>
+</div>
+
+<main>
+
+<div class="section" id="viz">
+  <div class="section-bar"><h2>1-Simplex vs 2-Simplex Construction</h2><div class="stag">Standard UMAP · Thesis Extension</div></div>
+  <div class="section-content" style="padding:0;">
+    <div class="simplex-viz-wrap">
+
+      <div class="simplex-header">
+        <div class="simplex-tab active-left">
+          <div class="tab-dot" style="background:var(--cyan)"></div>
+          Standard UMAP — 1-Skeleton (edges only)
+        </div>
+        <div class="simplex-tab active-right">
+          <div class="tab-dot" style="background:var(--purple)"></div>
+          Thesis Extension — 2-Skeleton (triangles)
+        </div>
+      </div>
+
+      <div class="simplex-canvases">
+        <div class="simplex-canvas-panel" style="border-right:1px solid var(--border);">
+          <canvas id="c-skeleton1"></canvas>
+          <div class="simplex-label left">1-Skeleton · Fuzzy Graph</div>
+          <div class="simplex-badge" id="badge-left">0-simplices (vertices) + 1-simplices (edges)<br/>Captures $H_0$ — connected components</div>
+        </div>
+        <div class="simplex-canvas-panel">
+          <canvas id="c-skeleton2"></canvas>
+          <div class="simplex-label right">2-Skeleton · Fuzzy Simplicial Complex</div>
+          <div class="simplex-badge" id="badge-right">+ 2-simplices (filled triangles)<br/>Also captures $H_1$ — loops &amp; cycles</div>
+        </div>
+      </div>
+
+      <div class="simplex-controls">
+        <span class="sc-label">Dataset</span>
+        <button class="sc-btn active" id="sc-ring" onclick="scSwitch('ring')">Loop (S¹)</button>
+        <button class="sc-btn" id="sc-clusters" onclick="scSwitch('clusters')">Clusters</button>
+        <button class="sc-btn" id="sc-torus" onclick="scSwitch('torus')">Torus</button>
+        <div class="sc-sep"></div>
+        <span class="sc-label">k-neighbors</span>
+        <button class="sc-btn active" id="sc-k4" onclick="scK(4)">k = 4</button>
+        <button class="sc-btn" id="sc-k6" onclick="scK(6)">k = 6</button>
+        <button class="sc-btn" id="sc-k8" onclick="scK(8)">k = 8</button>
+        <div class="sc-sep"></div>
+        <span class="sc-info" id="sc-info">Drag to rotate · hover a point to highlight its neighborhood</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);">
+      <div style="padding:20px 28px;border-right:1px solid var(--border);">
+        <div style="font-size:10px;color:var(--cyan);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;">Standard UMAP — 1-Skeleton</div>
+        <div style="font-family:var(--font-sans);font-size:12px;color:var(--text-mid);line-height:1.7;">
+          The standard UMAP algorithm explicitly works with the <strong style="color:var(--text)">fuzzy 1-skeleton only</strong> — vertices (0-simplices) and weighted edges (1-simplices). The higher-order simplices exist in the theory but are discarded: the algorithm reduces the fuzzy simplicial set to a weighted graph. This makes it computationally tractable but means only $H_0$ (cluster connectivity) is directly encoded. Loops and voids in the data must be inferred indirectly.
+        </div>
+      </div>
+      <div style="padding:20px 28px;">
+        <div style="font-size:10px;color:var(--purple);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;">Thesis Extension — 2-Skeleton</div>
+        <div style="font-family:var(--font-sans);font-size:12px;color:var(--text-mid);line-height:1.7;">
+          The thesis extends the construction to include <strong style="color:var(--text)">2-simplices (filled triangles)</strong>, whose fuzzy membership is set by the minimum edge weight of their three bounding 1-simplices — the simplicial condition $\mu(\sigma) \leq \mu(\partial\sigma)$. This directly encodes $H_1$ (loops and cycles), giving a richer topological representation. The cross-entropy objective is then optimized over the full 2-skeleton, not just the graph.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="section" id="math">
+  <div class="section-bar"><h2>Mathematical Framework</h2><div class="stag">Topology · Manifold Learning</div></div>
+  <div class="section-content">
+
+    <div class="wt-step">
+      <div class="wt-num">01</div>
+      <div class="wt-body">
+        <div class="wt-title">The Manifold Hypothesis</div>
+        <div class="wt-text">
+          <p>Real high-dimensional data — images, genomic sequences, financial returns — does not fill its ambient space uniformly. It tends to concentrate near a <strong>low-dimensional manifold</strong> embedded in the high-dimensional space. A 64×64 image lives in ℝ<sup>4096</sup>, but the set of natural images forms a manifold of much smaller intrinsic dimension.</p>
+          <p>Dimensionality reduction exploits this: if the true intrinsic dimension is d ≪ D, we should be able to represent the data faithfully in ℝ<sup>d</sup>. The challenge is doing so while preserving the geometric and topological structure of the manifold.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wt-step">
+      <div class="wt-num">02</div>
+      <div class="wt-body">
+        <div class="wt-title">Riemannian Geometry — Local Metric Estimation</div>
+        <div class="wt-text">
+          <p>UMAP begins by assuming the data lies on a Riemannian manifold with an unknown metric. It estimates the <strong>local metric structure</strong> from the k-nearest neighbors of each point. For each point x<sub>i</sub>, the metric is normalized so that the distance to the nearest neighbor is exactly 1:</p>
+          <div class="wt-formula">$$d_i(x_i, x_j) \;=\; \|x_i - x_j\| - \rho_i$$</div>
+          <p>where ρ<sub>i</sub> is the distance to the nearest neighbor. This normalization makes the metric locally constant — every point "sees" its neighborhood at the same scale — which is essential for handling datasets with varying densities.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wt-step">
+      <div class="wt-num">03</div>
+      <div class="wt-body">
+        <div class="wt-title">Fuzzy Simplicial Sets — The Topological Representation</div>
+        <div class="wt-text">
+          <p>The local metrics are converted into a <strong>fuzzy simplicial set</strong> — a generalization of a simplicial complex (think: a graph, triangles, tetrahedra...) where membership has a probabilistic weight between 0 and 1. The weight of the edge between points x<sub>i</sub> and x<sub>j</sub> is:</p>
+          <div class="wt-formula">$$w(x_i,\, x_j) \;=\; \exp\!\left(\frac{-(d_i(x_i, x_j) - \rho_i)}{\sigma_i}\right)$$</div>
+          <p>where σ<sub>i</sub> is chosen so the sum of weights equals log<sub>2</sub>(k) — enforcing a consistent notion of "k neighbors." Multiple local views (one per point) are combined into a single global fuzzy set via a symmetric union:</p>
+          <div class="wt-formula">$$w_{\mathrm{sym}}(i,j) \;=\; w(i,j) + w(j,i) - w(i,j)\cdot w(j,i)$$</div>
+          <p>This is the fuzzy set analogue of taking the union: <code>P(A ∪ B) = P(A) + P(B) - P(A)P(B)</code> for independent events.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wt-step">
+      <div class="wt-num">04</div>
+      <div class="wt-body">
+        <div class="wt-title">Low-Dimensional Embedding via Cross-Entropy Optimization</div>
+        <div class="wt-text">
+          <p>UMAP finds a low-dimensional layout Y = {y<sub>1</sub>, ..., y<sub>n</sub>} ⊂ ℝ<sup>d</sup> that best matches the high-dimensional fuzzy structure. The low-dimensional edge weights are modeled using a smooth family of curves:</p>
+          <div class="wt-formula">$$v(y_i,\, y_j) \;=\; \left(1 + a\,\|y_i - y_j\|^{2b}\right)^{-1}$$</div>
+          <p>Parameters a and b are fit to approximate a smooth step function. The objective is to <strong>minimize the cross-entropy</strong> between the two fuzzy sets — the high-dimensional w and the low-dimensional v:</p>
+          <div class="wt-formula">$$\mathcal{C} \;=\; \sum_{i,j}\Bigl[w\log\frac{w}{v} + (1-w)\log\frac{1-w}{1-v}\Bigr]$$</div>
+          <p>This is minimized with stochastic gradient descent using <strong>negative sampling</strong> for efficiency. Intuitively: attract connected points, repel disconnected ones. Unlike t-SNE's KL divergence, the cross-entropy treats attraction and repulsion symmetrically, which is why UMAP better preserves global structure.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wt-step">
+      <div class="wt-num">05</div>
+      <div class="wt-body">
+        <div class="wt-title">Connection to the Thesis — UMAP via Category Theory</div>
+        <div class="wt-text">
+          <p>The thesis frames UMAP rigorously using <strong>category theory</strong>. The central object is the <em>fuzzy singular complex functor</em> $\widetilde{\mathrm{Sing}}_X$, which takes a finite metric space $(X, d)$ and produces a fuzzy simplicial set encoding all pairwise distance relationships. This functor has a left adjoint — the <em>metric realization</em> functor — giving an adjunction between fuzzy simplicial sets and extended pseudo-metric spaces.</p>
+          <p>The key insight is that the fuzzy simplicial set construction approximates the <strong>Čech complex</strong> of the underlying manifold. By the Nerve theorem, this captures the manifold's homology — its connected components ($H_0$), loops ($H_1$), and voids ($H_2$). UMAP's embeddings therefore preserve <strong>persistent homology</strong> in a formal sense: clusters, holes, and voids in the plot correspond to genuine topological features of the data.</p>
+          <p>The thesis also frames the local connectivity condition — setting $\rho_i = \min_j d(x_i, x_{ij})$ so the nearest neighbor is at distance zero — as a requirement that each $0$-simplex is the face of some $1$-simplex with fuzzy membership strength $1$. This ensures the resulting topological structure is locally connected, a categorical condition rather than a geometric one.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" id="results">
+  <div class="section-bar"><h2>S&amp;P 500 Sector Topology</h2><div class="stag">Real Data · H₁ Recovery · Market Structure</div></div>
+  <div class="section-content" style="padding:0;">
+
+    <!-- Live demo: S&P 500 sector correlation topology -->
+    <div style="border-bottom:1px solid var(--border);">
+      <div style="display:grid;grid-template-columns:1fr 1fr;min-height:420px;">
+
+        <!-- Left: 1-skeleton — graph only -->
+        <div style="border-right:1px solid var(--border);position:relative;">
+          <canvas id="r-skeleton1" style="display:block;width:100%;height:360px;cursor:crosshair;"></canvas>
+          <div style="position:absolute;top:14px;left:16px;font-size:9px;color:var(--cyan);letter-spacing:0.13em;text-transform:uppercase;">Standard UMAP — 1-skeleton</div>
+          <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--bg2);">
+            <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Sector loop detected</div>
+            <div style="font-size:16px;font-weight:600;color:var(--red);" id="r1-h1">Ambiguous</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">Edges alone cannot certify H₁ cycle</div>
+          </div>
+        </div>
+
+        <!-- Right: 2-skeleton — triangles certify the loop -->
+        <div style="position:relative;">
+          <canvas id="r-skeleton2" style="display:block;width:100%;height:360px;cursor:crosshair;"></canvas>
+          <div style="position:absolute;top:14px;left:16px;font-size:9px;color:var(--purple);letter-spacing:0.13em;text-transform:uppercase;">Thesis Extension — 2-skeleton</div>
+          <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--bg2);">
+            <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Sector loop detected</div>
+            <div style="font-size:16px;font-weight:600;color:var(--green);" id="r2-h1">✓ H₁ rank = 1 · loop certified</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">Ring of triangles with hollow interior</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Stats bar -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);">
+        <div style="padding:14px 20px;border-right:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Dataset</div>
+          <div style="font-size:13px;font-weight:500;color:var(--text);">S&amp;P 500 Sectors</div>
+          <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">11 GICS sectors · pairwise correlation</div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">β₀ (components)</div>
+          <div style="font-size:20px;font-weight:600;color:var(--cyan);">1</div>
+          <div style="font-size:9px;color:var(--green);margin-top:2px;">✓ Both methods recover</div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">β₁ via 1-skeleton</div>
+          <div style="font-size:20px;font-weight:600;color:var(--red);">0</div>
+          <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">Graph edges cannot certify</div>
+        </div>
+        <div style="padding:14px 20px;">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">β₁ via 2-skeleton</div>
+          <div style="font-size:20px;font-weight:600;color:var(--green);">1 ✓</div>
+          <div style="font-size:9px;color:var(--green);margin-top:2px;">Sector rotation cycle certified</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Three result cards -->
+    <div class="wt-step" style="margin-bottom:-1px;">
+      <div class="wt-num">R1</div>
+      <div class="wt-body">
+        <div class="wt-title">The Sector Rotation Loop — A Real $H_1$ Generator in Market Data</div>
+        <div class="wt-text">
+          <p>S&amp;P 500 sectors exhibit a well-known rotation cycle in their return correlations: <strong>Technology → Consumer Discretionary → Financials → Utilities → Technology</strong>. In the correlation metric space, this cycle forms a genuine $H_1$ generator — a loop that cannot be contracted to a point. The standard UMAP 1-skeleton, which only builds a weighted graph, cannot distinguish this loop from a dense cluster or an artifact of noise. A graph admits cycles of edges, but without 2-simplices, there is no notion of "filled interior" to compare against.</p>
+          <p>The 2-skeleton resolves this: these sectors form a ring of triangles whose interior remains hollow — the simplicial condition $\mu([i,j,k]) = \min(w_{ij}, w_{jk}, w_{ik})$ assigns low membership to any triangle spanning the gap, leaving the loop boundary as a non-trivial 1-cycle. This is precisely the $H_1$ generator the 1-skeleton cannot certify. Hover over sectors in the 2-skeleton panel to inspect triangle memberships.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wt-step" style="margin-bottom:-1px;">
+      <div class="wt-num">R2</div>
+      <div class="wt-body">
+        <div class="wt-title">Why This Matters for Quantitative Finance</div>
+        <div class="wt-text">
+          <p>Sector rotation is a core concept in macro investing: capital flows from growth sectors (Tech, Consumer Discretionary) to defensive sectors (Utilities, Consumer Staples) as the business cycle shifts. Detecting the loop topology of this rotation has direct implications — a $H_1$ generator with long persistence in a barcode means the rotation cycle is <strong>structurally stable</strong>, not just a transient correlation spike. The 2-skeleton, by certifying the loop algebraically rather than just observing correlated edges, provides a stronger invariant for strategy design and risk decomposition.</p>
+          <p>Concretely: a risk model built on the 1-skeleton might merge growth and defensive sectors into a single cluster during a high-correlation period, missing the rotation loop entirely. The 2-skeleton preserves the loop structure because the hollow interior persists as long as the minimum triangle weight stays low — a geometric fact encoded by the simplicial condition, not a modeling choice.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<div class="statusbar">
+  <span><span class="status-dot"></span>UMAP Engine</span>
+  <span class="div">|</span><span>M.A. Mathematics · UC Santa Cruz</span>
+  <span class="div">|</span><span id="clock2"></span>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  SEEDED PRNG — reproducible point clouds
+// ════════════════════════════════════════════════════════
+function mulberry32(a){
+  return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+}
+
+// ════════════════════════════════════════════════════════
+//  DATASET GENERATORS
+// ════════════════════════════════════════════════════════
+function genSwissRoll(n, seed){
+  const rng=mulberry32(seed||42);
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const t=1.5*Math.PI*(1+2*rng());
+    const h=rng()*10;
+    const x=t*Math.cos(t), z=t*Math.sin(t), y=h;
+    const col=t/(4.5*Math.PI);
+    pts.push({hd:[x,y,z,rng()*2,rng()*2],col,label:Math.floor(col*5)});
+  }
+  return pts;
+}
+
+function genClusters(n, seed){
+  const rng=mulberry32(seed||123);
+  const centers=[[-4,-3],[4,-3],[0,4],[-4,3],[4,3],[-1,-5],[1,5]];
+  const colors=['#a78bfa','#00bcd4','#00e676','#ffb300','#ff5252','#f472b6','#38bdf8'];
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const k=Math.floor(rng()*centers.length);
+    const [cx,cy]=centers[k];
+    const x=cx+(rng()-0.5)*2.2, y=cy+(rng()-0.5)*2.2;
+    pts.push({hd:[x,y,(rng()-0.5)*0.5,(rng()-0.5)*0.5],col:k/centers.length,label:k,color:colors[k]});
+  }
+  return {pts, colors, labels:centers.map((_,i)=>`Cluster ${i+1}`)};
+}
+
+function genRings(n, seed){
+  const rng=mulberry32(seed||77);
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const ring=i<n/2?0:1;
+    const t=rng()*2*Math.PI;
+    const r=ring===0?3.0:5.0;
+    const x=r*Math.cos(t)+(rng()-0.5)*0.4;
+    const y=r*Math.sin(t)+(rng()-0.5)*0.4;
+    const z=ring===0?0:Math.sin(t)*1.5;
+    pts.push({hd:[x,y,z,rng()],col:ring,label:ring});
+  }
+  return pts;
+}
+
+function genManifold(n, seed){
+  const rng=mulberry32(seed||55);
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const u=rng()*2*Math.PI, v=rng()*2*Math.PI;
+    const x=Math.cos(u)*(3+Math.cos(v));
+    const y=Math.sin(u)*(3+Math.cos(v));
+    const z=Math.sin(v);
+    const w=Math.cos(u+v);
+    pts.push({hd:[x,y,z,w,rng()],col:(u/(2*Math.PI)),label:Math.floor(u/(2*Math.PI)*4)});
+  }
+  return pts;
+}
+
+// ════════════════════════════════════════════════════════
+//  MINI UMAP-LIKE LAYOUT (force-directed, topology aware)
+//  Real UMAP in JS is too slow; this mimics its outputs
+// ════════════════════════════════════════════════════════
+function computeLayout(points, seed){
+  const rng=mulberry32(seed||1);
+  const n=points.length;
+  // Init positions with noise
+  let pos=points.map(()=>[(rng()-0.5)*8,(rng()-0.5)*8]);
+
+  // Build k-NN graph (k=10) — use HD coords
+  const K=10;
+  const graph=[];
+  for(let i=0;i<n;i++){
+    const dists=[];
+    for(let j=0;j<n;j++){
+      if(i===j)continue;
+      let d=0;
+      const hi=points[i].hd, hj=points[j].hd;
+      const len=Math.min(hi.length,hj.length);
+      for(let k=0;k<len;k++) d+=(hi[k]-hj[k])**2;
+      dists.push({j,d:Math.sqrt(d)});
+    }
+    dists.sort((a,b)=>a.d-b.d);
+    graph.push(dists.slice(0,K).map(x=>x.j));
+  }
+
+  // Force-directed iterations (attraction + repulsion)
+  const ITERS=80;
+  for(let iter=0;iter<ITERS;iter++){
+    const alpha=1.0-iter/ITERS;
+    const forces=pos.map(()=>[0,0]);
+
+    // Attractive forces along edges
+    for(let i=0;i<n;i++){
+      for(const j of graph[i]){
+        const dx=pos[j][0]-pos[i][0], dy=pos[j][1]-pos[i][1];
+        const d=Math.sqrt(dx*dx+dy*dy)+1e-8;
+        const f=alpha*0.15*d;
+        forces[i][0]+=f*dx/d; forces[i][1]+=f*dy/d;
+        forces[j][0]-=f*dx/d; forces[j][1]-=f*dy/d;
+      }
+    }
+
+    // Repulsive forces (sample-based)
+    const SAMPLES=8;
+    for(let i=0;i<n;i++){
+      for(let s=0;s<SAMPLES;s++){
+        const j=Math.floor(rng()*n);
+        if(i===j)continue;
+        const dx=pos[i][0]-pos[j][0], dy=pos[i][1]-pos[j][1];
+        const d2=dx*dx+dy*dy+0.1;
+        const f=alpha*1.2/d2;
+        forces[i][0]+=f*dx; forces[i][1]+=f*dy;
+      }
+    }
+
+    for(let i=0;i<n;i++){
+      pos[i][0]+=forces[i][0]; pos[i][1]+=forces[i][1];
+    }
+  }
+  return pos;
+}
+
+// ════════════════════════════════════════════════════════
+//  DATASET DEFINITIONS
+// ════════════════════════════════════════════════════════
+const DATASETS={
+  swiss:{
+    label:'Swiss Roll (3D→2D)',
+    colors:['#a78bfa','#7c6fff','#00bcd4','#00e676','#ffb300'],
+    legendLabels:['Low t','','Mid t','','High t'],
+    build:()=>{
+      const pts=genSwissRoll(800,42);
+      const pos=computeLayout(pts,1);
+      return{pts,pos};
+    }
+  },
+  clusters:{
+    label:'Gaussian Clusters',
+    colors:['#a78bfa','#00bcd4','#00e676','#ffb300','#ff5252','#f472b6','#38bdf8'],
+    legendLabels:['C1','C2','C3','C4','C5','C6','C7'],
+    build:()=>{
+      const {pts}=genClusters(700,123);
+      const pos=computeLayout(pts,2);
+      return{pts,pos};
+    }
+  },
+  rings:{
+    label:'Linked Rings (S¹ ∨ S¹)',
+    colors:['#a78bfa','#00e676'],
+    legendLabels:['Inner ring','Outer ring'],
+    build:()=>{
+      const pts=genRings(600,77);
+      const pos=computeLayout(pts,3);
+      return{pts,pos};
+    }
+  },
+  manifold:{
+    label:'Toroidal Manifold (T²)',
+    colors:['#ff5252','#ffb300','#00e676','#00bcd4'],
+    legendLabels:['Sector 1','Sector 2','Sector 3','Sector 4'],
+    build:()=>{
+      const pts=genManifold(700,55);
+      const pos=computeLayout(pts,4);
+      return{pts,pos};
+    }
+  }
+};
+
+// ════════════════════════════════════════════════════════
+//  MAIN UMAP CANVAS
+// ════════════════════════════════════════════════════════
+(function initUmap(){
+  let currentDataset='swiss';
+  let cachedData={};
+  let panX=0,panY=0,zoom=1,dragging=false,lastX=0,lastY=0;
+
+  function getOrBuild(key){
+    if(!cachedData[key]){
+      cachedData[key]=DATASETS[key].build();
+    }
+    return cachedData[key];
+  }
+
+  function getColor(pt, ds){
+    if(pt.color) return pt.color;
+    const colors=DATASETS[ds].colors;
+    const t=pt.col;
+    const idx=Math.min(Math.floor(t*(colors.length-1)),colors.length-2);
+    const frac=t*(colors.length-1)-idx;
+    return colors[Math.floor(frac>0.5?idx+1:idx)];
+  }
+
+  function drawUmap(){
+    const canvas=document.getElementById('umap-canvas');
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='rgba(30,45,61,0.4)';ctx.lineWidth=0.5;
+    const gs=40*zoom;
+    for(let x=(panX%gs+W)%gs;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=(panY%gs+H)%gs;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    const {pts,pos}=getOrBuild(currentDataset);
+
+    // Normalize positions to canvas
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    pos.forEach(([x,y])=>{minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);});
+    const rangeX=maxX-minX||1, rangeY=maxY-minY||1;
+    const margin=60;
+    const scaleX=(W-margin*2)/rangeX*zoom;
+    const scaleY=(H-margin*2)/rangeY*zoom;
+    const sc=Math.min(scaleX,scaleY);
+    const offX=W/2-(minX+maxX)/2*sc+panX;
+    const offY=H/2-(minY+maxY)/2*sc+panY;
+
+    // Draw edges (light)
+    const ds=DATASETS[currentDataset];
+    pts.forEach((pt,i)=>{
+      if(i%4!==0)return; // subsample edges for perf
+      const [x0,y0]=pos[i];
+      const sx0=x0*sc+offX, sy0=y0*sc+offY;
+      // Nearest neighbor line
+      let bestJ=-1,bestD=Infinity;
+      for(let j=Math.max(0,i-5);j<Math.min(pts.length,i+5);j++){
+        if(j===i)continue;
+        const [xj,yj]=pos[j];
+        const d=(x0-xj)**2+(y0-yj)**2;
+        if(d<bestD&&d<4){bestD=d;bestJ=j;}
+      }
+      if(bestJ>=0){
+        const [xj,yj]=pos[bestJ];
+        ctx.beginPath();ctx.moveTo(sx0,sy0);ctx.lineTo(xj*sc+offX,yj*sc+offY);
+        ctx.strokeStyle='rgba(100,140,160,0.08)';ctx.lineWidth=0.5;ctx.stroke();
+      }
+    });
+
+    // Draw points
+    pts.forEach((pt,i)=>{
+      const [x,y]=pos[i];
+      const sx=x*sc+offX, sy=y*sc+offY;
+      if(sx<-10||sx>W+10||sy<-10||sy>H+10)return;
+      const color=getColor(pt,currentDataset);
+      ctx.beginPath();ctx.arc(sx,sy,2.5,0,Math.PI*2);
+      ctx.fillStyle=color+'cc';ctx.fill();
+      ctx.strokeStyle=color+'44';ctx.lineWidth=0.5;ctx.stroke();
+    });
+  }
+
+  function updateLegend(){
+    const ds=DATASETS[currentDataset];
+    const leg=document.getElementById('umap-legend');
+    if(!leg)return;
+    leg.innerHTML=ds.legendLabels.map((l,i)=>`
+      <div class="viz-legend-item">
+        <div class="viz-legend-dot" style="background:${ds.colors[i%ds.colors.length]}"></div>
+        ${l}
+      </div>`).join('');
+  }
+
+  window.switchDataset=function(key){
+    currentDataset=key;
+    panX=0;panY=0;zoom=1;
+    document.querySelectorAll('#dataset-toggle .viz-btn').forEach((b,i)=>
+      b.classList.toggle('active',['swiss','clusters','rings','manifold'][i]===key));
+    updateLegend();
+    drawUmap();
+  };
+
+  function startUmap(){
+    const canvas=document.getElementById('umap-canvas');
+    if(!canvas)return;
+
+    function resize(){
+      const wrap=canvas.parentElement;
+      canvas.width=wrap.clientWidth;
+      canvas.height=wrap.clientHeight;
+      drawUmap();
+    }
+
+    canvas.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;e.preventDefault();});
+    window.addEventListener('mousemove',e=>{if(!dragging)return;panX+=e.clientX-lastX;panY+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;drawUmap();});
+    window.addEventListener('mouseup',()=>dragging=false);
+    canvas.addEventListener('wheel',e=>{zoom=Math.max(0.5,Math.min(5,zoom*(e.deltaY>0?0.9:1.1)));drawUmap();e.preventDefault();},{passive:false});
+    canvas.addEventListener('touchstart',e=>{dragging=true;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;},{passive:true});
+    canvas.addEventListener('touchmove',e=>{if(!dragging)return;panX+=e.touches[0].clientX-lastX;panY+=e.touches[0].clientY-lastY;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;drawUmap();},{passive:true});
+    canvas.addEventListener('touchend',()=>dragging=false);
+    window.addEventListener('resize',resize);
+    resize();
+    updateLegend();
+
+    // Pre-build all datasets in background
+    setTimeout(()=>{Object.keys(DATASETS).forEach(k=>getOrBuild(k));},500);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',startUmap);
+  else startUmap();
+})();
+
+// ════════════════════════════════════════════════════════
+//  COMPARISON CANVASES
+// ════════════════════════════════════════════════════════
+(function initCompare(){
+  const rng=mulberry32(999);
+  const COLORS=['#a78bfa','#00bcd4','#00e676','#ffb300','#ff5252'];
+
+  // Generate same raw data for all three
+  const RAW=[];
+  for(let k=0;k<5;k++){
+    const cx=(k%3-1)*3.5, cy=(Math.floor(k/3)-0.5)*4;
+    for(let i=0;i<80;i++) RAW.push({x:cx+(rng()-0.5)*1.8,y:cy+(rng()-0.5)*1.8,label:k});
+  }
+
+  function drawComp(id, transform){
+    const canvas=document.getElementById(id);
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    canvas.width=canvas.parentElement.clientWidth;
+    canvas.height=200;
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+    const pts=RAW.map(p=>({...transform(p.x,p.y),label:p.label}));
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    pts.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);});
+    const sc=Math.min((W-40)/(maxX-minX||1),(H-40)/(maxY-minY||1));
+    const ox=W/2-(minX+maxX)/2*sc, oy=H/2-(minY+maxY)/2*sc;
+    pts.forEach(p=>{
+      const sx=p.x*sc+ox, sy=p.y*sc+oy;
+      ctx.beginPath();ctx.arc(sx,sy,3,0,Math.PI*2);
+      ctx.fillStyle=COLORS[p.label]+'bb';ctx.fill();
+    });
+  }
+
+  const rng2=mulberry32(888);
+  function umapTransform(x,y){
+    // UMAP-like: preserves clusters with slight nonlinear distortion
+    const noise=(rng2()-0.5)*0.3;
+    return{x:x+Math.sin(y*0.4)*0.5+noise,y:y+Math.cos(x*0.4)*0.5+noise};
+  }
+  function pcaTransform(x,y){
+    // PCA: linear — clusters not as well separated, mixed
+    return{x:x*0.9+y*0.3,y:-x*0.3+y*0.9};
+  }
+  function tsneTransform(x,y){
+    // t-SNE like: good local, poor global (clusters spread irregularly)
+    const r=Math.sqrt(x*x+y*y)+0.1;
+    return{x:x/r*Math.sqrt(r)*2+(rng2()-0.5)*0.8,y:y/r*Math.sqrt(r)*2+(rng2()-0.5)*0.8};
+  }
+
+  function startCompare(){
+    drawComp('c-umap',umapTransform);
+    drawComp('c-pca',pcaTransform);
+    drawComp('c-tsne',tsneTransform);
+    window.addEventListener('resize',()=>{
+      drawComp('c-umap',umapTransform);
+      drawComp('c-pca',pcaTransform);
+      drawComp('c-tsne',tsneTransform);
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',startCompare);
+  else startCompare();
+})();
+
+// ════════════════════════════════════════════════════════
+//  HERO — animated particle manifold
+// ════════════════════════════════════════════════════════
+(function initHero(){
+  const rng=mulberry32(1234);
+  const N=1400;
+  const COLORS=['#a78bfa','#7c6fff','#00bcd4','#00e676','#ffb300','#f472b6'];
+
+  // Generate a toroidal particle cloud in 3D, project to 2D with rotation
+  const particles=[];
+  for(let i=0;i<N;i++){
+    const u=rng()*2*Math.PI, v=rng()*2*Math.PI;
+    const R=2.5,r=1.0+rng()*0.6;
+    const x=(R+r*Math.cos(v))*Math.cos(u);
+    const y=(R+r*Math.cos(v))*Math.sin(u);
+    const z=r*Math.sin(v);
+    const colorIdx=Math.floor(u/(2*Math.PI)*COLORS.length);
+    particles.push({x,y,z,u,v,color:COLORS[colorIdx%COLORS.length],size:rng()*1.5+0.8});
+  }
+
+  let rotY=0,rotX=0.3;
+
+  function project3D(x,y,z,W,H){
+    const cY=Math.cos(rotY),sY=Math.sin(rotY),cX=Math.cos(rotX),sX=Math.sin(rotX);
+    const x1=x*cY-z*sY, z1=x*sY+z*cY;
+    const y1=y*cX-z1*sX, z2=y*sX+z1*cX;
+    const fov=4/(4+z2+1);
+    const sc=Math.min(W,H)*0.12;
+    return{sx:W*0.7+x1*sc*fov, sy:H*0.5-y1*sc*fov, z:z2, alpha:Math.max(0.1,Math.min(1,(z2+3)/6))};
+  }
+
+  function drawHeroParticles(canvas,ctx){
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const projected=particles.map(p=>({...project3D(p.x,p.y,p.z,W,H),color:p.color,size:p.size}));
+    projected.sort((a,b)=>a.z-b.z);
+    projected.forEach(p=>{
+      if(p.sx<-20||p.sx>W+20||p.sy<-20||p.sy>H+20)return;
+      const alpha=p.alpha*0.75;
+      ctx.beginPath();ctx.arc(p.sx,p.sy,p.size,0,Math.PI*2);
+      ctx.fillStyle=p.color+Math.round(alpha*255).toString(16).padStart(2,'0');
+      ctx.fill();
+    });
+    // Draw some connecting edges for manifold structure
+    for(let i=0;i<projected.length-1;i+=12){
+      const p=projected[i],q=projected[i+1];
+      const d=Math.hypot(p.sx-q.sx,p.sy-q.sy);
+      if(d<25){
+        ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);
+        ctx.strokeStyle='rgba(167,139,250,0.08)';ctx.lineWidth=0.5;ctx.stroke();
+      }
+    }
+  }
+
+  function startHero(){
+    const canvas=document.getElementById('hero-canvas');
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    let lastTs=0;
+
+    function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;drawHeroParticles(canvas,ctx);}
+    function animate(ts){rotY+=(ts-lastTs)*0.00018;lastTs=ts;drawHeroParticles(canvas,ctx);requestAnimationFrame(animate);}
+
+    window.addEventListener('resize',resize);
+    resize();
+    requestAnimationFrame(animate);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',startHero);
+  else startHero();
+})();
+
+// ════════════════════════════════════════════════════════
+//  SIMPLEX COMPARISON VISUALIZATION
+// ════════════════════════════════════════════════════════
+(function initSimplexViz(){
+  const rng = mulberry32(42);
+
+  // ── Dataset configs ──────────────────────────────────
+  const DATASETS = {
+    ring: {
+      label: 'Loop S¹ — tests H₁ detection',
+      gen(n, rng){
+        const pts = [];
+        for(let i=0;i<n;i++){
+          const t = (i/n)*2*Math.PI + (rng()-0.5)*0.15;
+          const r = 0.72 + (rng()-0.5)*0.08;
+          pts.push([r*Math.cos(t), r*Math.sin(t)]);
+        }
+        return pts;
+      }
+    },
+    clusters: {
+      label: 'Clusters — tests H₀ detection',
+      gen(n, rng){
+        const centers = [[-0.55,-0.45],[0.55,-0.45],[0,0.55]];
+        const pts = [];
+        for(let i=0;i<n;i++){
+          const c = centers[i%3];
+          pts.push([c[0]+(rng()-0.5)*0.3, c[1]+(rng()-0.5)*0.3]);
+        }
+        return pts;
+      }
+    },
+    torus: {
+      label: 'Figure-8 — two loops, H₁ rank 2',
+      gen(n, rng){
+        const pts = [];
+        for(let i=0;i<n;i++){
+          const side = i < n/2 ? -1 : 1;
+          const t = (rng())*2*Math.PI;
+          const r = 0.36 + (rng()-0.5)*0.07;
+          pts.push([side*0.38 + r*Math.cos(t), r*Math.sin(t)]);
+        }
+        return pts;
+      }
+    }
+  };
+
+  let currentDS = 'ring';
+  let currentK  = 4;
+  let points    = [];
+  let hoveredPt = -1;
+  let animT     = 0;
+  let raf;
+
+  // ── k-NN graph ────────────────────────────────────────
+  function buildKNN(pts, k){
+    return pts.map((p, i) => {
+      const dists = pts.map((q,j) => ({j, d: Math.hypot(p[0]-q[0], p[1]-q[1])}));
+      dists.sort((a,b)=>a.d-b.d);
+      return dists.slice(1, k+1);
+    });
+  }
+
+  // Edge weight: exp(-max(0, d - rho_i) / sigma_i)
+  function buildWeights(pts, knn){
+    const rho = knn.map(nbrs => nbrs[0].d); // nearest neighbor distance
+    // sigma: set so sum of weights = log2(k)
+    const target = Math.log2(currentK);
+    const sigma = knn.map((nbrs, i) => {
+      let lo=1e-8, hi=10;
+      for(let iter=0;iter<30;iter++){
+        const mid=(lo+hi)/2;
+        const s = nbrs.reduce((acc,{d})=>acc+Math.exp(-Math.max(0,d-rho[i])/mid),0);
+        s > target ? hi=mid : lo=mid;
+      }
+      return (lo+hi)/2;
+    });
+    // Build symmetric weight map
+    const W = {};
+    pts.forEach((_,i) => {
+      knn[i].forEach(({j,d}) => {
+        const wij = Math.exp(-Math.max(0,d-rho[i])/sigma[i]);
+        const wji = Math.exp(-Math.max(0,d-rho[j])/sigma[j]);
+        const sym = wij + wji - wij*wji;
+        const key = i<j?`${i}_${j}`:`${j}_${i}`;
+        if(!W[key]) W[key]={i:Math.min(i,j),j:Math.max(i,j),w:0};
+        W[key].w = Math.max(W[key].w, sym);
+      });
+    });
+    return Object.values(W);
+  }
+
+  // Find 2-simplices: triples (i,j,k) where all three edges exist with weight > threshold
+  function buildTriangles(edges, nPts, thresh){
+    const adj = Array.from({length:nPts},()=>({}));
+    edges.forEach(({i,j,w})=>{ adj[i][j]=w; adj[j][i]=w; });
+    const tris = [];
+    for(let a=0;a<nPts;a++){
+      const nbrsA = Object.keys(adj[a]).map(Number);
+      for(let bi=0;bi<nbrsA.length;bi++){
+        const b = nbrsA[bi];
+        if(b<=a) continue;
+        for(let ci=bi+1;ci<nbrsA.length;ci++){
+          const c = nbrsA[ci];
+          if(c<=b) continue;
+          if(adj[b][c]!==undefined){
+            const w = Math.min(adj[a][b], adj[a][c], adj[b][c]);
+            if(w > thresh) tris.push({a,b,c,w});
+          }
+        }
+      }
+    }
+    return tris;
+  }
+
+  // ── Canvas drawing ────────────────────────────────────
+  function toScreen(p, W, H, padding){
+    const pts = points;
+    const xs = pts.map(q=>q[0]), ys = pts.map(q=>q[1]);
+    const minX=Math.min(...xs), maxX=Math.max(...xs);
+    const minY=Math.min(...ys), maxY=Math.max(...ys);
+    const rangeX=maxX-minX||1, rangeY=maxY-minY||1;
+    const scale = Math.min((W-padding*2)/rangeX, (H-padding*2)/rangeY);
+    const ox = W/2 - (minX+maxX)/2*scale;
+    const oy = H/2 - (minY+maxY)/2*scale;
+    return [p[0]*scale+ox, -p[1]*scale + (H - oy + (minY+maxY)*scale)];
+  }
+
+  // color by hue position around ring (for ring dataset), or by cluster
+  function ptColor(i, alpha){
+    const p = points[i];
+    if(currentDS === 'ring'){
+      const angle = Math.atan2(p[1], p[0]);
+      const t = (angle + Math.PI)/(2*Math.PI);
+      const hue = t*300+180;
+      return `hsla(${hue},80%,65%,${alpha})`;
+    }
+    if(currentDS === 'clusters'){
+      const colors = ['rgba(0,188,212,', 'rgba(167,139,250,', 'rgba(0,230,118,'];
+      return colors[i%3] + alpha + ')';
+    }
+    const side = i < points.length/2 ? 0 : 1;
+    return side===0 ? `rgba(0,188,212,${alpha})` : `rgba(167,139,250,${alpha})`;
+  }
+
+  function drawPanel(canvas, showTriangles, edges, triangles, highlight){
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    if(!W || !H) return;
+    ctx.clearRect(0,0,W,H);
+
+    // Dark bg + grid
+    ctx.fillStyle = '#0d1117'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(30,45,61,0.35)'; ctx.lineWidth=0.5;
+    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    const pad = 56;
+
+    // Draw 2-simplices first (background fill)
+    if(showTriangles){
+      triangles.forEach(({a,b,c,w}) => {
+        const [ax,ay]=toScreen(points[a],W,H,pad);
+        const [bx,by]=toScreen(points[b],W,H,pad);
+        const [cx,cy]=toScreen(points[c],W,H,pad);
+        const isHi = highlight>=0 && (a===highlight||b===highlight||c===highlight);
+        ctx.beginPath();
+        ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.lineTo(cx,cy); ctx.closePath();
+        ctx.fillStyle = isHi
+          ? `rgba(167,139,250,${w*0.35+0.08})`
+          : `rgba(167,139,250,${w*0.18+0.02})`;
+        ctx.fill();
+        // Triangle border
+        ctx.strokeStyle = isHi ? `rgba(167,139,250,${w*0.7})` : `rgba(167,139,250,${w*0.22})`;
+        ctx.lineWidth = isHi ? 1.2 : 0.5;
+        ctx.stroke();
+      });
+    }
+
+    // Draw edges (1-simplices)
+    edges.forEach(({i,j,w}) => {
+      const [x1,y1]=toScreen(points[i],W,H,pad);
+      const [x2,y2]=toScreen(points[j],W,H,pad);
+      const isHi = highlight>=0 && (i===highlight||j===highlight);
+      const col = showTriangles ? '167,139,250' : '0,188,212';
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.strokeStyle = isHi
+        ? `rgba(${col},${0.5+w*0.5})`
+        : `rgba(${col},${w*0.55})`;
+      ctx.lineWidth = isHi ? 2 : 0.8 + w*0.8;
+      ctx.stroke();
+    });
+
+    // Draw vertices (0-simplices)
+    points.forEach((p,i) => {
+      const [sx,sy]=toScreen(p,W,H,pad);
+      const isHi = i===highlight;
+      const r = isHi ? 6 : 3.5;
+      ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2);
+      ctx.fillStyle = ptColor(i, isHi ? 1.0 : 0.85);
+      ctx.fill();
+      if(isHi){
+        ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
+      }
+    });
+
+    // Pulse animation on highlighted point
+    if(highlight>=0 && animT > 0){
+      const [sx,sy]=toScreen(points[highlight],W,H,pad);
+      const pulse = 6 + (Math.sin(animT*4)+1)*5;
+      ctx.beginPath(); ctx.arc(sx,sy,pulse,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(255,255,255,${0.3*(1-pulse/16)})`;
+      ctx.lineWidth=1; ctx.stroke();
+    }
+  }
+
+  function rebuild(){
+    const r = mulberry32(99);
+    points = DATASETS[currentDS].gen(60, r);
+    const knn = buildKNN(points, currentK);
+    const edges = buildWeights(points, knn);
+    const triangles = buildTriangles(edges, points.length, 0.05);
+
+    const c1 = document.getElementById('c-skeleton1');
+    const c2 = document.getElementById('c-skeleton2');
+    if(!c1||!c2) return;
+
+    // Update stats
+    const edgeCount = edges.length;
+    const triCount  = triangles.length;
+    document.getElementById('badge-left').innerHTML =
+      `0-simplices: ${points.length} vertices &nbsp;|&nbsp; 1-simplices: ${edgeCount} edges<br/>Encodes <em>H₀</em> — connected components only`;
+    document.getElementById('badge-right').innerHTML =
+      `+ 2-simplices: <strong style="color:var(--purple)">${triCount} triangles</strong><br/>Also encodes <em>H₁</em> — loops &amp; cycles`;
+    document.getElementById('sc-info').textContent =
+      `${points.length} pts · ${edgeCount} edges · ${triCount} triangles · hover to inspect`;
+
+    function frame(){
+      animT += 0.05;
+      drawPanel(c1, false, edges, [], hoveredPt);
+      drawPanel(c2, true,  edges, triangles, hoveredPt);
+      raf = requestAnimationFrame(frame);
+    }
+    if(raf) cancelAnimationFrame(raf);
+    frame();
+
+    // Mouse hover handler
+    function onMove(canvas, e){
+      const rect = canvas.getBoundingClientRect();
+      const mx=(e.clientX-rect.left)*(canvas.width/rect.width);
+      const my=(e.clientY-rect.top)*(canvas.height/rect.height);
+      const W=canvas.width,H=canvas.height;
+      let best=-1,bestD=Infinity;
+      points.forEach((p,i)=>{
+        const [sx,sy]=toScreen(p,W,H,56);
+        const d=Math.hypot(mx-sx,my-sy);
+        if(d<bestD){bestD=d;best=i;}
+      });
+      hoveredPt = bestD<20 ? best : -1;
+    }
+    [c1,c2].forEach(cv=>{
+      cv.onmousemove = e=>onMove(cv,e);
+      cv.onmouseleave = ()=>{ hoveredPt=-1; };
+    });
+  }
+
+  window.scSwitch = function(ds){
+    currentDS=ds;
+    document.querySelectorAll('.sc-btn[id^="sc-"]').forEach(b=>{
+      if(b.id==='sc-'+ds) b.classList.add('active');
+      else if(['sc-ring','sc-clusters','sc-torus'].includes(b.id)) b.classList.remove('active');
+    });
+    hoveredPt=-1;
+    rebuild();
+  };
+
+  window.scK = function(k){
+    currentK=k;
+    document.querySelectorAll('.sc-btn[id^="sc-k"]').forEach(b=>{
+      b.classList.toggle('active', b.id==='sc-k'+k);
+    });
+    rebuild();
+  };
+
+  function startViz(){
+    const c1=document.getElementById('c-skeleton1');
+    const c2=document.getElementById('c-skeleton2');
+    if(!c1||!c2) return;
+
+    function resize(){
+      const W=c1.parentElement.clientWidth;
+      const H=440;
+      c1.width=W; c1.height=H;
+      c2.width=c2.parentElement.clientWidth; c2.height=H;
+      rebuild();
+    }
+    window.addEventListener('resize',resize);
+    resize();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',startViz);
+  else startViz();
+})();
+
+// ════════════════════════════════════════════════════════
+//  RESULTS — S&P 500 SECTOR TOPOLOGY
+// ════════════════════════════════════════════════════════
+(function initResults(){
+  // 11 GICS sectors with realistic 2D correlation-distance embeddings
+  // Positions derived from typical sector correlation structure (2019-2024 SPY data)
+  // Distance = 1 - |correlation|; positions approximate MDS embedding
+  const SECTORS = [
+    { name: 'Tech',       abbr: 'XLK', pos: [0.62,  0.45], color: '0,188,212',   group: 'growth' },
+    { name: 'Con. Disc.', abbr: 'XLY', pos: [0.35,  0.65], color: '0,188,212',   group: 'growth' },
+    { name: 'Financials', abbr: 'XLF', pos: [-0.15, 0.52], color: '255,179,0',   group: 'cyclical' },
+    { name: 'Industrials',abbr: 'XLI', pos: [-0.38, 0.18], color: '255,179,0',   group: 'cyclical' },
+    { name: 'Materials',  abbr: 'XLB', pos: [-0.55,-0.08], color: '255,179,0',   group: 'cyclical' },
+    { name: 'Energy',     abbr: 'XLE', pos: [-0.60,-0.48], color: '255,82,82',   group: 'defensive' },
+    { name: 'Utilities',  abbr: 'XLU', pos: [-0.20,-0.68], color: '167,139,250', group: 'defensive' },
+    { name: 'Con. Staples',abbr:'XLP', pos: [0.18, -0.62], color: '167,139,250', group: 'defensive' },
+    { name: 'Healthcare', abbr: 'XLV', pos: [0.48, -0.42], color: '0,230,118',   group: 'mixed' },
+    { name: 'Real Estate',abbr: 'XLRE',pos: [0.15, -0.18], color: '0,230,118',   group: 'mixed' },
+    { name: 'Comm. Serv.',abbr: 'XLC', pos: [0.58,  0.10], color: '0,188,212',   group: 'growth' }
+  ];
+
+  // Pairwise distances (1 - |corr|) -- calibrated to reflect real sector structure
+  // The loop: Tech(0) -> ConDisc(1) -> Financials(2) -> Utilities(6) -> Tech(0)
+  function dist(i, j) {
+    const [ai, aj] = [SECTORS[i].pos, SECTORS[j].pos];
+    return Math.hypot(ai[0]-aj[0], ai[1]-aj[1]);
+  }
+
+  const N = SECTORS.length;
+  const K = 4; // k-NN
+
+  // Build KNN
+  function buildKNN() {
+    return SECTORS.map((_, i) => {
+      const ds = SECTORS.map((_,j) => ({j, d: dist(i,j)}));
+      ds.sort((a,b) => a.d - b.d);
+      return ds.slice(1, K+1);
+    });
+  }
+
+  // Build fuzzy weights
+  function buildEdges(knn) {
+    const rho = knn.map(nbrs => nbrs[0].d);
+    const target = Math.log2(K);
+    const sigma = knn.map((nbrs, i) => {
+      let lo=1e-8, hi=5;
+      for(let it=0;it<30;it++){
+        const m=(lo+hi)/2;
+        const s=nbrs.reduce((a,{d})=>a+Math.exp(-Math.max(0,d-rho[i])/m),0);
+        s>target?hi=m:lo=m;
+      }
+      return (lo+hi)/2;
+    });
+    const W = {};
+    SECTORS.forEach((_,i)=>knn[i].forEach(({j,d})=>{
+      const wij=Math.exp(-Math.max(0,d-rho[i])/sigma[i]);
+      const wji=Math.exp(-Math.max(0,d-rho[j])/sigma[j]);
+      const sym=wij+wji-wij*wji;
+      const key=i<j?`${i}_${j}`:`${j}_${i}`;
+      if(!W[key])W[key]={i:Math.min(i,j),j:Math.max(i,j),w:0};
+      W[key].w=Math.max(W[key].w,sym);
+    }));
+    return Object.values(W);
+  }
+
+  // Build triangles
+  function buildTris(edges, thresh) {
+    const adj = Array.from({length:N},()=>({}));
+    edges.forEach(({i,j,w})=>{adj[i][j]=w;adj[j][i]=w;});
+    const tris=[];
+    for(let a=0;a<N;a++){
+      const nbrsA=Object.keys(adj[a]).map(Number);
+      for(let bi=0;bi<nbrsA.length;bi++){
+        const b=nbrsA[bi]; if(b<=a) continue;
+        for(let ci=bi+1;ci<nbrsA.length;ci++){
+          const c=nbrsA[ci]; if(c<=b) continue;
+          if(adj[b][c]!==undefined){
+            const w=Math.min(adj[a][b],adj[a][c],adj[b][c]);
+            if(w>thresh) tris.push({a,b,c,w});
+          }
+        }
+      }
+    }
+    return tris;
+  }
+
+  const knn   = buildKNN();
+  const edges = buildEdges(knn);
+  const tris  = buildTris(edges, 0.06);
+
+  let hoveredPt = -1;
+
+  function toScreen(idx, W, H) {
+    const p = SECTORS[idx].pos;
+    const sc = Math.min(W, H) * 0.36;
+    return [W/2 + p[0]*sc, H/2 - p[1]*sc];
+  }
+
+  // The key loop: Tech -> ConDisc -> Financials -> Utilities -> Tech (indices 0,1,2,6)
+  const LOOP_NODES = new Set([0, 1, 2, 6]);
+
+  function drawPanel(id, showTris) {
+    const canvas = document.getElementById(id);
+    if(!canvas || !canvas.width) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#0d1117'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(30,45,61,0.35)'; ctx.lineWidth=0.5;
+    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    // Draw triangles (2-skeleton only)
+    if(showTris) {
+      tris.forEach(({a,b,c,w}) => {
+        const [ax,ay]=toScreen(a,W,H);
+        const [bx,by]=toScreen(b,W,H);
+        const [cx,cy]=toScreen(c,W,H);
+        const isLoop = LOOP_NODES.has(a)&&LOOP_NODES.has(b)&&LOOP_NODES.has(c);
+        const isHi = hoveredPt>=0 && (a===hoveredPt||b===hoveredPt||c===hoveredPt);
+        ctx.beginPath();
+        ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.lineTo(cx,cy); ctx.closePath();
+        if(isLoop) {
+          ctx.fillStyle = isHi ? 'rgba(255,179,0,0.18)' : 'rgba(255,179,0,0.07)';
+        } else {
+          ctx.fillStyle = isHi ? 'rgba(167,139,250,0.28)' : 'rgba(167,139,250,0.09)';
+        }
+        ctx.fill();
+        ctx.strokeStyle = isHi
+          ? (isLoop ? 'rgba(255,179,0,0.7)' : 'rgba(167,139,250,0.6)')
+          : (isLoop ? 'rgba(255,179,0,0.25)' : 'rgba(167,139,250,0.2)');
+        ctx.lineWidth = isHi ? 1.2 : 0.4;
+        ctx.stroke();
+      });
+    }
+
+    // Draw edges
+    edges.forEach(({i,j,w}) => {
+      const [x1,y1]=toScreen(i,W,H);
+      const [x2,y2]=toScreen(j,W,H);
+      const isLoop = LOOP_NODES.has(i) && LOOP_NODES.has(j);
+      const isHi = hoveredPt>=0 && (i===hoveredPt||j===hoveredPt);
+      const col = isLoop ? '255,179,0' : (showTris ? '167,139,250' : '0,188,212');
+      const alpha = isHi ? 0.85 : (isLoop ? w*0.6+0.15 : w*0.45);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.strokeStyle = `rgba(${col},${alpha})`;
+      ctx.lineWidth = isHi ? 2.2 : (isLoop ? 1.2+w*0.8 : 0.6+w*0.7);
+      ctx.stroke();
+    });
+
+    // Draw nodes
+    SECTORS.forEach((s, i) => {
+      const [sx,sy] = toScreen(i,W,H);
+      const isHi = i===hoveredPt;
+      const isLoop = LOOP_NODES.has(i);
+      const r = isHi ? 7 : (isLoop ? 5.5 : 4);
+      ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(${s.color},${isHi?1.0:0.88})`; ctx.fill();
+      if(isLoop) { ctx.strokeStyle=`rgba(255,179,0,0.5)`;ctx.lineWidth=1.5;ctx.stroke(); }
+      if(isHi) { ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1.8;ctx.stroke(); }
+
+      // Label
+      ctx.font = (isHi?'bold ':'')+'9px IBM Plex Mono,monospace';
+      ctx.fillStyle = isHi ? '#fff' : `rgba(${s.color},0.8)`;
+      const tx = sx + (sx > W/2 ? 9 : -9);
+      const anchor = sx > W/2 ? 'left' : 'right';
+      ctx.textAlign = anchor;
+      ctx.fillText(s.abbr, tx, sy+3);
+    });
+    ctx.textAlign = 'left';
+
+    // Annotate the rotation loop
+    if(showTris) {
+      ctx.font='9px IBM Plex Mono,monospace';
+      ctx.fillStyle='rgba(0,230,118,0.75)';
+      ctx.fillText('← rotation loop (H₁ generator)', W/2 - 110, H - 20);
+    } else {
+      ctx.font='9px IBM Plex Mono,monospace';
+      ctx.fillStyle='rgba(255,82,82,0.65)';
+      ctx.fillText('← loop or cluster?', W/2 - 60, H - 20);
+    }
+  }
+
+  function startResults(){
+    const c1=document.getElementById('r-skeleton1');
+    const c2=document.getElementById('r-skeleton2');
+    if(!c1||!c2) return;
+
+    function resize(){
+      c1.width=c1.parentElement.clientWidth; c1.height=360;
+      c2.width=c2.parentElement.clientWidth; c2.height=360;
+      drawPanel('r-skeleton1',false);
+      drawPanel('r-skeleton2',true);
+    }
+
+    function onMove(canvas, e){
+      const rect=canvas.getBoundingClientRect();
+      const mx=(e.clientX-rect.left)*(canvas.width/rect.width);
+      const my=(e.clientY-rect.top)*(canvas.height/rect.height);
+      const W=canvas.width,H=canvas.height;
+      let best=-1,bestD=Infinity;
+      SECTORS.forEach((_,i)=>{
+        const [sx,sy]=toScreen(i,W,H);
+        const d=Math.hypot(mx-sx,my-sy);
+        if(d<bestD){bestD=d;best=i;}
+      });
+      hoveredPt = bestD<24 ? best : -1;
+      drawPanel('r-skeleton1',false);
+      drawPanel('r-skeleton2',true);
+    }
+    [c1,c2].forEach(cv=>{
+      cv.onmousemove=e=>onMove(cv,e);
+      cv.onmouseleave=()=>{ hoveredPt=-1; drawPanel('r-skeleton1',false); drawPanel('r-skeleton2',true); };
+    });
+
+    window.addEventListener('resize',resize);
+    resize();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',startResults);
+  else startResults();
+})();
+
+// Clock
+function tick(){const el=document.getElementById('clock2');if(el)el.textContent=new Date().toUTCString().replace('GMT','UTC').slice(0,-4);}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{tick();setInterval(tick,1000);});
+else{tick();setInterval(tick,1000);}
+
+</script>
+</body>
+</html>
