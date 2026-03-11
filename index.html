@@ -146,27 +146,13 @@
       overflow: hidden;
     }
 
-    .hero::after {
-      content: '';
+    #hero-canvas {
       position: absolute;
-      top: 0; right: 0;
-      width: 40%;
+      top: 0; left: 0;
+      width: 100%;
       height: 100%;
-      background: repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 40px,
-        rgba(30,45,61,0.3) 40px,
-        rgba(30,45,61,0.3) 41px
-      ),
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 40px,
-        rgba(30,45,61,0.3) 40px,
-        rgba(30,45,61,0.3) 41px
-      );
       pointer-events: none;
+      opacity: 0.9;
     }
 
     .hero-tag {
@@ -523,6 +509,7 @@
   <main>
     <!-- Hero -->
     <section class="hero">
+      <canvas id="hero-canvas"></canvas>
       <div class="hero-tag">Quantitative Research</div>
       <div class="hero-name fade-in">Nicholas<br/>McBride</div>
       <div class="hero-title fade-in">M.A. Mathematics · UC Santa Cruz · Quantitative Research</div>
@@ -603,7 +590,7 @@
         </div>
         <div class="project-sidebar">
           <div class="metric"><div class="metric-label">Method</div><div class="metric-value purple" style="font-size:14px">Fuzzy Sets</div></div>
-          <div class="metric"><div class="metric-label">Complexity</div><div class="metric-value purple">O(n)</div></div>
+          <div class="metric"><div class="metric-label">Complexity</div><div class="metric-value purple">O(n log n)</div></div>
           <div class="metric"><div class="metric-label">Topology</div><div class="metric-value purple" style="font-size:14px">H₀ · H₁</div></div>
           <div class="metric"><div class="metric-label">Dim reduction</div><div class="metric-value purple" style="font-size:14px">ℝⁿ → ℝ²</div></div>
           <div class="project-arrow">→ View Thesis</div>
@@ -615,7 +602,7 @@
         <div class="project-main">
           <div class="project-id" style="color:#1a6b60">PUB-001 · Discrete &amp; Computational Geometry · Springer 2025</div>
           <div class="project-title">Bounding the Gromov–Hausdorff Distance by the Hausdorff Distance</div>
-          <div class="project-subtitle">Nicholas McBride · Henry Adams · Florian Frick</div>
+          <div class="project-subtitle">Nicholas McBride · Henry Adams · Florian Frick · Sushovan Majhi</div>
           <p class="project-desc">
             Published research establishing sharp bounds between the Gromov–Hausdorff distance
             and the simpler Hausdorff distance for compact metric spaces. Provides computable,
@@ -634,7 +621,7 @@
           <div class="metric"><div class="metric-label">Journal</div><div class="metric-value teal" style="font-size:11px">Disc. &amp; Comp. Geom.</div></div>
           <div class="metric"><div class="metric-label">Publisher</div><div class="metric-value teal" style="font-size:13px">Springer</div></div>
           <div class="metric"><div class="metric-label">Main Result</div><div class="metric-value teal" style="font-size:11px">d_GH ≤ d_H</div></div>
-          <div class="metric"><div class="metric-label">Co-authors</div><div class="metric-value teal" style="font-size:11px">Adams · Frick</div></div>
+          <div class="metric"><div class="metric-label">Co-authors</div><div class="metric-value teal" style="font-size:11px">Adams · Frick · Majhi</div></div>
           <div class="project-arrow">→ View Paper</div>
         </div>
       </a>
@@ -656,7 +643,240 @@
   </div>
 
   <script>
-    // ── Clock ──────────────────────────────────────────────────────────────
+    // ── Hero Canvas — Flowing Contour Lines ────────────────────────────────
+    (function initHeroCanvas(){
+      const canvas = document.getElementById('hero-canvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      // ── Seeded PRNG ──
+      function mulberry32(a){
+        return function(){ a|=0; a=a+0x6D2B79F5|0;
+          var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
+          return((t^t>>>14)>>>0)/4294967296; };
+      }
+      const rng = mulberry32(42);
+
+      const N_POINTS = 72;   // total stars
+      const LINK_DIST = 0.22; // fraction of canvas width to form edges
+      const DISSOLVE_SPEED = 0.0007; // edge alpha fade rate
+
+      // Each point drifts slowly with its own velocity and phase
+      let pts = [];
+
+      function initPoints(W, H){
+        pts = [];
+        const r2 = mulberry32(99);
+        for(let i = 0; i < N_POINTS; i++){
+          pts.push({
+            x:  r2() * W,
+            y:  r2() * H,
+            vx: (r2() - 0.5) * 0.07,
+            vy: (r2() - 0.5) * 0.055,
+            phase: r2() * Math.PI * 2,
+            // Each point has a slow sinusoidal drift overlay
+            driftAmp:  r2() * 18 + 6,
+            driftFreq: r2() * 0.0004 + 0.0001,
+            driftPhaseX: r2() * Math.PI * 2,
+            driftPhaseY: r2() * Math.PI * 2,
+          });
+        }
+      }
+
+      // ── Bowyer-Watson Delaunay triangulation ──────────────────────────────
+      function circumcircle(ax,ay,bx,by,cx,cy){
+        const D = 2*(ax*(by-cy)+bx*(cy-ay)+cx*(ay-by));
+        if(Math.abs(D)<1e-10) return null;
+        const ux=((ax*ax+ay*ay)*(by-cy)+(bx*bx+by*by)*(cy-ay)+(cx*cx+cy*cy)*(ay-by))/D;
+        const uy=((ax*ax+ay*ay)*(cx-bx)+(bx*bx+by*by)*(ax-cx)+(cx*cx+cy*cy)*(bx-ax))/D;
+        const r=Math.hypot(ax-ux,ay-uy);
+        return{cx:ux,cy:uy,r};
+      }
+
+      function delaunay(points){
+        // Super-triangle that contains all points
+        const W=canvas.width, H=canvas.height;
+        const M = Math.max(W,H)*3;
+        const superTri = [
+          {x: W/2 - M, y: -M},
+          {x: W/2,     y: H + M*2},
+          {x: W/2 + M, y: -M},
+        ];
+        const all = [...points, ...superTri];
+        const n = all.length;
+        const sv = n-3, se = n-2, sf = n-1; // super-triangle vertex indices
+
+        let tris = [{a:sv, b:se, c:sf}];
+
+        for(let pi=0; pi < points.length; pi++){
+          const p = all[pi];
+          const bad = [];
+          const boundary = [];
+
+          // Find all triangles whose circumcircle contains p
+          for(const t of tris){
+            const cc = circumcircle(all[t.a].x,all[t.a].y,all[t.b].x,all[t.b].y,all[t.c].x,all[t.c].y);
+            if(cc && Math.hypot(p.x-cc.cx,p.y-cc.cy) < cc.r - 1e-8){
+              bad.push(t);
+            }
+          }
+
+          // Find boundary of polygonal hole
+          for(const t of bad){
+            const edges=[[t.a,t.b],[t.b,t.c],[t.c,t.a]];
+            for(const [ea,eb] of edges){
+              // Edge is boundary if it appears in exactly one bad triangle
+              let shared=0;
+              for(const t2 of bad){
+                const e2=[[t2.a,t2.b],[t2.b,t2.c],[t2.c,t2.a]];
+                for(const [e2a,e2b] of e2){
+                  if((ea===e2a&&eb===e2b)||(ea===e2b&&eb===e2a)) shared++;
+                }
+              }
+              if(shared===1) boundary.push([ea,eb]);
+            }
+          }
+
+          // Remove bad triangles
+          for(const t of bad){
+            const idx=tris.indexOf(t);
+            if(idx>=0) tris.splice(idx,1);
+          }
+
+          // Re-triangulate hole
+          for(const [ea,eb] of boundary){
+            tris.push({a:ea,b:eb,c:pi});
+          }
+        }
+
+        // Remove triangles touching the super-triangle
+        tris = tris.filter(t => t.a<sv && t.b<sv && t.c<sv);
+        return tris;
+      }
+
+      // ── Edge registry with fade in/out ───────────────────────────────────
+      // Each edge keyed as "min-max" index, tracks alpha 0→1→0
+      const edges = new Map();
+
+      function updateEdges(tris){
+        const active = new Set();
+        for(const t of tris){
+          const pairs=[[t.a,t.b],[t.b,t.c],[t.c,t.a]];
+          for(const [a,b] of pairs){
+            const key = Math.min(a,b)+'-'+Math.max(a,b);
+            active.add(key);
+            if(!edges.has(key)) edges.set(key,{alpha:0, state:'in', a, b});
+          }
+        }
+        for(const [k,e] of edges){
+          if(!active.has(k)) e.state='out';
+        }
+      }
+
+      function stepEdges(dt){
+        for(const [k,e] of edges){
+          if(e.state==='in'){
+            e.alpha = Math.min(1, e.alpha + dt * DISSOLVE_SPEED * 3.2);
+          } else {
+            e.alpha = Math.max(0, e.alpha - dt * DISSOLVE_SPEED * 1.8);
+            if(e.alpha<=0) edges.delete(k);
+          }
+        }
+      }
+
+      function draw(W, H, dt){
+        ctx.clearRect(0,0,W,H);
+
+        // Move points
+        for(const p of pts){
+          p.x += p.vx + Math.sin(performance.now()*p.driftFreq + p.driftPhaseX)*0.045;
+          p.y += p.vy + Math.cos(performance.now()*p.driftFreq + p.driftPhaseY)*0.035;
+          // Soft boundary bounce
+          if(p.x < 0)   { p.x = 0;   p.vx = Math.abs(p.vx); }
+          if(p.x > W)   { p.x = W;   p.vx = -Math.abs(p.vx); }
+          if(p.y < 0)   { p.y = 0;   p.vy = Math.abs(p.vy); }
+          if(p.y > H)   { p.y = H;   p.vy = -Math.abs(p.vy); }
+        }
+
+        // Recompute triangulation every frame
+        const tris = delaunay(pts);
+
+        // Filter edges by proximity — only keep edges shorter than LINK_DIST * W
+        const maxDist = LINK_DIST * W;
+        const filteredTris = tris.filter(t => {
+          const dAB = Math.hypot(pts[t.a].x-pts[t.b].x, pts[t.a].y-pts[t.b].y);
+          const dBC = Math.hypot(pts[t.b].x-pts[t.c].x, pts[t.b].y-pts[t.c].y);
+          const dCA = Math.hypot(pts[t.c].x-pts[t.a].x, pts[t.c].y-pts[t.a].y);
+          return dAB < maxDist && dBC < maxDist && dCA < maxDist;
+        });
+
+        updateEdges(filteredTris);
+        stepEdges(dt);
+
+        // ── Draw triangle fills (very faint) ──
+        for(const t of filteredTris){
+          const ea = edges.get(Math.min(t.a,t.b)+'-'+Math.max(t.a,t.b));
+          const eb = edges.get(Math.min(t.b,t.c)+'-'+Math.max(t.b,t.c));
+          const ec = edges.get(Math.min(t.c,t.a)+'-'+Math.max(t.c,t.a));
+          if(!ea||!eb||!ec) continue;
+          const triAlpha = Math.min(ea.alpha, eb.alpha, ec.alpha) * 0.045;
+          if(triAlpha < 0.002) continue;
+          ctx.beginPath();
+          ctx.moveTo(pts[t.a].x, pts[t.a].y);
+          ctx.lineTo(pts[t.b].x, pts[t.b].y);
+          ctx.lineTo(pts[t.c].x, pts[t.c].y);
+          ctx.closePath();
+          ctx.fillStyle = `rgba(167,139,250,${triAlpha})`;
+          ctx.fill();
+        }
+
+        // ── Draw edges ──
+        for(const [,e] of edges){
+          if(e.alpha < 0.005) continue;
+          const pa = pts[e.a], pb = pts[e.b];
+          const dist = Math.hypot(pa.x-pb.x, pa.y-pb.y);
+          // Fade by distance too — closer = brighter
+          const distFade = Math.max(0, 1 - dist/maxDist);
+          const alpha = e.alpha * distFade * 0.22;
+          ctx.beginPath();
+          ctx.moveTo(pa.x, pa.y);
+          ctx.lineTo(pb.x, pb.y);
+          ctx.strokeStyle = `rgba(100,130,180,${alpha})`;
+          ctx.lineWidth = 0.7;
+          ctx.stroke();
+        }
+
+        // ── Draw points ──
+        for(const p of pts){
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(140,160,200,0.35)';
+          ctx.fill();
+        }
+      }
+
+      function resize(){
+        const hero = canvas.parentElement;
+        const W = hero.clientWidth;
+        const H = hero.clientHeight;
+        canvas.width  = W;
+        canvas.height = H;
+        initPoints(W, H);
+        edges.clear();
+      }
+
+      let last = 0;
+      function animate(ts){
+        const dt = ts - last; last = ts;
+        const W=canvas.width, H=canvas.height;
+        if(W>0 && H>0) draw(W, H, dt);
+        requestAnimationFrame(animate);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(animate);
+    })();
     function updateClock() {
       const now = new Date();
       document.getElementById('clock').textContent =

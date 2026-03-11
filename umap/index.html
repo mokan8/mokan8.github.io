@@ -164,13 +164,16 @@
       <div class="hero-stat"><div class="hero-stat-val green">~n<sup style="font-size:11px">1.1</sup></div><div class="hero-stat-label">Empirical</div></div>
       <div class="hero-stat"><div class="hero-stat-val cyan">Top.</div><div class="hero-stat-label">Preserving</div></div>
     </div>
+    <div style="margin-top:20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:9px;color:var(--text-dim);letter-spacing:0.18em;text-transform:uppercase;">Thesis Advisor</span>
+      <span style="width:1px;height:14px;background:var(--border);display:inline-block;"></span>
+      <span style="font-size:11px;color:var(--purple);letter-spacing:0.06em;">Marty Weissman</span>
+      <span style="font-size:10px;color:var(--text-dim);letter-spacing:0.05em;">· UC Santa Cruz</span>
+    </div>
     <div class="hero-scroll">↓ Scroll to explore</div>
   </div>
-  <div class="hero-legend">
-    <div class="legend-item">Cluster structure <div class="legend-dot" style="background:var(--purple)"></div></div>
-    <div class="legend-item">Local connectivity <div class="legend-dot" style="background:var(--cyan)"></div></div>
-    <div class="legend-item">Global topology <div class="legend-dot" style="background:var(--green)"></div></div>
-  </div>
+
+
 </div>
 
 <main>
@@ -1001,6 +1004,51 @@ const DATASETS={
     ctx.strokeStyle = 'rgba(30,45,61,0.35)'; ctx.lineWidth=0.5;
     for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
     for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    // ── 2D Sheet manifold ──
+    // A soft wavy mesh drawn in the background to represent the underlying data manifold
+    const MX=14, MY=10;
+    const mPad=48, mW=W-mPad*2, mH=H-mPad*2-20;
+    const sheetCol = showTriangles ? 'rgba(167,139,250,' : 'rgba(0,188,212,';
+    const mpts=[];
+    for(let j=0;j<=MY;j++) for(let i=0;i<=MX;i++){
+      const tx=i/MX, ty=j/MY;
+      // Wave deformation — gentle ripple suggesting curved manifold
+      const wave1=Math.sin(tx*Math.PI*1.4+animT*0.18)*0.06;
+      const wave2=Math.cos(ty*Math.PI*1.2+animT*0.12)*0.05;
+      const wave3=Math.sin((tx+ty)*Math.PI*0.9+animT*0.08)*0.04;
+      const wx=mPad+tx*mW + (wave2+wave3)*mW*0.5;
+      const wy=mPad+20+ty*mH + (wave1+wave3)*mH*0.55;
+      mpts.push({wx,wy});
+    }
+    // Fill quads
+    for(let j=0;j<MY;j++) for(let i=0;i<MX;i++){
+      const idx=j*(MX+1)+i;
+      const p00=mpts[idx], p10=mpts[idx+1], p01=mpts[idx+MX+1], p11=mpts[idx+MX+2];
+      ctx.beginPath();
+      ctx.moveTo(p00.wx,p00.wy);ctx.lineTo(p10.wx,p10.wy);
+      ctx.lineTo(p11.wx,p11.wy);ctx.lineTo(p01.wx,p01.wy);ctx.closePath();
+      ctx.fillStyle = sheetCol+'0.025)';
+      ctx.fill();
+    }
+    // Draw u-lines
+    for(let j=0;j<=MY;j++){
+      ctx.beginPath();
+      for(let i=0;i<=MX;i++){
+        const {wx,wy}=mpts[j*(MX+1)+i];
+        i===0?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy);
+      }
+      ctx.strokeStyle=sheetCol+'0.18)'; ctx.lineWidth=0.7; ctx.stroke();
+    }
+    // Draw v-lines
+    for(let i=0;i<=MX;i++){
+      ctx.beginPath();
+      for(let j=0;j<=MY;j++){
+        const {wx,wy}=mpts[j*(MX+1)+i];
+        j===0?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy);
+      }
+      ctx.strokeStyle=sheetCol+'0.12)'; ctx.lineWidth=0.5; ctx.stroke();
+    }
 
     const pad = 56;
 
