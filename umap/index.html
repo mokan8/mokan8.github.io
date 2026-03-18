@@ -22,10 +22,10 @@
     nav{position:fixed;top:0;left:0;right:0;height:42px;background:rgba(8,11,15,0.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:200;}
     .nav-back{color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:0.08em;display:flex;align-items:center;gap:8px;transition:color 0.15s;}
     .nav-back:hover{color:var(--amber);}
-    .nav-title{margin-left:20px;color:var(--text-mid);font-size:11px;letter-spacing:0.08em;padding-left:20px;border-left:1px solid var(--border);}
-    .nav-title span{color:var(--purple);}
+    .nav-title{margin-left:20px;color:var(--text-dim);font-size:10px;letter-spacing:0.1em;padding-left:20px;border-left:1px solid var(--border);}
+    .nav-title span{color:var(--purple);font-weight:500;}
     .nav-right{margin-left:auto;display:flex;}
-    .nav-right a{color:var(--text-dim);text-decoration:none;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:0 14px;height:42px;display:flex;align-items:center;border-left:1px solid var(--border);transition:color 0.15s;}
+    .nav-right a{color:var(--text-dim);text-decoration:none;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;padding:0 16px;height:42px;display:flex;align-items:center;border-left:1px solid var(--border);transition:color 0.15s;}
     .nav-right a:hover{color:var(--purple);}
 
     .statusbar{position:fixed;bottom:0;left:0;right:0;height:24px;background:var(--purple);display:flex;align-items:center;padding:0 16px;gap:20px;z-index:200;}
@@ -60,9 +60,9 @@
     /* ── Sections ── */
     main{padding-top:0;}
     .section{border-bottom:1px solid var(--border);}
-    .section-bar{padding:10px 48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-    .section-bar h2{font-size:10px;font-weight:500;color:var(--text-dim);letter-spacing:0.2em;text-transform:uppercase;}
-    .stag{font-size:9px;padding:2px 8px;background:rgba(167,139,250,0.1);color:var(--purple);letter-spacing:0.1em;text-transform:uppercase;}
+    .section-bar{padding:8px 48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+    .section-bar h2{font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:0.22em;text-transform:uppercase;}
+    .stag{font-size:8px;padding:2px 7px;background:rgba(167,139,250,0.08);color:var(--purple);letter-spacing:0.1em;text-transform:uppercase;border:1px solid rgba(167,139,250,0.15);}
     .section-content{padding:36px 48px;}
 
     /* ── Simplex comparison viz ── */
@@ -90,9 +90,9 @@
     .sc-info{margin-left:auto;font-size:9px;color:var(--text-dim);letter-spacing:0.08em;}
 
     /* ── Walkthrough ── */
-    .wt-step{display:grid;grid-template-columns:48px 1fr;border:1px solid var(--border);margin-bottom:-1px;transition:border-color 0.2s;}
-    .wt-step:hover{border-color:rgba(167,139,250,0.4);z-index:1;position:relative;}
-    .wt-num{display:flex;align-items:flex-start;justify-content:center;padding-top:24px;font-size:11px;color:rgba(167,139,250,0.4);border-right:1px solid var(--border);font-weight:500;}
+    .wt-step{display:grid;grid-template-columns:48px 1fr;border:1px solid var(--border);margin-bottom:-1px;transition:border-color 0.2s,border-left-color 0.2s;}
+    .wt-step:hover{border-color:rgba(167,139,250,0.3);border-left:2px solid var(--purple);z-index:1;position:relative;}
+    .wt-num{display:flex;align-items:flex-start;justify-content:center;padding-top:22px;font-size:10px;color:rgba(167,139,250,0.3);border-right:1px solid var(--border);font-weight:600;letter-spacing:0.05em;}
     .wt-body{padding:24px 28px;}
     .wt-title{font-size:14px;font-weight:500;color:#fff;margin-bottom:8px;}
     .wt-text{font-family:var(--font-sans);font-size:13px;color:var(--text-mid);line-height:1.8;font-weight:300;max-width:740px;}
@@ -158,19 +158,13 @@
   <div class="hero-content">
     <div class="hero-eyebrow">M.A. Thesis · UC Santa Cruz · 2025</div>
     <div class="hero-h1">UMAP: Uniform Manifold<br/>Approximation & Projection</div>
-    <p class="hero-desc">Thesis research on <strong>topological dimensionality reduction</strong>. Built theoretical foundations connecting Riemannian geometry, fuzzy simplicial sets, and manifold learning — then applied the framework to high-dimensional data embedding.</p>
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-val purple">∞→2</div><div class="hero-stat-label">Dimension</div></div>
-      <div class="hero-stat"><div class="hero-stat-val green">~n<sup style="font-size:11px">1.1</sup></div><div class="hero-stat-label">Empirical</div></div>
-      <div class="hero-stat"><div class="hero-stat-val cyan">Top.</div><div class="hero-stat-label">Preserving</div></div>
-    </div>
-    <div style="margin-top:20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+    <p class="hero-desc">An extension of the UMAP dimensionality reduction algorithm that incorporates <strong>2-simplices</strong>, improving topological fidelity on manifold-structured data.</p>
+    <div style="margin-top:28px;margin-bottom:0;display:flex;align-items:center;gap:10px;">
       <span style="font-size:9px;color:var(--text-dim);letter-spacing:0.18em;text-transform:uppercase;">Thesis Advisor</span>
       <span style="width:1px;height:14px;background:var(--border);display:inline-block;"></span>
       <span style="font-size:11px;color:var(--purple);letter-spacing:0.06em;">Marty Weissman</span>
       <span style="font-size:10px;color:var(--text-dim);letter-spacing:0.05em;">· UC Santa Cruz</span>
     </div>
-    <div class="hero-scroll">↓ Scroll to explore</div>
   </div>
 
 
@@ -222,21 +216,6 @@
         <span class="sc-info" id="sc-info">Drag to rotate · hover a point to highlight its neighborhood</span>
       </div>
     </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);">
-      <div style="padding:20px 28px;border-right:1px solid var(--border);">
-        <div style="font-size:10px;color:var(--cyan);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;">Standard UMAP — 1-Skeleton</div>
-        <div style="font-family:var(--font-sans);font-size:12px;color:var(--text-mid);line-height:1.7;">
-          The standard UMAP algorithm explicitly works with the <strong style="color:var(--text)">fuzzy 1-skeleton only</strong> — vertices (0-simplices) and weighted edges (1-simplices). The higher-order simplices exist in the theory but are discarded: the algorithm reduces the fuzzy simplicial set to a weighted graph. This makes it computationally tractable but means only $H_0$ (cluster connectivity) is directly encoded. Loops and voids in the data must be inferred indirectly.
-        </div>
-      </div>
-      <div style="padding:20px 28px;">
-        <div style="font-size:10px;color:var(--purple);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;">Thesis Extension — 2-Skeleton</div>
-        <div style="font-family:var(--font-sans);font-size:12px;color:var(--text-mid);line-height:1.7;">
-          The thesis extends the construction to include <strong style="color:var(--text)">2-simplices (filled triangles)</strong>, whose fuzzy membership is set by the minimum edge weight of their three bounding 1-simplices — the simplicial condition $\mu(\sigma) \leq \mu(\partial\sigma)$. This directly encodes $H_1$ (loops and cycles), giving a richer topological representation. The cross-entropy objective is then optimized over the full 2-skeleton, not just the graph.
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -250,8 +229,7 @@
       <div class="wt-body">
         <div class="wt-title">The Manifold Hypothesis</div>
         <div class="wt-text">
-          <p>Real high-dimensional data — images, genomic sequences, financial returns — does not fill its ambient space uniformly. It tends to concentrate near a <strong>low-dimensional manifold</strong> embedded in the high-dimensional space. A 64×64 image lives in ℝ<sup>4096</sup>, but the set of natural images forms a manifold of much smaller intrinsic dimension.</p>
-          <p>Dimensionality reduction exploits this: if the true intrinsic dimension is d ≪ D, we should be able to represent the data faithfully in ℝ<sup>d</sup>. The challenge is doing so while preserving the geometric and topological structure of the manifold.</p>
+          <p>Real high-dimensional data doesn't fill its ambient space uniformly — it concentrates near a <strong>low-dimensional manifold</strong>. A 64×64 image lives in ℝ<sup>4096</sup>, but the set of natural images occupies a manifold of far smaller intrinsic dimension. Dimensionality reduction exploits this: if the true intrinsic dimension is d ≪ D, we can represent the data faithfully in ℝ<sup>d</sup> while preserving its geometric and topological structure.</p>
         </div>
       </div>
     </div>
@@ -287,11 +265,9 @@
       <div class="wt-body">
         <div class="wt-title">Low-Dimensional Embedding via Cross-Entropy Optimization</div>
         <div class="wt-text">
-          <p>UMAP finds a low-dimensional layout Y = {y<sub>1</sub>, ..., y<sub>n</sub>} ⊂ ℝ<sup>d</sup> that best matches the high-dimensional fuzzy structure. The low-dimensional edge weights are modeled using a smooth family of curves:</p>
-          <div class="wt-formula">$$v(y_i,\, y_j) \;=\; \left(1 + a\,\|y_i - y_j\|^{2b}\right)^{-1}$$</div>
-          <p>Parameters a and b are fit to approximate a smooth step function. The objective is to <strong>minimize the cross-entropy</strong> between the two fuzzy sets — the high-dimensional w and the low-dimensional v:</p>
+          <p>UMAP finds a low-dimensional layout Y ⊂ ℝ<sup>d</sup> by minimizing the <strong>cross-entropy</strong> between the high-dimensional fuzzy set and a low-dimensional one whose edge weights are modeled as $v(y_i, y_j) = (1 + a\|y_i - y_j\|^{2b})^{-1}$:</p>
           <div class="wt-formula">$$\mathcal{C} \;=\; \sum_{i,j}\Bigl[w\log\frac{w}{v} + (1-w)\log\frac{1-w}{1-v}\Bigr]$$</div>
-          <p>This is minimized with stochastic gradient descent using <strong>negative sampling</strong> for efficiency. Intuitively: attract connected points, repel disconnected ones. Unlike t-SNE's KL divergence, the cross-entropy treats attraction and repulsion symmetrically, which is why UMAP better preserves global structure.</p>
+          <p>Minimized via stochastic gradient descent with negative sampling: attract connected points, repel disconnected ones. Unlike t-SNE's KL divergence, the cross-entropy treats attraction and repulsion symmetrically — which is why UMAP better preserves global structure.</p>
         </div>
       </div>
     </div>
@@ -299,11 +275,10 @@
     <div class="wt-step">
       <div class="wt-num">05</div>
       <div class="wt-body">
-        <div class="wt-title">Connection to the Thesis — UMAP via Category Theory</div>
+        <div class="wt-title">The Role of 0- and 1-Simplices</div>
         <div class="wt-text">
-          <p>The thesis frames UMAP rigorously using <strong>category theory</strong>. The central object is the <em>fuzzy singular complex functor</em> $\widetilde{\mathrm{Sing}}_X$, which takes a finite metric space $(X, d)$ and produces a fuzzy simplicial set encoding all pairwise distance relationships. This functor has a left adjoint — the <em>metric realization</em> functor — giving an adjunction between fuzzy simplicial sets and extended pseudo-metric spaces.</p>
-          <p>The key insight is that the fuzzy simplicial set construction approximates the <strong>Čech complex</strong> of the underlying manifold. By the Nerve theorem, this captures the manifold's homology — its connected components ($H_0$), loops ($H_1$), and voids ($H_2$). UMAP's embeddings therefore preserve <strong>persistent homology</strong> in a formal sense: clusters, holes, and voids in the plot correspond to genuine topological features of the data.</p>
-          <p>The thesis also frames the local connectivity condition — setting $\rho_i = \min_j d(x_i, x_{ij})$ so the nearest neighbor is at distance zero — as a requirement that each $0$-simplex is the face of some $1$-simplex with fuzzy membership strength $1$. This ensures the resulting topological structure is locally connected, a categorical condition rather than a geometric one.</p>
+          <p>A <strong>0-simplex</strong> is a point — one data observation, with membership strength 1. The local metric normalization (subtracting the nearest-neighbor distance ρ<sub>i</sub>) ensures every 0-simplex is the face of at least one 1-simplex with weight 1, guaranteeing local connectivity throughout the complex.</p>
+          <p>A <strong>1-simplex</strong> is a weighted edge between two points. Its weight $w(x_i, x_j) = \exp({-\max(0,\, d - \rho_i)}/{\sigma_i})$ encodes how strongly $x_j$ belongs to $x_i$'s neighborhood. These weighted edges form the <strong>fuzzy 1-skeleton</strong> — the graph UMAP optimizes over. Standard UMAP stops here, discarding higher-order simplices for tractability. The cost: $H_0$ (cluster structure) is encoded directly, but $H_1$ (loops, holes) can only be inferred — the graph cannot distinguish a genuine hollow loop from a dense cluster whose triangles would fill it in. That gap is what this thesis addresses.</p>
         </div>
       </div>
     </div>
@@ -311,83 +286,136 @@
   </div>
 </div>
 
+<!-- ── ANCHORUMAP RESULTS ── -->
 <div class="section" id="results">
-  <div class="section-bar"><h2>S&amp;P 500 Sector Topology</h2><div class="stag">Real Data · H₁ Recovery · Market Structure</div></div>
+  <div class="section-bar"><h2>AnchorUMAP — Results</h2><div class="stag">Geometric · Topological · Three Datasets</div></div>
+
   <div class="section-content" style="padding:0;">
 
-    <!-- Live demo: S&P 500 sector correlation topology -->
-    <div style="border-bottom:1px solid var(--border);">
-      <div style="display:grid;grid-template-columns:1fr 1fr;min-height:420px;">
-
-        <!-- Left: 1-skeleton — graph only -->
-        <div style="border-right:1px solid var(--border);position:relative;">
-          <canvas id="r-skeleton1" style="display:block;width:100%;height:360px;cursor:crosshair;"></canvas>
-          <div style="position:absolute;top:14px;left:16px;font-size:9px;color:var(--cyan);letter-spacing:0.13em;text-transform:uppercase;">Standard UMAP — 1-skeleton</div>
-          <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--bg2);">
-            <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Sector loop detected</div>
-            <div style="font-size:16px;font-weight:600;color:var(--red);" id="r1-h1">Ambiguous</div>
-            <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">Edges alone cannot certify H₁ cycle</div>
-          </div>
-        </div>
-
-        <!-- Right: 2-skeleton — triangles certify the loop -->
-        <div style="position:relative;">
-          <canvas id="r-skeleton2" style="display:block;width:100%;height:360px;cursor:crosshair;"></canvas>
-          <div style="position:absolute;top:14px;left:16px;font-size:9px;color:var(--purple);letter-spacing:0.13em;text-transform:uppercase;">Thesis Extension — 2-skeleton</div>
-          <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--bg2);">
-            <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Sector loop detected</div>
-            <div style="font-size:16px;font-weight:600;color:var(--green);" id="r2-h1">✓ H₁ rank = 1 · loop certified</div>
-            <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">Ring of triangles with hollow interior</div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Stats bar -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);">
-        <div style="padding:14px 20px;border-right:1px solid var(--border);">
-          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Dataset</div>
-          <div style="font-size:13px;font-weight:500;color:var(--text);">S&amp;P 500 Sectors</div>
-          <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">11 GICS sectors · pairwise correlation</div>
-        </div>
-        <div style="padding:14px 20px;border-right:1px solid var(--border);">
-          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">β₀ (components)</div>
-          <div style="font-size:20px;font-weight:600;color:var(--cyan);">1</div>
-          <div style="font-size:9px;color:var(--green);margin-top:2px;">✓ Both methods recover</div>
-        </div>
-        <div style="padding:14px 20px;border-right:1px solid var(--border);">
-          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">β₁ via 1-skeleton</div>
-          <div style="font-size:20px;font-weight:600;color:var(--red);">0</div>
-          <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">Graph edges cannot certify</div>
-        </div>
-        <div style="padding:14px 20px;">
-          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">β₁ via 2-skeleton</div>
-          <div style="font-size:20px;font-weight:600;color:var(--green);">1 ✓</div>
-          <div style="font-size:9px;color:var(--green);margin-top:2px;">Sector rotation cycle certified</div>
-        </div>
+    <!-- Intro -->
+    <div style="padding:24px 48px;border-bottom:1px solid var(--border);">
+      <div style="font-family:var(--font-sans);font-size:13px;color:var(--text-mid);line-height:1.8;font-weight:300;max-width:820px;">
+        Evaluated on a <strong style="color:var(--text);">circle</strong> (S¹), a <strong style="color:var(--text);">2D wavy manifold</strong>, and <strong style="color:var(--text);">PBMC3k</strong> single-cell RNA data. Four metrics: trustworthiness and Spearman's ρ for geometry (higher = better), Wasserstein and bottleneck distance from Ripser persistence diagrams for topology (lower = better). Key finding: <strong style="color:var(--text);">AnchorUMAP improves topological fidelity on manifold-structured data without harming local geometry.</strong>
       </div>
     </div>
 
-    <!-- Three result cards -->
-    <div class="wt-step" style="margin-bottom:-1px;">
-      <div class="wt-num">R1</div>
-      <div class="wt-body">
-        <div class="wt-title">The Sector Rotation Loop — A Real $H_1$ Generator in Market Data</div>
-        <div class="wt-text">
-          <p>S&amp;P 500 sectors exhibit a well-known rotation cycle in their return correlations: <strong>Technology → Consumer Discretionary → Financials → Utilities → Technology</strong>. In the correlation metric space, this cycle forms a genuine $H_1$ generator — a loop that cannot be contracted to a point. The standard UMAP 1-skeleton, which only builds a weighted graph, cannot distinguish this loop from a dense cluster or an artifact of noise. A graph admits cycles of edges, but without 2-simplices, there is no notion of "filled interior" to compare against.</p>
-          <p>The 2-skeleton resolves this: these sectors form a ring of triangles whose interior remains hollow — the simplicial condition $\mu([i,j,k]) = \min(w_{ij}, w_{jk}, w_{ik})$ assigns low membership to any triangle spanning the gap, leaving the loop boundary as a non-trivial 1-cycle. This is precisely the $H_1$ generator the 1-skeleton cannot certify. Hover over sectors in the 2-skeleton panel to inspect triangle memberships.</p>
+    <!-- Geometric metrics — inline, no grid chrome -->
+    <div style="padding:20px 48px 24px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.16em;text-transform:uppercase;">Geometric metrics</div>
+        <div style="font-size:9px;color:var(--text-dim);opacity:0.5;">trustworthiness · Spearman ρ &nbsp;·&nbsp; higher is better</div>
+        <div style="display:flex;gap:0;margin-left:auto;">
+          <button class="sc-btn active" id="kt-5" onclick="showK(5)">k = 5</button>
+          <button class="sc-btn" id="kt-10" onclick="showK(10)">k = 10</button>
+          <button class="sc-btn" id="kt-20" onclick="showK(20)">k = 20</button>
         </div>
+      </div>
+      <div id="table-rows"></div>
+    </div>
+
+    <!-- Topological scoreboard -->
+    <div style="padding:20px 48px 24px;border-bottom:1px solid var(--border);">
+      <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:4px;">Topological distortion — Wasserstein &amp; Bottleneck (lower is better · k=10)</div>
+      <div style="font-family:var(--font-sans);font-size:11px;color:var(--text-dim);margin-bottom:18px;">How faithfully does the embedding preserve the shape of the data? These distances compare persistence diagrams of the original vs. embedded data — smaller means the topology was preserved more accurately.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);">
+
+        <!-- Circle -->
+        <div style="background:var(--bg);padding:20px 24px;">
+          <div style="font-size:9px;color:var(--green);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px;">Circle (S¹)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <div style="font-size:9px;color:var(--text-dim);margin-bottom:6px;">Wasserstein</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:22px;font-weight:600;color:var(--text-dim);text-decoration:line-through;opacity:0.5;">8.30</span>
+                <span style="font-size:11px;color:var(--text-dim);">→</span>
+                <span style="font-size:22px;font-weight:600;color:var(--green);">5.03</span>
+              </div>
+              <div style="font-size:9px;color:var(--green);margin-top:3px;">−39%</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--text-dim);margin-bottom:6px;">Bottleneck</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:22px;font-weight:600;color:var(--text-dim);text-decoration:line-through;opacity:0.5;">1.80</span>
+                <span style="font-size:11px;color:var(--text-dim);">→</span>
+                <span style="font-size:22px;font-weight:600;color:var(--green);">0.50</span>
+              </div>
+              <div style="font-size:9px;color:var(--green);margin-top:3px;">−72%</div>
+            </div>
+          </div>
+          <div style="font-family:var(--font-sans);font-size:11px;color:var(--text-dim);line-height:1.6;">Trustworthiness holds at 1.000. Circular topology is substantially more faithful.</div>
+        </div>
+
+        <!-- 2D Manifold -->
+        <div style="background:var(--bg);padding:20px 24px;">
+          <div style="font-size:9px;color:var(--purple);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px;">2D Manifold · best case</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <div style="font-size:9px;color:var(--text-dim);margin-bottom:6px;">Wasserstein</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:22px;font-weight:600;color:var(--text-dim);text-decoration:line-through;opacity:0.5;">14.18</span>
+                <span style="font-size:11px;color:var(--text-dim);">→</span>
+                <span style="font-size:22px;font-weight:600;color:var(--purple);">9.81</span>
+              </div>
+              <div style="font-size:9px;color:var(--purple);margin-top:3px;">−31%</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--text-dim);margin-bottom:6px;">Bottleneck</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:22px;font-weight:600;color:var(--text-dim);text-decoration:line-through;opacity:0.5;">0.72</span>
+                <span style="font-size:11px;color:var(--text-dim);">→</span>
+                <span style="font-size:22px;font-weight:600;color:var(--purple);">0.20</span>
+              </div>
+              <div style="font-size:9px;color:var(--purple);margin-top:3px;">−72%</div>
+            </div>
+          </div>
+          <div style="font-family:var(--font-sans);font-size:11px;color:var(--text-dim);line-height:1.6;">Spearman's ρ also improves (+0.031 at k=10). Genuine 2D structure → genuine gains.</div>
+        </div>
+
+        <!-- PBMC3k -->
+        <div style="background:var(--bg);padding:20px 24px;">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px;">PBMC3k · expected null</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <div style="font-size:9px;color:var(--text-dim);margin-bottom:6px;">Wasserstein</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:22px;font-weight:600;color:var(--text-dim);opacity:0.5;">505.9</span>
+                <span style="font-size:11px;color:var(--text-dim);">→</span>
+                <span style="font-size:22px;font-weight:600;color:var(--text-mid);">502.6</span>
+              </div>
+              <div style="font-size:9px;color:var(--text-dim);margin-top:3px;">≈ no change</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--text-dim);margin-bottom:6px;">Bottleneck</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span style="font-size:22px;font-weight:600;color:var(--text-dim);opacity:0.5;">2.03</span>
+                <span style="font-size:11px;color:var(--text-dim);">→</span>
+                <span style="font-size:22px;font-weight:600;color:var(--text-mid);">2.03</span>
+              </div>
+              <div style="font-size:9px;color:var(--text-dim);margin-top:3px;">≈ no change</div>
+            </div>
+          </div>
+          <div style="font-family:var(--font-sans);font-size:11px;color:var(--text-dim);line-height:1.6;">No 2D manifold structure → anchor mechanism correctly does nothing.</div>
+        </div>
+
       </div>
     </div>
 
-    <div class="wt-step" style="margin-bottom:-1px;">
-      <div class="wt-num">R2</div>
-      <div class="wt-body">
-        <div class="wt-title">Why This Matters for Quantitative Finance</div>
-        <div class="wt-text">
-          <p>Sector rotation is a core concept in macro investing: capital flows from growth sectors (Tech, Consumer Discretionary) to defensive sectors (Utilities, Consumer Staples) as the business cycle shifts. Detecting the loop topology of this rotation has direct implications — a $H_1$ generator with long persistence in a barcode means the rotation cycle is <strong>structurally stable</strong>, not just a transient correlation spike. The 2-skeleton, by certifying the loop algebraically rather than just observing correlated edges, provides a stronger invariant for strategy design and risk decomposition.</p>
-          <p>Concretely: a risk model built on the 1-skeleton might merge growth and defensive sectors into a single cluster during a high-correlation period, missing the rotation loop entirely. The 2-skeleton preserves the loop structure because the hollow interior persists as long as the minimum triangle weight stays low — a geometric fact encoded by the simplicial condition, not a modeling choice.</p>
-        </div>
+    <!-- Three finding cards — trimmed -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;">
+      <div style="padding:22px 28px;border-right:1px solid var(--border);">
+        <div style="font-size:9px;color:var(--green);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px;">Finding 01 · Circle</div>
+        <div style="font-size:12px;font-weight:500;color:#fff;margin-bottom:8px;">Local geometry intact, topology improved</div>
+        <div style="font-family:var(--font-sans);font-size:11px;color:var(--text-mid);line-height:1.7;">Trustworthiness is exactly 1.000 for both methods at all k — no spurious neighbors introduced. Spearman's ρ drops slightly, a modest global trade-off. The bottleneck distance falls 72%, meaning the circular loop is recovered far more cleanly.</div>
+      </div>
+      <div style="padding:22px 28px;border-right:1px solid var(--border);">
+        <div style="font-size:9px;color:var(--purple);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px;">Finding 02 · 2D Manifold</div>
+        <div style="font-size:12px;font-weight:500;color:#fff;margin-bottom:8px;">Strongest case — k=10 optimal</div>
+        <div style="font-family:var(--font-sans);font-size:11px;color:var(--text-mid);line-height:1.7;">The wavy surface is genuinely 2D, so triangle-finding identifies real structure. At k=10, both geometric and topological metrics improve. At k=20, spurious triangles accumulate and performance regresses — confirming that triangle quality filtering matters.</div>
+      </div>
+      <div style="padding:22px 28px;">
+        <div style="font-size:9px;color:var(--text-mid);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px;">Finding 03 · PBMC3k</div>
+        <div style="font-size:12px;font-weight:500;color:#fff;margin-bottom:8px;">No improvement — as expected</div>
+        <div style="font-family:var(--font-sans);font-size:11px;color:var(--text-mid);line-height:1.7;">Gene expression data forms clusters, not surfaces. AnchorUMAP finds no quality triangles and produces identical metrics. This is the correct outcome — the algorithm should be inert when no 2-simplicial structure exists.</div>
       </div>
     </div>
 
@@ -1191,7 +1219,95 @@ const DATASETS={
 })();
 
 // ════════════════════════════════════════════════════════
-//  RESULTS — S&P 500 SECTOR TOPOLOGY
+//  RESULTS — Interactive metrics table + topo chart
+// ════════════════════════════════════════════════════════
+(function initResults(){
+  // Data from Table 3.1 and Figure 3.5
+  const DATA = {
+    5:  { circle:   {utw:1.000, urho:0.879, atw:1.000, arho:0.873, dtw:0.000, drho:-0.006},
+           manifold: {utw:0.999, urho:0.906, atw:0.998, arho:0.919, dtw:-0.001,drho:0.013},
+           pbmc:     {utw:0.883, urho:0.581, atw:0.883, arho:0.570, dtw:0.000, drho:-0.011} },
+    10: { circle:   {utw:1.000, urho:0.931, atw:1.000, arho:0.911, dtw:0.000, drho:-0.020},
+           manifold: {utw:0.999, urho:0.930, atw:0.998, arho:0.961, dtw:-0.001,drho:0.031},
+           pbmc:     {utw:0.879, urho:0.632, atw:0.879, arho:0.608, dtw:0.000, drho:-0.024} },
+    20: { circle:   {utw:1.000, urho:0.945, atw:1.000, arho:0.904, dtw:0.000, drho:-0.041},
+           manifold: {utw:0.998, urho:0.944, atw:0.996, arho:0.910, dtw:-0.002,drho:-0.034},
+           pbmc:     {utw:0.878, urho:0.630, atw:0.876, arho:0.623, dtw:-0.002,drho:-0.007} }
+  };
+
+  const TOPO = {
+    circle:   { uW:8.304,   uB:1.803, aW:5.026,   aB:0.502 },
+    manifold: { uW:14.175,  uB:0.719, aW:9.807,   aB:0.201 },
+    pbmc:     { uW:505.850, uB:2.028, aW:502.596, aB:2.028 }
+  };
+
+  const DATASETS = [
+    {key:'circle',   label:'Circle (S¹)'},
+    {key:'manifold', label:'2D Manifold'},
+    {key:'pbmc',     label:'PBMC3k'}
+  ];
+
+  let currentK = 5;
+
+  function fmt(v){ return v.toFixed(3); }
+  function fmtDelta(v){
+    const s = (v >= 0 ? '+' : '') + v.toFixed(3);
+    const col = v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--text-dim)';
+    return `<span style="color:${col};font-weight:500;">${s}</span>`;
+  }
+
+  function renderTable(k){
+    const rows = document.getElementById('table-rows');
+    if(!rows) return;
+    const d = DATA[k];
+    rows.innerHTML = DATASETS.map(ds => {
+      const r = d[ds.key];
+      const dTrust = r.dtw;
+      const dRho   = r.drho;
+      const tCol = dTrust < -0.002 ? 'var(--red)' : dTrust > 0.002 ? 'var(--green)' : 'var(--text-dim)';
+      const rCol = dRho   >  0.005 ? 'var(--green)' : dRho < -0.005 ? 'var(--red)' : 'var(--text-dim)';
+      const fmtD = v => (v >= 0 ? '+' : '') + v.toFixed(3);
+      return `
+      <div style="display:flex;align-items:baseline;padding:10px 0;border-bottom:1px solid rgba(30,45,61,0.5);gap:0;">
+        <div style="width:120px;font-size:10px;color:var(--text-mid);flex-shrink:0;">${ds.label}</div>
+        <div style="flex:1;display:flex;align-items:baseline;gap:6px;">
+          <span style="font-size:9px;color:var(--text-dim);letter-spacing:0.08em;margin-right:2px;">trust</span>
+          <span style="font-size:13px;font-weight:500;color:var(--text-dim);">${r.utw.toFixed(3)}</span>
+          <span style="font-size:10px;color:var(--text-dim);opacity:0.4;">→</span>
+          <span style="font-size:13px;font-weight:500;color:var(--text);">${r.atw.toFixed(3)}</span>
+          <span style="font-size:10px;color:${tCol};margin-left:2px;">${fmtD(dTrust)}</span>
+        </div>
+        <div style="flex:1;display:flex;align-items:baseline;gap:6px;">
+          <span style="font-size:9px;color:var(--text-dim);letter-spacing:0.08em;margin-right:2px;">ρ</span>
+          <span style="font-size:13px;font-weight:500;color:var(--text-dim);">${r.urho.toFixed(3)}</span>
+          <span style="font-size:10px;color:var(--text-dim);opacity:0.4;">→</span>
+          <span style="font-size:13px;font-weight:500;color:var(--text);">${r.arho.toFixed(3)}</span>
+          <span style="font-size:10px;color:${rCol};margin-left:2px;">${fmtD(dRho)}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.showK = function(k){
+    currentK = k;
+    [5,10,20].forEach(v=>{
+      const b = document.getElementById(`kt-${v}`);
+      if(b) b.classList.toggle('active', v===k);
+    });
+    renderTable(k);
+  };
+
+  function init(){
+    renderTable(5);
+    window.addEventListener('resize', ()=>{});
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+// ════════════════════════════════════════════════════════
+//  LEGACY SECTOR STUB (canvas removed; stub prevents errors)
 // ════════════════════════════════════════════════════════
 (function initResults(){
   // 11 GICS sectors with realistic 2D correlation-distance embeddings
@@ -1376,7 +1492,7 @@ const DATASETS={
   function startResults(){
     const c1=document.getElementById('r-skeleton1');
     const c2=document.getElementById('r-skeleton2');
-    if(!c1||!c2) return;
+    if(!c1||!c2) return; // canvases removed — graceful no-op
 
     function resize(){
       c1.width=c1.parentElement.clientWidth; c1.height=360;
