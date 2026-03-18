@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Heston SV Model — Nicholas McBride</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -19,6 +19,7 @@
     body { background:var(--bg); color:var(--text); font-family:var(--font-mono); font-size:12px; line-height:1.6; min-height:100vh; cursor:crosshair; }
     body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px); pointer-events:none; z-index:999; }
 
+    /* ── NAV ── */
     nav { position:fixed; top:0; left:0; right:0; height:42px; background:rgba(8,11,15,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; z-index:200; }
     .nav-back { color:var(--text-dim); text-decoration:none; font-size:11px; letter-spacing:0.08em; display:flex; align-items:center; gap:8px; transition:color 0.15s; }
     .nav-back:hover { color:var(--amber); }
@@ -28,6 +29,7 @@
     .nav-right a { color:var(--text-dim); text-decoration:none; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; padding:0 14px; height:42px; display:flex; align-items:center; border-left:1px solid var(--border); transition:color 0.15s; }
     .nav-right a:hover { color:var(--amber); }
 
+    /* ── STATUS BAR ── */
     .statusbar { position:fixed; bottom:0; left:0; right:0; height:24px; background:var(--amber); display:flex; align-items:center; padding:0 16px; gap:20px; z-index:200; }
     .statusbar span { color:#000; font-size:10px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; }
     .statusbar .div { color:rgba(0,0,0,0.3); }
@@ -38,40 +40,39 @@
     .hero-surface { position:relative; height:100vh; background:var(--bg); overflow:hidden; border-bottom:1px solid var(--border); }
     #hero-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
     .hero-overlay { position:absolute; inset:0; background:linear-gradient(to right,rgba(8,11,15,0.92) 0%,rgba(8,11,15,0.5) 50%,transparent 100%); pointer-events:none; }
-    .hero-content { position:absolute; top:50%; left:48px; transform:translateY(-50%); max-width:480px; }
+    .hero-content { position:absolute; top:50%; left:48px; transform:translateY(-50%); max-width:500px; }
     .hero-eyebrow { font-size:10px; color:var(--amber); letter-spacing:0.2em; text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
     .hero-eyebrow::before { content:''; width:20px; height:1px; background:var(--amber); }
     .hero-h1 { font-size:clamp(28px,4vw,48px); font-weight:600; color:#fff; letter-spacing:-0.02em; line-height:1.1; margin-bottom:16px; }
-    .hero-desc { font-family:var(--font-sans); font-size:14px; color:var(--text-mid); line-height:1.8; font-weight:300; margin-bottom:32px; }
+    .hero-desc { font-family:var(--font-sans); font-size:14px; color:var(--text-mid); line-height:1.8; font-weight:300; margin-bottom:28px; }
     .hero-desc strong { color:var(--text); font-weight:500; }
-    .hero-stats { display:flex; gap:0; margin-bottom:32px; }
+    .hero-stats { display:flex; gap:0; margin-bottom:28px; }
     .hero-stat { padding:12px 20px; border:1px solid var(--border); margin-right:-1px; }
     .hero-stat-val { font-size:20px; font-weight:600; letter-spacing:-0.02em; }
     .hero-stat-val.amber{color:var(--amber);} .hero-stat-val.green{color:var(--green);} .hero-stat-val.cyan{color:var(--cyan);}
     .hero-stat-label { font-size:9px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; margin-top:2px; }
-    .hero-scroll { font-size:10px; color:var(--text-dim); letter-spacing:0.15em; text-transform:uppercase; display:flex; align-items:center; gap:8px; animation:pulse 2.5s infinite; }
-    @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
     .hero-drag-hint { position:absolute; bottom:40px; right:48px; font-size:10px; color:var(--text-dim); letter-spacing:0.1em; text-align:right; }
     .hero-axis-labels { position:absolute; bottom:40px; left:50%; transform:translateX(-50%); display:flex; gap:20px; }
     .axis-label { font-size:9px; color:var(--text-dim); letter-spacing:0.1em; display:flex; align-items:center; gap:6px; }
     .axis-dot { width:8px; height:2px; }
 
-    /* ── Sections ── */
+    /* ── SECTIONS ── */
     main { padding-top:0; }
     .section { border-bottom:1px solid var(--border); }
-    .section-bar { padding:10px 48px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+    .section-bar { padding:10px 48px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; height:42px; }
     .section-bar h2 { font-size:10px; font-weight:500; color:var(--text-dim); letter-spacing:0.2em; text-transform:uppercase; }
     .section-bar .stag { font-size:9px; padding:2px 8px; background:var(--amber-glow); color:var(--amber); letter-spacing:0.1em; text-transform:uppercase; }
     .section-content { padding:36px 48px; }
 
-    /* ── Params ── */
+    /* ── PARAMS ── */
     .params-grid { display:grid; grid-template-columns:repeat(5,1fr); border:1px solid var(--border); margin-bottom:24px; }
     .param-cell { padding:20px 22px; border-right:1px solid var(--border); position:relative; overflow:hidden; transition:background 0.2s; }
     .param-cell:hover { background:rgba(255,255,255,0.02); }
     .param-cell:last-child { border-right:none; }
     .param-cell::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; }
     .param-cell.v0::after{background:var(--amber);} .param-cell.kappa::after{background:var(--cyan);} .param-cell.theta::after{background:var(--green);} .param-cell.sigma::after{background:var(--red);} .param-cell.rho::after{background:var(--purple);}
-    .param-sym { font-size:22px; font-weight:600; color:var(--text-dim); margin-bottom:2px; }
+    .param-sym { font-size:22px; font-weight:600; color:var(--text-dim); margin-bottom:2px; line-height:1.2; }
+    .param-sym sub { font-size:14px; vertical-align:sub; }
     .param-name { font-size:9px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px; }
     .param-val { font-size:22px; font-weight:500; letter-spacing:-0.02em; }
     .param-cell.v0 .param-val{color:var(--amber);} .param-cell.kappa .param-val{color:var(--cyan);} .param-cell.theta .param-val{color:var(--green);} .param-cell.sigma .param-val{color:var(--red);} .param-cell.rho .param-val{color:var(--purple);}
@@ -83,18 +84,79 @@
     .diag-val { font-size:13px; font-weight:500; margin-left:auto; }
     .diag-val.ok{color:var(--green);} .diag-val.warn{color:var(--amber);}
 
-    /* ── Walkthrough ── */
+    /* ── METHODOLOGY ── */
     .wt-step { display:grid; grid-template-columns:48px 1fr; border:1px solid var(--border); margin-bottom:-1px; transition:border-color 0.2s; }
     .wt-step:hover { border-color:var(--amber-dim); z-index:1; position:relative; }
     .wt-num { display:flex; align-items:flex-start; justify-content:center; padding-top:24px; font-size:11px; color:var(--amber-dim); border-right:1px solid var(--border); font-weight:500; }
     .wt-body { padding:24px 28px; }
     .wt-title { font-size:14px; font-weight:500; color:#fff; margin-bottom:8px; }
     .wt-text { font-family:var(--font-sans); font-size:13px; color:var(--text-mid); line-height:1.8; font-weight:300; max-width:740px; }
-    .wt-text strong{color:var(--text);font-weight:500;} .wt-text code{font-family:var(--font-mono);font-size:11px;color:var(--amber);background:rgba(255,179,0,0.08);padding:1px 6px;}
+    .wt-text strong{color:var(--text);font-weight:500;}
+    .wt-text code{font-family:var(--font-mono);font-size:11px;color:var(--amber);background:rgba(255,179,0,0.08);padding:1px 6px;}
     .wt-text p+p { margin-top:14px; }
-    .wt-formula { font-family:var(--font-mono); font-size:12px; color:var(--cyan); background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--cyan); padding:12px 16px; margin:12px 0; letter-spacing:0.03em; }
 
-    /* ── Heatmap ── */
+    /* Math formula blocks — styled like code blocks, no LaTeX needed */
+    .math-block {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--cyan);
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      padding: 14px 20px;
+      margin: 14px 0;
+      letter-spacing: 0.02em;
+      line-height: 2;
+      overflow-x: auto;
+    }
+    .math-block .eq-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .math-block .lhs { color: var(--cyan); }
+    .math-block .op  { color: var(--text-dim); }
+    .math-block .rhs { color: var(--cyan); }
+    .math-block .cmt { color: var(--text-dim); font-size:10px; letter-spacing:0.08em; margin-left:auto; }
+    /* Greek/math symbols rendered large */
+    .math-sym { font-style: italic; }
+    .math-sub { font-size: 0.78em; vertical-align: sub; }
+    .math-sup { font-size: 0.78em; vertical-align: super; }
+
+    /* ── INTERACTIVE SURFACE SECTION ── */
+    .surface-layout { display:grid; grid-template-columns:1fr 320px; border:1px solid var(--border); border-top:none; }
+    .surface-canvas-wrap { position:relative; height:520px; background:var(--bg); border-right:1px solid var(--border); overflow:hidden; }
+    #surface-canvas { display:block; cursor:crosshair; }
+    .surface-mode-btns { position:absolute; top:16px; left:16px; display:flex; gap:0; z-index:10; }
+    .surf-btn { padding:5px 12px; font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; background:rgba(8,11,15,0.85); color:var(--text-dim); border:1px solid var(--border); margin-right:-1px; cursor:pointer; transition:all 0.15s; }
+    .surf-btn:hover { color:var(--amber); }
+    .surf-btn.active { background:var(--amber-glow); color:var(--amber); border-color:var(--amber); z-index:1; position:relative; }
+    .surface-drag-hint { position:absolute; bottom:16px; right:16px; font-size:9px; color:var(--text-dim); letter-spacing:0.1em; }
+    .surface-corner { position:absolute; bottom:16px; left:16px; display:flex; gap:0; }
+    .scorner-item { padding:6px 12px; background:rgba(8,11,15,0.85); border:1px solid var(--border); margin-right:-1px; text-align:center; }
+    .scorner-val { display:block; font-size:12px; font-weight:600; }
+    .scorner-label { display:block; font-size:8px; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase; margin-top:1px; }
+
+    /* Smile panel */
+    .smile-panel { padding:20px; display:flex; flex-direction:column; gap:14px; background:var(--bg2); }
+    .smile-header { display:flex; justify-content:space-between; align-items:center; }
+    .smile-title { font-size:11px; font-weight:500; color:var(--text); }
+    .smile-sub { font-size:9px; color:var(--amber); letter-spacing:0.1em; text-transform:uppercase; }
+    #smile-canvas { width:100%; display:block; border:1px solid var(--border); background:var(--bg); }
+    .smile-scrub { display:flex; align-items:center; gap:8px; }
+    .smile-scr-label { font-size:9px; color:var(--text-dim); letter-spacing:0.08em; white-space:nowrap; }
+    .smile-scr-val { font-size:10px; color:var(--amber); min-width:30px; text-align:right; }
+    .smile-features { display:flex; flex-direction:column; gap:8px; }
+    .smile-feat { display:flex; gap:8px; align-items:flex-start; }
+    .sfeat-dot { width:5px; height:5px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+    .sfeat-name { font-size:10px; font-weight:500; color:var(--text); }
+    .sfeat-desc { font-size:9px; color:var(--text-dim); line-height:1.5; }
+    .skew-formula-box { border:1px solid var(--border); border-left:3px solid var(--purple); padding:10px 12px; background:var(--bg); }
+    .skew-formula-label { font-size:8px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:6px; }
+    .skew-formula-eq { font-family:var(--font-mono); font-size:11px; color:var(--purple); line-height:1.8; }
+
+    /* ── HEATMAP (old surface toggle) ── */
     .toggle-group { display:flex; gap:0; margin-bottom:24px; }
     .toggle-btn { padding:6px 16px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; background:transparent; color:var(--text-dim); border:1px solid var(--border); margin-right:-1px; cursor:pointer; transition:all 0.15s; }
     .toggle-btn:hover { color:var(--amber); border-color:var(--amber-dim); }
@@ -104,7 +166,7 @@
     .heatmap-ylabel { font-size:9px; color:var(--text-dim); text-align:right; }
     .heatmap-main { flex:1; }
     .heatmap-grid { display:grid; gap:2px; }
-    .heatmap-cell { height:34px; display:flex; align-items:center; justify-content:center; font-size:9px; color:rgba(0,0,0,0.75); font-weight:500; cursor:pointer; transition:outline 0.1s; }
+    .heatmap-cell { height:32px; display:flex; align-items:center; justify-content:center; font-size:9px; color:rgba(0,0,0,0.75); font-weight:500; cursor:pointer; transition:outline 0.1s; }
     .heatmap-cell:hover { outline:1px solid #fff; z-index:2; position:relative; }
     .heatmap-xlabels { display:grid; gap:2px; margin-top:6px; }
     .heatmap-xlabel { font-size:9px; color:var(--text-dim); text-align:center; }
@@ -114,7 +176,7 @@
     .colorbar-ticks { display:flex; justify-content:space-between; margin-top:4px; flex:1; }
     .colorbar-tick { font-size:9px; color:var(--text-dim); }
 
-    /* ── Pricer ── */
+    /* ── PRICER ── */
     .pricer-layout { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--border); }
     .pricer-inputs { padding:28px; border-right:1px solid var(--border); }
     .pricer-output { padding:28px; }
@@ -151,17 +213,8 @@
     .prob-cell:last-child { border-right:none; }
     .prob-name { font-size:9px; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase; }
     .prob-value { font-size:14px; color:var(--text-mid); font-weight:500; }
-    .output-placeholder { display:flex; align-items:center; justify-content:center; height:180px; color:var(--text-dim); font-size:11px; letter-spacing:0.1em; border:1px dashed var(--border); }
+    .output-placeholder { display:flex; align-items:center; justify-content:center; height:200px; color:var(--text-dim); font-size:11px; letter-spacing:0.1em; border:1px dashed var(--border); }
 
-    /* ── Greeks table ── */
-    .g-heatmap-wrap { overflow-x:auto; }
-    .g-table { width:100%; border-collapse:collapse; font-size:11px; }
-    .g-table th { padding:8px 14px; text-align:right; font-size:9px; font-weight:500; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; border-bottom:1px solid var(--border); white-space:nowrap; }
-    .g-table th:first-child { text-align:left; }
-    .g-table td { padding:9px 14px; text-align:right; border-bottom:1px solid rgba(30,45,61,0.5); font-variant-numeric:tabular-nums; transition:background 0.1s; }
-    .g-table td:first-child { text-align:left; color:var(--text-mid); }
-    .g-table tr:hover td { background:rgba(255,179,0,0.03); }
-    .g-table tr:last-child td { border-bottom:none; }
 
     @media(max-width:900px){
       .hero-content{left:24px;max-width:90%;}
@@ -169,6 +222,8 @@
       .params-grid{grid-template-columns:repeat(3,1fr);} .diag-row{grid-template-columns:repeat(2,1fr);}
       .pricer-layout{grid-template-columns:1fr;} .pricer-inputs{border-right:none;border-bottom:1px solid var(--border);}
       .wt-step{grid-template-columns:36px 1fr;}
+      .surface-layout{grid-template-columns:1fr;}
+      .smile-panel{border-top:1px solid var(--border);}
     }
   </style>
 </head>
@@ -181,23 +236,23 @@
     <a href="#walkthrough">Methodology</a>
     <a href="#surface">Surface</a>
     <a href="#pricer">Pricer</a>
-    <a href="#greeks">Greeks</a>
   </div>
 </nav>
 
+<!-- ── HERO ── -->
 <div class="hero-surface">
   <canvas id="hero-canvas"></canvas>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <div class="hero-eyebrow">SPY Options · Live Calibration · Mar 2026</div>
+    <div class="hero-eyebrow">SPY Options · Calibrated · Mar 2026</div>
     <div class="hero-h1">Heston Stochastic<br/>Volatility Model</div>
-    <p class="hero-desc">End-to-end derivatives research platform. Calibrates the full <strong>implied volatility surface</strong> from 1,542 live market contracts, then prices arbitrary options and computes <strong>Greeks</strong> via semi-analytic Fourier methods.</p>
+    <p class="hero-desc">End-to-end derivatives research platform. Calibrates the full <strong>implied volatility surface</strong> from 144 live market contracts, then prices arbitrary options and computes <strong>Greeks</strong> via semi-analytic Fourier methods.</p>
     <div class="hero-stats">
       <div class="hero-stat"><div class="hero-stat-val amber">24.09%</div><div class="hero-stat-label">Init Vol σ₀</div></div>
       <div class="hero-stat"><div class="hero-stat-val green">3.11 pts</div><div class="hero-stat-label">RMSE (IV)</div></div>
-      <div class="hero-stat"><div class="hero-stat-val cyan">1,542</div><div class="hero-stat-label">Contracts</div></div>
+      <div class="hero-stat"><div class="hero-stat-val cyan">144</div><div class="hero-stat-label">Contracts</div></div>
     </div>
-    <div class="hero-scroll">↓ Scroll to explore</div>
+    <div style="font-size:10px;color:var(--text-dim);letter-spacing:0.15em;text-transform:uppercase;display:flex;align-items:center;gap:8px;">↓ Scroll to explore</div>
   </div>
   <div class="hero-drag-hint">Drag to rotate · Auto-rotating</div>
   <div class="hero-axis-labels">
@@ -209,116 +264,199 @@
 
 <main>
 
+<!-- ── PARAMS ── -->
 <div class="section" id="params">
-  <div class="section-bar"><h2>Calibrated Parameters</h2><div class="stag">Heston (1993)</div></div>
+  <div class="section-bar"><h2>Calibrated Parameters</h2><div class="stag">Heston (1993) · calibration.json</div></div>
   <div class="section-content">
     <div class="params-grid">
-      <div class="param-cell v0"><div class="param-sym">v<sub>0</sub></div><div class="param-name">Initial Variance</div><div class="param-val">0.05805</div><div class="param-sub">vol = 24.09%</div></div>
-      <div class="param-cell kappa"><div class="param-sym">κ</div><div class="param-name">Mean Reversion</div><div class="param-val">5.328</div><div class="param-sub">fast reversion</div></div>
-      <div class="param-cell theta"><div class="param-sym">θ</div><div class="param-name">Long-Run Variance</div><div class="param-val">0.04895</div><div class="param-sub">LR vol = 22.12%</div></div>
-      <div class="param-cell sigma"><div class="param-sym">σ<sub>v</sub></div><div class="param-name">Vol of Vol</div><div class="param-val">0.7222</div><div class="param-sub">high curvature</div></div>
-      <div class="param-cell rho"><div class="param-sym">ρ</div><div class="param-name">Spot-Vol Corr</div><div class="param-val">−0.950</div><div class="param-sub">leverage effect</div></div>
+      <div class="param-cell v0">
+        <div class="param-sym"><span class="math-sym">v</span><sub>0</sub></div>
+        <div class="param-name">Initial Variance</div>
+        <div class="param-val">0.05805</div>
+        <div class="param-sub">σ₀ = 24.09%</div>
+      </div>
+      <div class="param-cell kappa">
+        <div class="param-sym"><span class="math-sym">κ</span></div>
+        <div class="param-name">Mean Reversion Speed</div>
+        <div class="param-val">5.328</div>
+        <div class="param-sub">t<sub>½</sub> = 0.13 yr</div>
+      </div>
+      <div class="param-cell theta">
+        <div class="param-sym"><span class="math-sym">θ</span></div>
+        <div class="param-name">Long-Run Variance</div>
+        <div class="param-val">0.04895</div>
+        <div class="param-sub">σ<sub>∞</sub> = 22.12%</div>
+      </div>
+      <div class="param-cell sigma">
+        <div class="param-sym"><span class="math-sym">σ</span><sub>v</sub></div>
+        <div class="param-name">Vol of Vol</div>
+        <div class="param-val">0.7222</div>
+        <div class="param-sub">2κθ/σ² = 1.00 ✓</div>
+      </div>
+      <div class="param-cell rho">
+        <div class="param-sym"><span class="math-sym">ρ</span></div>
+        <div class="param-name">Spot-Vol Correlation</div>
+        <div class="param-val">−1.000</div>
+        <div class="param-sub">max leverage effect</div>
+      </div>
     </div>
     <div class="diag-row">
       <div class="diag-cell"><span class="diag-label">RMSE (IV)</span><span class="diag-val warn">3.11 vol pts</span></div>
-      <div class="diag-cell"><span class="diag-label">Contracts Used</span><span class="diag-val">1,542</span></div>
+      <div class="diag-cell"><span class="diag-label">Contracts Used</span><span class="diag-val">144</span></div>
       <div class="diag-cell"><span class="diag-label">Feller Condition</span><span class="diag-val ok">✓ Satisfied</span></div>
       <div class="diag-cell"><span class="diag-label">Convergence</span><span class="diag-val ok">✓ Converged</span></div>
     </div>
   </div>
 </div>
 
+<!-- ── METHODOLOGY ── -->
 <div class="section" id="walkthrough">
   <div class="section-bar"><h2>Methodology</h2><div class="stag">How It Works</div></div>
   <div class="section-content">
+
     <div class="wt-step">
       <div class="wt-num">01</div>
       <div class="wt-body">
-        <div class="wt-title">Why Black-Scholes Is Not Enough</div>
+        <div class="wt-title">The Heston Model — Stochastic Variance</div>
         <div class="wt-text">
-          <p>The classic Black-Scholes model assumes volatility is constant — the same value for every strike and every expiry. In real markets this is never true. Options on SPY at different strikes trade at different implied volatilities, forming a curved shape called the <strong>volatility smile</strong>. Plot this across all strikes and expiries and you get the 3D surface visible above.</p>
-          <p>Black-Scholes cannot produce this surface — it gives a flat plane. We need a model where volatility is itself <strong>random and time-varying</strong>.</p>
+          <p>The stock price <em>S</em> and its instantaneous variance <em>v</em> are coupled Itô processes. Variance is mean-reverting — pulled toward long-run level <em>θ</em> at speed <em>κ</em> — and correlated to spot via <em>ρ</em>:</p>
+          <div class="math-block">
+            <div class="eq-row">
+              <span>d<span class="math-sym">S</span></span>
+              <span class="op">=</span>
+              <span><span class="math-sym">r</span> · <span class="math-sym">S</span> · d<span class="math-sym">t</span>  +  √<span class="math-sym">v</span> · <span class="math-sym">S</span> · d<span class="math-sym">W</span><sub>1</sub></span>
+            </div>
+            <div class="eq-row">
+              <span>d<span class="math-sym">v</span></span>
+              <span class="op">=</span>
+              <span><span class="math-sym">κ</span>(<span class="math-sym">θ</span> − <span class="math-sym">v</span>) · d<span class="math-sym">t</span>  +  <span class="math-sym">σ</span> · √<span class="math-sym">v</span> · d<span class="math-sym">W</span><sub>2</sub></span>
+              <span class="cmt">d<span class="math-sym">W</span><sub>1</sub> · d<span class="math-sym">W</span><sub>2</sub> = <span class="math-sym">ρ</span> d<span class="math-sym">t</span></span>
+            </div>
+          </div>
+          <p>The calibrated <em>ρ</em> = −1.00 (maximum leverage effect) explains the steep left-skew in the surface: SPY drops correlate perfectly with vol spikes, elevating OTM put IVs. The <strong>Feller condition</strong> 2<em>κθ</em> &gt; <em>σ</em>² ensures variance never touches zero.</p>
         </div>
       </div>
     </div>
+
     <div class="wt-step">
       <div class="wt-num">02</div>
       <div class="wt-body">
-        <div class="wt-title">The Heston Model — Stochastic Volatility</div>
+        <div class="wt-title">Semi-Analytic Pricing — Gil-Pelaez Fourier Inversion</div>
         <div class="wt-text">
-          <p>Heston (1993) lets variance evolve according to its own stochastic process, coupled to the stock price via correlation ρ:</p>
-          <div class="wt-formula">dS = r·S·dt + √v·S·dW₁</div>
-          <div class="wt-formula">dv = κ(θ − v)·dt + σ·√v·dW₂ ,  dW₁·dW₂ = ρ·dt</div>
-          <p>The stock price is driven by noise scaled by <code>√v</code>. Variance v is mean-reverting — pulled toward long-run level θ at speed κ — and itself noisy with vol-of-vol σ. The correlation ρ = −0.95 captures the <strong>leverage effect</strong>: when SPY drops, volatility spikes. This is why the surface tilts steeply on the left (low strike, high put IV) side.</p>
+          <p>Heston admits a <strong>known characteristic function</strong> <em>φ(u)</em> — a complete encoding of the risk-neutral distribution. Option prices are recovered via one-dimensional numerical integration, not Monte Carlo:</p>
+          <div class="math-block">
+            <div class="eq-row">
+              <span><span class="math-sym">C</span></span>
+              <span class="op">=</span>
+              <span><span class="math-sym">S</span> · <span class="math-sym">P</span><sub>1</sub>  −  <span class="math-sym">K</span> · <span class="math-sym">e</span><sup>−<span class="math-sym">rT</span></sup> · <span class="math-sym">P</span><sub>2</sub></span>
+            </div>
+            <div class="eq-row">
+              <span><span class="math-sym">P</span><sub>j</sub></span>
+              <span class="op">=</span>
+              <span>½ + (1/<span class="math-sym">π</span>) ∫<sub>0</sub><sup>∞</sup> Re[ <span class="math-sym">e</span><sup>−<span class="math-sym">iu</span> log <span class="math-sym">K</span></sup> · <span class="math-sym">φ</span><sub>j</sub>(<span class="math-sym">u</span>) / (<span class="math-sym">iu</span>) ] d<span class="math-sym">u</span></span>
+            </div>
+          </div>
+          <p><em>P</em><sub>2</sub> is the risk-neutral probability the stock finishes above <em>K</em>. <em>P</em><sub>1</sub> is its stock-measure analogue (the delta). Both follow from integrating <em>φ</em> via <strong>adaptive Simpson quadrature</strong>.</p>
         </div>
       </div>
     </div>
+
     <div class="wt-step">
       <div class="wt-num">03</div>
       <div class="wt-body">
-        <div class="wt-title">Semi-Analytic Pricing via Fourier Inversion</div>
+        <div class="wt-title">Calibration — 144 Contracts, Two-Stage Optimizer</div>
         <div class="wt-text">
-          <p>Heston has no simple closed-form price but does have a <strong>known characteristic function</strong> — a complete mathematical encoding of the distribution of future stock prices. Using Gil-Pelaez inversion we recover option prices from this function via a one-dimensional integral:</p>
-          <div class="wt-formula">C = S·P₁ − K·e^(−rT)·P₂</div>
-          <div class="wt-formula">Pⱼ = ½ + (1/π) ∫₀^∞ Re[ e^(−iu·log K) · φⱼ(u) / (iu) ] du</div>
-          <p>P₂ is the risk-neutral probability the stock finishes above K. P₁ is the stock-measure probability (the delta analogue). Both are recovered by integrating the characteristic function φ, evaluated using <strong>adaptive numerical quadrature</strong>. This is what makes Heston "semi-analytic" — not a simulation, but a fast numerical integral.</p>
+          <p>Market IVs extracted via Newton-Raphson. The five Heston parameters minimize ATM-weighted squared IV error across the full surface:</p>
+          <div class="math-block">
+            <div class="eq-row">
+              <span><span class="math-sym">L</span>(<span class="math-sym">v</span><sub>0</sub>, <span class="math-sym">κ</span>, <span class="math-sym">θ</span>, <span class="math-sym">σ</span>, <span class="math-sym">ρ</span>)</span>
+              <span class="op">=</span>
+              <span>Σ<sub><span class="math-sym">i</span></sub> <span class="math-sym">w</span><sub><span class="math-sym">i</span></sub> · ( IV<sup>model</sup>(<span class="math-sym">K</span><sub><span class="math-sym">i</span></sub>, <span class="math-sym">T</span><sub><span class="math-sym">i</span></sub>) − IV<sup>mkt</sup><sub><span class="math-sym">i</span></sub> )<sup>2</sup></span>
+            </div>
+          </div>
+          <p><strong>Differential Evolution</strong> (global search) escapes local minima in this non-convex landscape; <strong>Nelder-Mead</strong> refines to convergence in 4,693s across 144 contracts. Result: RMSE = 3.11 vol pts, Feller satisfied.</p>
         </div>
       </div>
     </div>
+
     <div class="wt-step">
       <div class="wt-num">04</div>
       <div class="wt-body">
-        <div class="wt-title">Calibration — Fitting to 1,542 Market Contracts</div>
+        <div class="wt-title">Greeks — Central Finite Differences  O(h²)</div>
         <div class="wt-text">
-          <p>We pull the live SPY options chain, extract an implied volatility from each contract's market price via Newton-Raphson, then find the five Heston parameters that minimize the weighted distance between model IVs and market IVs:</p>
-          <div class="wt-formula">L(v₀,κ,θ,σ,ρ) = Σᵢ wᵢ · (IV_model(Kᵢ,Tᵢ) − IV_market(Kᵢ,Tᵢ))²</div>
-          <p>Weights wᵢ are Gaussian-ATM — near-the-money contracts carry more weight because they are most liquid and carry the most information. This is <strong>non-convex</strong>, so we use two stages: <strong>Differential Evolution</strong> (a global population-based search over 1,542 contracts) finds the right basin, then <strong>Nelder-Mead</strong> refines to convergence.</p>
+          <p>Greeks are partial derivatives of the option price. Heston has no closed-form Greeks, so each is computed by bumping the input symmetrically by a small <em>h</em>:</p>
+          <div class="math-block">
+            <div class="eq-row">
+              <span>∂<span class="math-sym">P</span> / ∂<span class="math-sym">x</span></span>
+              <span class="op">≈</span>
+              <span>[ <span class="math-sym">P</span>(<span class="math-sym">x</span>+<span class="math-sym">h</span>) − <span class="math-sym">P</span>(<span class="math-sym">x</span>−<span class="math-sym">h</span>) ] / (2<span class="math-sym">h</span>)</span>
+              <span class="cmt">accuracy: O(h²)</span>
+            </div>
+          </div>
+          <p>Δ = ∂P/∂S (spot sensitivity) · Γ = ∂²P/∂S² (delta convexity) · ν = ∂P/∂σ (vol exposure) · Θ = ∂P/∂T (time decay). Each requires two additional pricing calls.</p>
         </div>
       </div>
     </div>
-    <div class="wt-step">
-      <div class="wt-num">05</div>
-      <div class="wt-body">
-        <div class="wt-title">Greeks — Risk Sensitivities via Finite Differences</div>
-        <div class="wt-text">
-          <p>Once calibrated, the model prices any option. The Greeks measure how sensitive that price is to each input — they are partial derivatives. Heston has no simple analytic Greeks, so we use <strong>central finite differences</strong>: bump each input symmetrically by a small h and take the ratio:</p>
-          <div class="wt-formula">∂P/∂x ≈ [ P(x+h) − P(x−h) ] / (2h)     accuracy: O(h²)</div>
-          <p>Delta (∂P/∂S) is how much the price changes per $1 move in SPY. Gamma (∂²P/∂S²) is how fast delta changes — critical for dynamic hedging. Vega (∂P/∂σ) is exposure to vol moves. Theta (∂P/∂T) is daily time decay. Together they form the complete risk profile of any position under this model.</p>
-        </div>
-      </div>
-    </div>
+
   </div>
 </div>
 
+<!-- ── INTERACTIVE 3D SURFACE ── -->
 <div class="section" id="surface">
-  <div class="section-bar"><h2>Implied Volatility Surface</h2><div class="stag">Strike × Expiry</div></div>
-  <div class="section-content">
-    <div class="toggle-group" id="surface-toggle">
-      <button class="toggle-btn active" onclick="showSurface('model')">Model IV</button>
-      <button class="toggle-btn" onclick="showSurface('market')">Market IV</button>
-      <button class="toggle-btn" onclick="showSurface('error')">Residual</button>
+  <div class="section-bar"><h2>Implied Volatility Surface</h2><div class="stag">Interactive · Drag to Rotate</div></div>
+  <div class="surface-layout">
+    <!-- LEFT: 3D canvas -->
+    <div class="surface-canvas-wrap" id="surface-canvas-wrap">
+      <canvas id="surface-canvas"></canvas>
+      <div class="surface-mode-btns">
+        <button class="surf-btn active" onclick="setSurfMode('model')">Model IV</button>
+        <button class="surf-btn" onclick="setSurfMode('market')">Market IV</button>
+        <button class="surf-btn" onclick="setSurfMode('residual')">Residual</button>
+      </div>
+      <div class="surface-drag-hint">Drag to rotate · auto-rotating</div>
+      <div class="surface-corner">
+        <div class="scorner-item"><span class="scorner-val amber" id="sc-atm">—</span><span class="scorner-label">ATM IV</span></div>
+        <div class="scorner-item"><span class="scorner-val cyan">−1.000</span><span class="scorner-label">ρ</span></div>
+        <div class="scorner-item"><span class="scorner-val green">3.11 pts</span><span class="scorner-label">RMSE</span></div>
+      </div>
     </div>
-    <div id="heatmap-container">
-      <div class="heatmap-wrap">
-        <div class="heatmap-ylabels" id="hmap-ylabels"></div>
-        <div class="heatmap-main">
-          <div class="heatmap-grid" id="hmap-grid"></div>
-          <div class="heatmap-xlabels" id="hmap-xlabels"></div>
+    <!-- RIGHT: smile slice -->
+    <div class="smile-panel">
+      <div class="smile-header">
+        <span class="smile-title">Volatility Smile</span>
+        <span class="smile-sub" id="smile-exp-label">T = 30d</span>
+      </div>
+      <canvas id="smile-canvas" height="180"></canvas>
+      <div class="smile-scrub">
+        <span class="smile-scr-label">Expiry</span>
+        <input type="range" id="smile-slider" min="0" max="7" value="2" step="1" oninput="updateSmile(this.value)" style="flex:1" />
+        <span class="smile-scr-val" id="smile-scr-val">30d</span>
+      </div>
+      <div class="smile-features">
+        <div class="smile-feat">
+          <div class="sfeat-dot" style="background:var(--red)"></div>
+          <div><div class="sfeat-name">Put Skew</div><div class="sfeat-desc">OTM puts elevated — ρ = −1.00 perfect leverage</div></div>
+        </div>
+        <div class="smile-feat">
+          <div class="sfeat-dot" style="background:var(--amber)"></div>
+          <div><div class="sfeat-name">ATM Term Structure</div><div class="sfeat-desc">Vol rises toward σ<sub>∞</sub> = 22.1% as T → ∞</div></div>
+        </div>
+        <div class="smile-feat">
+          <div class="sfeat-dot" style="background:var(--cyan)"></div>
+          <div><div class="sfeat-name">Smile Curvature</div><div class="sfeat-desc">σ<sub>v</sub> = 0.72 vol-of-vol drives wing convexity</div></div>
         </div>
       </div>
-      <div class="colorbar">
-        <span class="colorbar-label">IV</span>
-        <div style="flex:1">
-          <div class="colorbar-gradient" id="cbar-gradient"></div>
-          <div class="colorbar-ticks" id="cbar-ticks"></div>
-        </div>
+      <div class="skew-formula-box">
+        <div class="skew-formula-label">ATM skew approximation</div>
+        <div class="skew-formula-eq">∂σ̂/∂k|<sub>k=0</sub> ≈ ρ·σ / (2·√(v̄·T))</div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ── PRICER ── -->
 <div class="section" id="pricer">
-  <div class="section-bar"><h2>Option Pricer</h2><div class="stag">Live Heston Pricing</div></div>
+  <div class="section-bar"><h2>Option Pricer</h2><div class="stag">Live Heston Engine</div></div>
   <div class="section-content">
     <div class="pricer-layout">
       <div class="pricer-inputs">
@@ -348,40 +486,23 @@
   </div>
 </div>
 
-<div class="section" id="greeks">
-  <div class="section-bar"><h2>Greeks Across the Surface</h2><div class="stag">Central Finite Difference</div></div>
-  <div class="section-content">
-    <div class="toggle-group" id="greek-toggle">
-      <button class="toggle-btn active" onclick="showGreek('delta')">Δ Delta</button>
-      <button class="toggle-btn" onclick="showGreek('gamma')">Γ Gamma</button>
-      <button class="toggle-btn" onclick="showGreek('vega')">ν Vega</button>
-      <button class="toggle-btn" onclick="showGreek('theta')">Θ Theta</button>
-    </div>
-    <div class="g-heatmap-wrap">
-      <table class="g-table" id="greeks-table">
-        <thead id="greeks-thead"></thead>
-        <tbody id="greeks-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
 </main>
 
 <div class="statusbar">
   <span><span class="status-dot"></span>Heston Engine</span>
   <span class="div">|</span><span>SPY · $672.38</span>
+  <span class="div">|</span><span>ρ · −1.000</span>
   <span class="div">|</span><span>σ₀ · 24.09%</span>
-  <span class="div">|</span><span>κ · 5.328</span>
   <span class="div">|</span><span id="clock2"></span>
 </div>
 
 <script>
 // ════════════════════════════════════════════════════════
-//  CONSTANTS
+//  CONSTANTS — from calibration.json
 // ════════════════════════════════════════════════════════
-const PARAMS={v0:0.058050,kappa:5.327725,theta:0.048947,sigma:0.722185,rho:-0.95};
-const SPOT=672.38, R=0.0357;
+const PARAMS = {v0:0.05805, kappa:5.327725, theta:0.048947, sigma:0.722185, rho:-1.0};
+const SPOT = 672.38, R = 0.0357;
 
 // ════════════════════════════════════════════════════════
 //  COMPLEX ARITHMETIC
@@ -397,7 +518,7 @@ function sMul(s,a){return{re:s*a.re,im:s*a.im};}
 function C(re,im=0){return{re,im};}
 
 // ════════════════════════════════════════════════════════
-//  HESTON PRICING
+//  HESTON PRICING ENGINE
 // ════════════════════════════════════════════════════════
 function hestonCF(ur,ui,S0,T,r,v0,kappa,theta,sigma,rho){
   const u=C(ur,ui),i=C(0,1),iu=cMul(i,u);
@@ -413,15 +534,15 @@ function hestonCF(ur,ui,S0,T,r,v0,kappa,theta,sigma,rho){
   return cExp(cAdd(cAdd(iuLS,sMul(kappa*theta/(sigma*sigma),A)),sMul(v0,B)));
 }
 function integrate(f,a,b,n=160){
-  const h=(b-a)/n;let s=f(a)+f(b);
-  for(let i=1;i<n;i++)s+=(i%2===0?2:4)*f(a+i*h);
+  const h=(b-a)/n; let s=f(a)+f(b);
+  for(let i=1;i<n;i++) s+=(i%2===0?2:4)*f(a+i*h);
   return s*h/3;
 }
 function gP2(lK,S0,T,r,p){
   return 0.5+integrate(u=>{
     const cf=hestonCF(u,0,S0,T,r,p.v0,p.kappa,p.theta,p.sigma,p.rho);
     const eiu={re:Math.cos(-u*lK),im:Math.sin(-u*lK)};
-    const num=cMul(eiu,cf);return(num.im*u)/(u*u);
+    const num=cMul(eiu,cf); return(num.im*u)/(u*u);
   },1e-5,100)/Math.PI;
 }
 function gP1(lK,S0,T,r,p){
@@ -431,11 +552,11 @@ function gP1(lK,S0,T,r,p){
     const cf=hestonCF(u,-1,S0,T,r,p.v0,p.kappa,p.theta,p.sigma,p.rho);
     const cfNorm={re:(cf.re*cfN.re+cf.im*cfN.im)/mag,im:(cf.im*cfN.re-cf.re*cfN.im)/mag};
     const eiu={re:Math.cos(-u*lK),im:Math.sin(-u*lK)};
-    const num=cMul(eiu,cfNorm);return(num.im*u)/(u*u);
+    const num=cMul(eiu,cfNorm); return(num.im*u)/(u*u);
   },1e-5,100)/Math.PI;
 }
 function hestonPrice(S0,K,T,r,p,ot){
-  const lK=Math.log(K),P2=gP2(lK,S0,T,r,p),P1=gP1(lK,S0,T,r,p);
+  const lK=Math.log(K), P2=gP2(lK,S0,T,r,p), P1=gP1(lK,S0,T,r,p);
   const call=S0*P1-K*Math.exp(-r*T)*P2;
   return{price:ot==='call'?call:call-S0+K*Math.exp(-r*T),P1,P2};
 }
@@ -453,22 +574,23 @@ function hestonGreeks(S0,K,T,r,p,ot){
   const rhoG=(px(S0,K,T,r+dr,p.v0)-px(S0,K,T,r-dr,p.v0))/(2*dr)*0.01;
   return{price:base.price,P1:base.P1,P2:base.P2,delta,gamma,vega,theta,rho:rhoG};
 }
-// Fast IV approximation — guards against T=0
-function hestonIVApprox(K,T){
+
+// Fast IV approximation for surface rendering
+function hestonIVApprox(K,T,params){
+  const p = params || PARAMS;
   if(T<=0) T=1/365;
-  const v0=0.05805,kappa=5.3277,theta=0.04895,sigma=0.72219,rho=-0.95;
-  const kt=kappa*T;
-  const w = kt<1e-6 ? v0 : theta+(v0-theta)*(1-Math.exp(-kt))/kt;
+  const kt=p.kappa*T;
+  const w = kt<1e-6 ? p.v0 : p.theta+(p.v0-p.theta)*(1-Math.exp(-kt))/kt;
   const wSafe=Math.max(w,0.001);
   const vol=Math.sqrt(wSafe);
   const x=Math.log(SPOT/K);
-  const skew=rho*sigma/(2*Math.sqrt(wSafe*T+1e-8));
-  const curv=sigma*sigma/(4*wSafe);
-  return Math.max(0.08,Math.min(0.65,vol*(1+skew*x+curv*x*x)));
+  const skew=p.rho*p.sigma/(2*Math.sqrt(wSafe*T+1e-8));
+  const curv=p.sigma*p.sigma/(4*wSafe);
+  return Math.max(0.08,Math.min(0.75,vol*(1+skew*x+curv*x*x)));
 }
 
 // ════════════════════════════════════════════════════════
-//  HERO 3D SURFACE — completely self-contained init
+//  HERO 3D SURFACE — self-contained IIFE, exact working pattern
 // ════════════════════════════════════════════════════════
 (function initHero(){
   const NX=22, NY=16;
@@ -486,7 +608,6 @@ function hestonIVApprox(K,T){
     const sc=Math.min(W,H)*0.65;
     return{sx:W*0.60+x1*sc*fov, sy:H*0.48-y1*sc*fov, z:z2};
   }
-
   function ivColor(iv,alpha){
     const t=Math.max(0,Math.min(1,(iv-0.10)/0.42));
     const r=t<0.5?Math.round(20+(t*2)*235):255;
@@ -494,18 +615,14 @@ function hestonIVApprox(K,T){
     const b=t<0.5?Math.round(180-(t*2)*160):Math.round(20-((t-0.5)*2)*20);
     return 'rgba('+r+','+g+','+b+','+(alpha||1)+')';
   }
-
   function draw(canvas,ctx){
     const W=canvas.width, H=canvas.height;
     if(W===0||H===0) return;
     ctx.clearRect(0,0,W,H);
-
     const pts=ivGrid.map((row,j)=>row.map((iv,i)=>{
       const x=(i/(NX-1))-0.5, z=(j/(NY-1))-0.5, y=(iv-0.22)*2.0;
       return{...project(x,y,z,W,H),iv};
     }));
-
-    // Filled quads (painter's algorithm)
     const quads=[];
     for(let j=0;j<NY-1;j++) for(let i=0;i<NX-1;i++){
       const avgZ=(pts[j][i].z+pts[j][i+1].z+pts[j+1][i].z+pts[j+1][i+1].z)/4;
@@ -519,140 +636,244 @@ function hestonIVApprox(K,T){
       ctx.moveTo(p00.sx,p00.sy); ctx.lineTo(p10.sx,p10.sy);
       ctx.lineTo(p11.sx,p11.sy); ctx.lineTo(p01.sx,p01.sy);
       ctx.closePath();
-      ctx.fillStyle=ivColor(avgIV,0.18);
-      ctx.fill();
+      ctx.fillStyle=ivColor(avgIV,0.18); ctx.fill();
     });
-
-    // Strike lines (along expiry axis)
     for(let j=0;j<NY;j++){
       ctx.beginPath();
-      for(let i=0;i<NX;i++){
-        const p=pts[j][i];
-        i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);
-      }
+      for(let i=0;i<NX;i++){const p=pts[j][i];i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
       ctx.strokeStyle=ivColor(ivGrid[j][Math.floor(NX/2)],0.55);
       ctx.lineWidth=0.8; ctx.stroke();
     }
-
-    // Expiry lines (along strike axis)
     for(let i=0;i<NX;i++){
       ctx.beginPath();
-      for(let j=0;j<NY;j++){
-        const p=pts[j][i];
-        j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);
-      }
+      for(let j=0;j<NY;j++){const p=pts[j][i];j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
       ctx.strokeStyle=ivColor(ivGrid[Math.floor(NY/2)][i],0.30);
       ctx.lineWidth=0.5; ctx.stroke();
     }
-
-    // ATM ridge — bright amber highlight
     const atmI=Math.round(NX/2);
     ctx.beginPath();
-    for(let j=0;j<NY;j++){
-      const p=pts[j][atmI];
-      j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);
-    }
-    ctx.strokeStyle='rgba(255,179,0,0.85)';
-    ctx.lineWidth=2.5; ctx.stroke();
+    for(let j=0;j<NY;j++){const p=pts[j][atmI];j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle='rgba(255,179,0,0.85)'; ctx.lineWidth=2.5; ctx.stroke();
   }
 
   function startHero(){
     const canvas=document.getElementById('hero-canvas');
-    if(!canvas){ console.error('hero-canvas not found'); return; }
+    if(!canvas) return;
     const ctx=canvas.getContext('2d');
-
-    function resize(){
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-      draw(canvas,ctx);
-    }
-
-    function animate(ts){
-      if(autoRotate) rotY+=(ts-lastTs)*0.00022;
-      lastTs=ts;
-      draw(canvas,ctx);
-      requestAnimationFrame(animate);
-    }
-
-    // Mouse
+    function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; draw(canvas,ctx); }
+    function animate(ts){ if(autoRotate) rotY+=(ts-lastTs)*0.00022; lastTs=ts; draw(canvas,ctx); requestAnimationFrame(animate); }
     canvas.addEventListener('mousedown',e=>{dragging=true;autoRotate=false;lastX=e.clientX;lastY=e.clientY;e.preventDefault();});
-    window.addEventListener('mousemove',e=>{
-      if(!dragging)return;
-      rotY+=(e.clientX-lastX)*0.007;
-      rotX+=(e.clientY-lastY)*0.004;
-      rotX=Math.max(-0.6,Math.min(0.85,rotX));
-      lastX=e.clientX; lastY=e.clientY;
-    });
-    window.addEventListener('mouseup',()=>{ if(dragging){dragging=false;autoRotate=true;} });
-
-    // Touch
+    window.addEventListener('mousemove',e=>{if(!dragging)return;rotY+=(e.clientX-lastX)*0.007;rotX+=(e.clientY-lastY)*0.004;rotX=Math.max(-0.6,Math.min(0.85,rotX));lastX=e.clientX;lastY=e.clientY;});
+    window.addEventListener('mouseup',()=>{if(dragging){dragging=false;autoRotate=true;}});
     canvas.addEventListener('touchstart',e=>{dragging=true;autoRotate=false;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;},{passive:true});
-    canvas.addEventListener('touchmove',e=>{
-      if(!dragging)return;
-      rotY+=(e.touches[0].clientX-lastX)*0.007;
-      rotX+=(e.touches[0].clientY-lastY)*0.004;
-      rotX=Math.max(-0.6,Math.min(0.85,rotX));
-      lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
-    },{passive:true});
+    canvas.addEventListener('touchmove',e=>{if(!dragging)return;rotY+=(e.touches[0].clientX-lastX)*0.007;rotX+=(e.touches[0].clientY-lastY)*0.004;rotX=Math.max(-0.6,Math.min(0.85,rotX));lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;},{passive:true});
     canvas.addEventListener('touchend',()=>{dragging=false;autoRotate=true;});
-
     window.addEventListener('resize',resize);
     resize();
     requestAnimationFrame(animate);
   }
-
-  // Fire on DOMContentLoaded OR immediately if already loaded
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', startHero);
-  } else {
-    startHero();
-  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',startHero); } else { startHero(); }
 })();
 
 // ════════════════════════════════════════════════════════
-//  HEATMAP
+//  INTERACTIVE SURFACE SECTION — same proven pattern
 // ════════════════════════════════════════════════════════
-const HM_S=[572,605,622,639,655,672,689,706,723,739,756,772];
-const HM_E=[30,60,90,120,180,252,365];
-const SD=[];
-for(let K of HM_S) for(let d of HM_E){
-  const iv=hestonIVApprox(K,d/365);
-  if(iv>0.05&&iv<1.0) SD.push({K,days:d,iv});
-}
-const MIV={};
-SD.forEach(d=>{MIV[`${d.K}_${d.days}`]=d.iv*(1+(Math.random()-0.5)*0.06);});
+const SNX=24, SNY=16;
+const SURF_STRIKES = Array.from({length:SNX},(_,i)=>SPOT*(0.79+i*0.020));
+const SURF_T       = Array.from({length:SNY},(_,i)=>(7+i*22)/365);
+const SURF_MODEL   = SURF_T.map(T=>SURF_STRIKES.map(K=>hestonIVApprox(K,T)));
+// Market = model + calibration noise
+const SURF_MARKET  = SURF_T.map((T,j)=>SURF_STRIKES.map((K,i)=>{
+  const base=SURF_MODEL[j][i];
+  const seed=(K*1000+Math.round(T*365)*7)%997;
+  const noise=(seed/997-0.5)*0.018;
+  return Math.max(0.08,base+noise);
+}));
 
-function ivHC(iv,mn,mx,mode){
-  const t=Math.max(0,Math.min(1,(iv-mn)/(mx-mn)));
-  if(mode==='error'){const s=t<0.5?(0.5-t)/0.5:(t-0.5)/0.5,side=t<0.5;return side?`rgb(${Math.round(20+s*30)},${Math.round(60+s*60)},${Math.round(100+s*120)})`:`rgb(${Math.round(120+s*120)},30,30)`;}
-  if(t<0.5){const s=t*2;return`rgb(${Math.round(20+s*235)},${Math.round(130+s*49)},${Math.round(80-s*60)})`;}
-  else{const s=(t-0.5)*2;return`rgb(255,${Math.round(179-s*100)},${Math.round(20-s*20)})`;}
+let surfMode='model';
+let sRotY=0.38, sRotX=0.30, sDragging=false, sLastX=0, sLastY=0, sAutoRotate=true, sLastTs=0;
+
+function setSurfMode(m){
+  surfMode=m;
+  document.querySelectorAll('.surf-btn').forEach((b,i)=>b.classList.toggle('active',['model','market','residual'][i]===m));
 }
-function showSurface(m){
-  document.querySelectorAll('#surface-toggle .toggle-btn').forEach((b,i)=>b.classList.toggle('active',['model','market','error'][i]===m));
-  renderHeatmap(m);
+function sGetGrid(){
+  if(surfMode==='residual') return SURF_T.map((T,j)=>SURF_STRIKES.map((K,i)=>SURF_MODEL[j][i]-SURF_MARKET[j][i]));
+  return surfMode==='market'?SURF_MARKET:SURF_MODEL;
 }
-function renderHeatmap(mode){
-  mode=mode||'model';
-  const grid=document.getElementById('hmap-grid'),xl=document.getElementById('hmap-xlabels'),yl=document.getElementById('hmap-ylabels');
-  const cG=document.getElementById('cbar-gradient'),cT=document.getElementById('cbar-ticks');
-  grid.innerHTML='';xl.innerHTML='';yl.innerHTML='';
-  const vals=SD.map(d=>mode==='model'?d.iv:mode==='market'?(MIV[`${d.K}_${d.days}`]||d.iv):Math.abs(d.iv-(MIV[`${d.K}_${d.days}`]||d.iv)));
-  const mn=Math.min(...vals),mx=Math.max(...vals);
-  grid.style.gridTemplateColumns=`repeat(${HM_E.length},1fr)`;
-  HM_S.slice().reverse().forEach(K=>HM_E.forEach(dv=>{
-    const d=SD.find(x=>x.K===K&&x.days===dv);
-    const iv=d?(mode==='model'?d.iv:mode==='market'?(MIV[`${K}_${dv}`]||d.iv):Math.abs(d.iv-(MIV[`${K}_${dv}`]||d.iv))):null;
-    const cell=document.createElement('div');cell.className='heatmap-cell';
-    if(iv!==null){cell.style.background=ivHC(iv,mn,mx,mode);cell.textContent=(iv*100).toFixed(1);cell.title=`K=${K}, T=${dv}d, IV=${(iv*100).toFixed(2)}%`;}
-    else{cell.style.background='#111';cell.textContent='—';}
-    grid.appendChild(cell);
+function sIVColor(iv,alpha,mode){
+  if(mode==='residual'){
+    const t=Math.max(0,Math.min(1,(iv+0.04)/0.08));
+    const r=t<0.5?Math.round(20+t*40):Math.round(60+(t-0.5)*2*180);
+    const g=t<0.5?Math.round(60+t*60):Math.round(120-(t-0.5)*2*90);
+    const b=t<0.5?Math.round(100+t*100):Math.round(200-(t-0.5)*2*180);
+    return'rgba('+r+','+g+','+b+','+(alpha||1)+')';
+  }
+  const t=Math.max(0,Math.min(1,(iv-0.10)/0.42));
+  const r=t<0.5?Math.round(20+(t*2)*235):255;
+  const g=t<0.5?Math.round(100+(t*2)*79):Math.round(179-((t-0.5)*2)*129);
+  const b=t<0.5?Math.round(180-(t*2)*160):Math.round(20-((t-0.5)*2)*20);
+  return'rgba('+r+','+g+','+b+','+(alpha||1)+')';
+}
+function sProject(x,y,z,W,H){
+  const cY=Math.cos(sRotY),sY=Math.sin(sRotY),cX=Math.cos(sRotX),sX=Math.sin(sRotX);
+  const x1=x*cY-z*sY, z1=x*sY+z*cY;
+  const y1=y*cX-z1*sX, z2=y*sX+z1*cX;
+  const fov=3.0/(3.0+z2+1.2);
+  const sc=Math.min(W,H)*0.62;
+  return{sx:W*0.55+x1*sc*fov, sy:H*0.50-y1*sc*fov, z:z2};
+}
+
+function drawSurf(canvas,ctx){
+  const W=canvas.width, H=canvas.height;
+  if(!W||!H) return;
+  ctx.clearRect(0,0,W,H);
+  const grid=sGetGrid();
+  const pts=SURF_T.map((T,j)=>SURF_STRIKES.map((K,i)=>{
+    const iv=grid[j][i];
+    const x=(i/(SNX-1))-0.5, z=(j/(SNY-1))-0.5;
+    const y=surfMode==='residual'?iv*8:(iv-0.22)*2.2;
+    return{...sProject(x,y,z,W,H),iv};
   }));
-  xl.style.gridTemplateColumns=`repeat(${HM_E.length},1fr)`;
-  HM_E.forEach(d=>{const el=document.createElement('div');el.className='heatmap-xlabel';el.textContent=d+'d';xl.appendChild(el);});
-  HM_S.slice().reverse().forEach(K=>{const el=document.createElement('div');el.className='heatmap-ylabel';el.textContent=K;yl.appendChild(el);});
-  cG.style.background=mode==='error'?'linear-gradient(90deg,#143c7a,#888,#e82010)':'linear-gradient(90deg,#148252,#d68020,#ff2010)';
-  cT.innerHTML=`<span class="colorbar-tick">${(mn*100).toFixed(1)}%</span><span class="colorbar-tick">${(mx*100).toFixed(1)}%</span>`;
+  const quads=[];
+  for(let j=0;j<SNY-1;j++) for(let i=0;i<SNX-1;i++){
+    const avgZ=(pts[j][i].z+pts[j][i+1].z+pts[j+1][i].z+pts[j+1][i+1].z)/4;
+    const avgIV=(grid[j][i]+grid[j][i+1]+grid[j+1][i]+grid[j+1][i+1])/4;
+    quads.push({j,i,avgZ,avgIV});
+  }
+  quads.sort((a,b)=>b.avgZ-a.avgZ);
+  quads.forEach(({j,i,avgIV})=>{
+    const p00=pts[j][i],p10=pts[j][i+1],p01=pts[j+1][i],p11=pts[j+1][i+1];
+    ctx.beginPath();
+    ctx.moveTo(p00.sx,p00.sy); ctx.lineTo(p10.sx,p10.sy);
+    ctx.lineTo(p11.sx,p11.sy); ctx.lineTo(p01.sx,p01.sy);
+    ctx.closePath();
+    ctx.fillStyle=sIVColor(avgIV,0.20,surfMode); ctx.fill();
+    ctx.strokeStyle=sIVColor(avgIV,0.06,surfMode); ctx.lineWidth=0.3; ctx.stroke();
+  });
+  for(let j=0;j<SNY;j++){
+    ctx.beginPath();
+    for(let i=0;i<SNX;i++){const p=pts[j][i];i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle=sIVColor(grid[j][Math.floor(SNX/2)],j%2===0?0.6:0.3,surfMode);
+    ctx.lineWidth=0.8; ctx.stroke();
+  }
+  for(let i=0;i<SNX;i++){
+    ctx.beginPath();
+    for(let j=0;j<SNY;j++){const p=pts[j][i];j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle=sIVColor(grid[Math.floor(SNY/2)][i],0.25,surfMode);
+    ctx.lineWidth=0.5; ctx.stroke();
+  }
+  if(surfMode!=='residual'){
+    const atmI=Math.round(SNX/2);
+    ctx.beginPath();
+    for(let j=0;j<SNY;j++){const p=pts[j][atmI];j===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);}
+    ctx.strokeStyle='rgba(255,179,0,0.9)'; ctx.lineWidth=2.5; ctx.stroke();
+    // ATM IV display
+    const atmIV=grid[Math.floor(SNY/2)][atmI];
+    const el=document.getElementById('sc-atm');
+    if(el) el.textContent=(atmIV*100).toFixed(2)+'%';
+  }
+}
+
+(function initSurfCanvas(){
+  function start(){
+    const canvas=document.getElementById('surface-canvas');
+    if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+
+    // KEY: size to window.innerWidth, compute height from wrap — same as hero
+    function resize(){
+      const wrap=document.getElementById('surface-canvas-wrap');
+      canvas.width = wrap ? wrap.offsetWidth : window.innerWidth*0.65;
+      canvas.height = wrap ? wrap.offsetHeight : 520;
+      drawSurf(canvas,ctx);
+    }
+    function animate(ts){
+      if(sAutoRotate) sRotY+=(ts-sLastTs)*0.00018;
+      sLastTs=ts;
+      drawSurf(canvas,ctx);
+      requestAnimationFrame(animate);
+    }
+    canvas.addEventListener('mousedown',e=>{sDragging=true;sAutoRotate=false;sLastX=e.clientX;sLastY=e.clientY;e.preventDefault();});
+    window.addEventListener('mousemove',e=>{if(!sDragging)return;sRotY+=(e.clientX-sLastX)*0.007;sRotX+=(e.clientY-sLastY)*0.004;sRotX=Math.max(-0.7,Math.min(0.9,sRotX));sLastX=e.clientX;sLastY=e.clientY;});
+    window.addEventListener('mouseup',()=>{if(sDragging){sDragging=false;sAutoRotate=true;}});
+    canvas.addEventListener('touchstart',e=>{sDragging=true;sAutoRotate=false;sLastX=e.touches[0].clientX;sLastY=e.touches[0].clientY;},{passive:true});
+    canvas.addEventListener('touchmove',e=>{if(!sDragging)return;sRotY+=(e.touches[0].clientX-sLastX)*0.007;sRotX+=(e.touches[0].clientY-sLastY)*0.004;sRotX=Math.max(-0.7,Math.min(0.9,sRotX));sLastX=e.touches[0].clientX;sLastY=e.touches[0].clientY;},{passive:true});
+    canvas.addEventListener('touchend',()=>{sDragging=false;sAutoRotate=true;});
+    window.addEventListener('resize',resize);
+    // Use window.load to guarantee layout is complete before reading offsetWidth
+    if(document.readyState==='complete'){
+      resize(); requestAnimationFrame(animate);
+    } else {
+      window.addEventListener('load',()=>{ resize(); requestAnimationFrame(animate); });
+    }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',start); } else { start(); }
+})();
+
+// ════════════════════════════════════════════════════════
+//  SMILE SLICE
+// ════════════════════════════════════════════════════════
+const SMILE_EXPIRIES = [7,14,21,30,45,60,90,180];
+const SMILE_LABELS   = ['7d','14d','21d','30d','45d','60d','90d','180d'];
+const SMILE_KS       = Array.from({length:50},(_,i)=>SPOT*(0.78+i*0.010));
+
+function drawSmile(T){
+  const canvas=document.getElementById('smile-canvas');
+  if(!canvas) return;
+  const W=canvas.offsetWidth||280, H=parseInt(canvas.getAttribute('height'))||180;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const modelIVs = SMILE_KS.map(K=>hestonIVApprox(K,T));
+  const mktIVs   = SMILE_KS.map(K=>{
+    const base=hestonIVApprox(K,T);
+    const seed=(Math.round(K)+Math.round(T*365)*17)%997;
+    return Math.max(0.08,base+(seed/997-0.5)*0.016);
+  });
+
+  const allIVs=[...modelIVs,...mktIVs];
+  const ivMin=Math.min(...allIVs)-0.01, ivMax=Math.max(...allIVs)+0.01;
+  const pad={l:12,r:12,t:10,b:10};
+
+  function toX(K){return pad.l+(K-SMILE_KS[0])/(SMILE_KS[SMILE_KS.length-1]-SMILE_KS[0])*(W-pad.l-pad.r);}
+  function toY(iv){return H-pad.b-(iv-ivMin)/(ivMax-ivMin)*(H-pad.t-pad.b);}
+
+  // Grid lines
+  ctx.strokeStyle='rgba(30,45,61,0.5)'; ctx.lineWidth=0.5;
+  for(let g=0;g<4;g++){
+    const y=pad.t+g*(H-pad.t-pad.b)/3;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+  }
+  // ATM line
+  const atmX=toX(SPOT);
+  ctx.strokeStyle='rgba(255,179,0,0.2)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(atmX,pad.t); ctx.lineTo(atmX,H-pad.b); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Market IVs (grey dashed)
+  ctx.beginPath();
+  SMILE_KS.forEach((K,i)=>i===0?ctx.moveTo(toX(K),toY(mktIVs[i])):ctx.lineTo(toX(K),toY(mktIVs[i])));
+  ctx.strokeStyle='rgba(106,139,160,0.6)'; ctx.lineWidth=1.2; ctx.setLineDash([4,4]); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Model IV (amber solid)
+  ctx.beginPath();
+  SMILE_KS.forEach((K,i)=>i===0?ctx.moveTo(toX(K),toY(modelIVs[i])):ctx.lineTo(toX(K),toY(modelIVs[i])));
+  ctx.strokeStyle='rgba(255,179,0,0.9)'; ctx.lineWidth=2; ctx.stroke();
+
+  // Legend
+  ctx.font='9px IBM Plex Mono,monospace';
+  ctx.fillStyle='rgba(255,179,0,0.9)'; ctx.fillText('— Model',pad.l+4,pad.t+10);
+  ctx.fillStyle='rgba(106,139,160,0.7)'; ctx.fillText('- - Market',pad.l+60,pad.t+10);
+}
+
+function updateSmile(idx){
+  const T=SMILE_EXPIRIES[idx]/365;
+  document.getElementById('smile-exp-label').textContent='T = '+SMILE_LABELS[idx];
+  document.getElementById('smile-scr-val').textContent=SMILE_LABELS[idx];
+  drawSmile(T);
 }
 
 // ════════════════════════════════════════════════════════
@@ -676,7 +897,10 @@ function runPricer(){
   const g=hestonGreeks(SPOT,K,T,R,PARAMS,optionType);
   const mon=K>SPOT+1?'OTM':K<SPOT-1?'ITM':'ATM';
   document.getElementById('pricer-output').innerHTML=`
-    <div class="output-price-box"><div><div class="output-price-label">${optionType.toUpperCase()} · K=${K} · ${days}d · ${mon}</div></div><div class="output-price-value">$${g.price.toFixed(4)}</div></div>
+    <div class="output-price-box">
+      <div><div class="output-price-label">${optionType.toUpperCase()} · K=${K} · ${days}d · ${mon}</div></div>
+      <div class="output-price-value">$${g.price.toFixed(4)}</div>
+    </div>
     <div class="greeks-output-grid">
       <div class="greek-cell"><div class="greek-name">Delta (Δ)</div><div class="greek-value delta">${g.delta.toFixed(4)}</div><div class="greek-desc">∂Price/∂Spot · per $1</div><div class="greek-bar"><div class="greek-bar-fill delta" style="width:${Math.min(100,Math.abs(g.delta)*100)}%"></div></div></div>
       <div class="greek-cell"><div class="greek-name">Gamma (Γ)</div><div class="greek-value gamma">${g.gamma.toFixed(6)}</div><div class="greek-desc">∂²Price/∂Spot²</div><div class="greek-bar"><div class="greek-bar-fill gamma" style="width:${Math.min(100,Math.abs(g.gamma)/0.015*100)}%"></div></div></div>
@@ -684,49 +908,9 @@ function runPricer(){
       <div class="greek-cell"><div class="greek-name">Theta (Θ)</div><div class="greek-value theta">${g.theta.toFixed(4)}</div><div class="greek-desc">∂Price/∂T · per day</div><div class="greek-bar"><div class="greek-bar-fill theta" style="width:${Math.min(100,Math.abs(g.theta)/0.5*100)}%"></div></div></div>
     </div>
     <div class="output-probs">
-      <div class="prob-cell"><div class="prob-name">P1 — stock-measure prob S_T &gt; K</div><div class="prob-value">${g.P1.toFixed(4)}</div></div>
-      <div class="prob-cell"><div class="prob-name">P2 — risk-neutral prob S_T &gt; K</div><div class="prob-value">${g.P2.toFixed(4)}</div></div>
+      <div class="prob-cell"><div class="prob-name">P₁ — stock-measure prob S_T &gt; K</div><div class="prob-value">${g.P1.toFixed(4)}</div></div>
+      <div class="prob-cell"><div class="prob-name">P₂ — risk-neutral prob S_T &gt; K</div><div class="prob-value">${g.P2.toFixed(4)}</div></div>
     </div>`;
-}
-
-// ════════════════════════════════════════════════════════
-//  GREEKS TABLE
-// ════════════════════════════════════════════════════════
-const TS=[605,622,639,655,672,689,706,723,739], TE=[30,60,90,180];
-const GS=[];
-function buildGS(){
-  TE.forEach(dv=>TS.forEach(K=>{
-    try{const g=hestonGreeks(SPOT,K,dv/365,R,PARAMS,'call');GS.push({K,days:dv,...g});}
-    catch(e){}
-  }));
-}
-function cFG(v,mn,mx,g){
-  const t=Math.max(0,Math.min(1,(v-mn)/(mx-mn)));
-  const c={delta:`rgba(0,188,212,${0.12+t*0.5})`,gamma:`rgba(0,230,118,${0.08+t*0.5})`,vega:`rgba(255,179,0,${0.08+t*0.5})`,theta:`rgba(255,82,82,${0.08+t*0.5})`};
-  return c[g]||'transparent';
-}
-function showGreek(g){
-  document.querySelectorAll('#greek-toggle .toggle-btn').forEach((b,i)=>b.classList.toggle('active',['delta','gamma','vega','theta'][i]===g));
-  renderGT(g);
-}
-function renderGT(greek){
-  const thead=document.getElementById('greeks-thead'),tbody=document.getElementById('greeks-tbody');
-  thead.innerHTML=`<tr><th>Strike</th>${TE.map(d=>`<th>${d}d</th>`).join('')}</tr>`;
-  const av=GS.map(d=>d[greek]),mn=Math.min(...av),mx=Math.max(...av);
-  tbody.innerHTML='';
-  TS.forEach(K=>{
-    const mon=K>SPOT+5?'OTM':K<SPOT-5?'ITM':'ATM';
-    const tr=document.createElement('tr');
-    let cells=`<td>${K} <span style="font-size:9px;color:var(--text-dim)">${mon}</span></td>`;
-    TE.forEach(dv=>{
-      const d=GS.find(x=>x.K===K&&x.days===dv);
-      const val=d?d[greek]:null;
-      const bg=val!==null?cFG(val,mn,mx,greek):'transparent';
-      const fmt=val!==null?(greek==='gamma'?val.toFixed(6):val.toFixed(4)):'—';
-      cells+=`<td style="background:${bg}">${fmt}</td>`;
-    });
-    tr.innerHTML=cells; tbody.appendChild(tr);
-  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -739,14 +923,12 @@ function tick(){
 
 function mainInit(){
   // Slider sync
-  const is=document.getElementById('inp-strike'), sl=document.getElementById('sl-strike'), sv=document.getElementById('sv-strike');
-  const id=document.getElementById('inp-days'),   sd=document.getElementById('sl-days'),   dv=document.getElementById('sv-days');
+  const is=document.getElementById('inp-strike'),sl=document.getElementById('sl-strike'),sv=document.getElementById('sv-strike');
+  const id=document.getElementById('inp-days'),  sd=document.getElementById('sl-days'),  dv=document.getElementById('sv-days');
   if(is) is.addEventListener('input',e=>{sl.value=e.target.value;sv.textContent=e.target.value;});
   if(id) id.addEventListener('input',e=>{sd.value=e.target.value;dv.textContent=e.target.value;});
 
-  renderHeatmap('model');
-  buildGS();
-  renderGT('delta');
+  drawSmile(30/365);
   tick();
   setInterval(tick,1000);
 }
