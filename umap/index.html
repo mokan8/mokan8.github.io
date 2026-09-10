@@ -16,8 +16,7 @@
       --font-mono:'IBM Plex Mono',monospace;--font-sans:'IBM Plex Sans',sans-serif;
     }
     html{scroll-behavior:smooth;}
-    body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:12px;line-height:1.6;min-height:100vh;cursor:crosshair;}
-    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:999;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;line-height:1.6;min-height:100vh;}
 
     nav{position:fixed;top:0;left:0;right:0;height:42px;background:rgba(8,11,15,0.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:200;}
     .nav-back{color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:0.08em;display:flex;align-items:center;gap:8px;transition:color 0.15s;}

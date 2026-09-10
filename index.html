@@ -1,649 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nicholas McBride — Quantitative Research</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #080b0f;
-      --bg2:       #0d1117;
-      --bg3:       #111820;
-      --border:    #1e2d3d;
-      --amber:     #ffb300;
-      --amber-dim: #996b00;
-      --green:     #00e676;
-      --green-dim: #007840;
-      --cyan:      #00bcd4;
-      --red:       #ff5252;
-      --text:      #c8d8e8;
-      --text-dim:  #4a6070;
-      --text-mid:  #7a9bb0;
-      --font-mono: 'IBM Plex Mono', monospace;
-      --font-sans: 'IBM Plex Sans', sans-serif;
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.6;
-      min-height: 100vh;
-      cursor: crosshair;
-    }
-
-    /* Scanline overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.03) 2px,
-        rgba(0,0,0,0.03) 4px
-      );
-      pointer-events: none;
-      z-index: 1000;
-    }
-
-    /* ── Nav ── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 42px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      gap: 0;
-      z-index: 100;
-    }
-
-    .nav-logo {
-      color: var(--amber);
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      margin-right: auto;
-    }
-
-    .nav-logo span { color: var(--text-dim); font-weight: 300; }
-
-    .nav-links { display: flex; gap: 0; }
-
-    .nav-links a {
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0 16px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      border-left: 1px solid var(--border);
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .nav-links a:hover { color: var(--amber); background: rgba(255,179,0,0.04); }
-
-    /* ── Status bar ── */
-    .statusbar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: 24px;
-      background: var(--amber);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      gap: 24px;
-      z-index: 100;
-    }
-
-    .statusbar span {
-      color: #000;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .statusbar .divider { color: rgba(0,0,0,0.3); }
-
-    .status-dot {
-      width: 6px; height: 6px;
-      background: #000;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 6px;
-      animation: blink 2s infinite;
-    }
-
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* ── Main layout ── */
-    main {
-      padding: 42px 0 24px;
-      min-height: 100vh;
-    }
-
-    /* ── Hero ── */
-    .hero {
-      padding: 80px 48px 60px;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-
-    #hero-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      opacity: 0.9;
-    }
-
-    .hero-tag {
-      color: var(--amber);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .hero-tag::before {
-      content: '';
-      width: 24px; height: 1px;
-      background: var(--amber);
-    }
-
-    .hero-name {
-      font-family: var(--font-mono);
-      font-size: clamp(32px, 5vw, 56px);
-      font-weight: 600;
-      color: #fff;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-      margin-bottom: 8px;
-    }
-
-    .hero-title {
-      font-size: clamp(13px, 2vw, 16px);
-      color: var(--text-dim);
-      font-weight: 300;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 40px;
-    }
-
-    .hero-bio {
-      font-family: var(--font-sans);
-      font-size: 15px;
-      color: var(--text-mid);
-      max-width: 560px;
-      line-height: 1.8;
-      font-weight: 300;
-    }
-
-    .hero-bio strong { color: var(--text); font-weight: 500; }
-
-    .hero-links {
-      display: flex;
-      gap: 0;
-      margin-top: 40px;
-    }
-
-    .hero-links a {
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 8px 20px;
-      border: 1px solid var(--border);
-      margin-right: -1px;
-      transition: all 0.15s;
-    }
-
-    .hero-links a:hover {
-      color: var(--amber);
-      border-color: var(--amber);
-      background: rgba(255,179,0,0.05);
-      z-index: 1;
-      position: relative;
-    }
-
-    /* ── Section header ── */
-    .section-header {
-      padding: 20px 48px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .section-header h2 {
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-    }
-
-    .section-header::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    /* ── Project cards ── */
-    .projects {
-      padding: 0 48px 80px;
-    }
-
-    .project-card {
-      border: 1px solid var(--border);
-      margin-top: 24px;
-      display: grid;
-      grid-template-columns: 3fr 1fr;
-      transition: border-color 0.2s;
-      text-decoration: none;
-      color: inherit;
-      cursor: pointer;
-    }
-
-    .project-card:hover { border-color: var(--amber); }
-    .project-card:hover .project-arrow { color: var(--amber); }
-    .project-card:hover .project-main { background: rgba(255,179,0,0.02); }
-
-    .project-main { padding: 32px; }
-
-    .project-id {
-      font-size: 10px;
-      color: var(--amber-dim);
-      letter-spacing: 0.15em;
-      margin-bottom: 12px;
-    }
-
-    .project-title {
-      font-size: 18px;
-      font-weight: 500;
-      color: #fff;
-      margin-bottom: 8px;
-      letter-spacing: -0.01em;
-    }
-
-    .project-subtitle {
-      font-size: 11px;
-      color: var(--text-dim);
-      letter-spacing: 0.05em;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-    }
-
-    .project-desc {
-      font-family: var(--font-sans);
-      font-size: 13px;
-      color: var(--text-mid);
-      line-height: 1.7;
-      max-width: 560px;
-      font-weight: 300;
-    }
-
-    .project-tags {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
-
-    .tag {
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 3px 10px;
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-    }
-
-    .tag.highlight {
-      border-color: var(--amber-dim);
-      color: var(--amber);
-    }
-
-    .project-sidebar {
-      border-left: 1px solid var(--border);
-      padding: 32px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .metric {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .metric-label {
-      font-size: 9px;
-      color: var(--text-dim);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-
-    .metric-value {
-      font-size: 18px;
-      font-weight: 500;
-      color: var(--green);
-      letter-spacing: -0.02em;
-    }
-
-    .metric-value.amber { color: var(--amber); }
-    .metric-value.cyan  { color: var(--cyan);  }
-
-    .project-arrow {
-      margin-top: auto;
-      font-size: 20px;
-      color: var(--text-dim);
-      transition: color 0.15s;
-      align-self: flex-end;
-    }
-
-    /* ── Card accent colors per project ── */
-    .card-umap:hover  { border-color: #a78bfa; }
-    .card-umap:hover .project-arrow { color: #a78bfa; }
-    .card-umap:hover .project-main  { background: rgba(167,139,250,0.02); }
-    .card-paper:hover { border-color: #2dd4bf; }
-    .card-paper:hover .project-arrow { color: #2dd4bf; }
-    .card-paper:hover .project-main  { background: rgba(45,212,191,0.02); }
-
-    .tag.highlight-purple { border-color: #5b4a90; color: #a78bfa; }
-    .tag.highlight-teal   { border-color: #1a6b60; color: #2dd4bf; }
-
-    .metric-value.purple { color: #a78bfa; }
-    .metric-value.teal   { color: #2dd4bf; }
-
-    /* ── Vol surface card ── */
-    .surface-card {
-      border: 1px solid var(--border);
-      margin-top: 24px;
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      transition: border-color 0.2s;
-      text-decoration: none;
-      color: inherit;
-      cursor: pointer;
-      min-height: 340px;
-    }
-    .surface-card:hover { border-color: var(--amber); }
-    .surface-card:hover .project-arrow { color: var(--amber); }
-
-    .surface-canvas-wrap {
-      position: relative;
-      background: var(--bg2);
-      border-right: 1px solid var(--border);
-      overflow: hidden;
-    }
-
-    #vol-surface-canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .canvas-label {
-      position: absolute;
-      top: 14px; left: 16px;
-      font-size: 9px;
-      color: var(--amber);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      opacity: 0.7;
-    }
-
-    .canvas-axes {
-      position: absolute;
-      bottom: 14px;
-      right: 16px;
-      font-size: 9px;
-      color: var(--text-dim);
-      letter-spacing: 0.08em;
-      text-align: right;
-      line-height: 1.6;
-    }
-
-    .surface-info {
-      padding: 32px 28px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .surface-info .project-id    { font-size: 10px; color: var(--amber-dim); letter-spacing: 0.15em; margin-bottom: 12px; }
-    .surface-info .project-title { font-size: 18px; font-weight: 500; color: #fff; margin-bottom: 6px; letter-spacing: -0.01em; }
-    .surface-info .project-subtitle { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 20px; }
-    .surface-info .project-desc  { font-family: var(--font-sans); font-size: 13px; color: var(--text-mid); line-height: 1.7; font-weight: 300; }
-
-    .surface-metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      border: 1px solid var(--border);
-      margin-top: 24px;
-    }
-
-    .surface-metric {
-      padding: 12px 16px;
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .surface-metric:nth-child(2n) { border-right: none; }
-    .surface-metric:nth-last-child(-n+2) { border-bottom: none; }
-    .surface-metric-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
-    .surface-metric-value { font-size: 15px; font-weight: 500; }
-    .surface-metric-value.green { color: var(--green); }
-    .surface-metric-value.amber { color: var(--amber); }
-    .surface-metric-value.cyan  { color: var(--cyan);  }
-
-    .surface-tags {
-      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 20px;
-    }
-
-    @media (max-width: 900px) {
-      .surface-card { grid-template-columns: 1fr; }
-      .surface-canvas-wrap { height: 260px; border-right: none; border-bottom: 1px solid var(--border); }
-    }
-
-    /* ── Animations ── */
-    .fade-in {
-      opacity: 0;
-      transform: translateY(12px);
-      animation: fadeIn 0.5s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .fade-in:nth-child(1) { animation-delay: 0.1s; }
-    .fade-in:nth-child(2) { animation-delay: 0.2s; }
-    .fade-in:nth-child(3) { animation-delay: 0.3s; }
-    .fade-in:nth-child(4) { animation-delay: 0.4s; }
-
-    @media (max-width: 768px) {
-      .hero { padding: 48px 24px 40px; }
-      .projects { padding: 0 24px 60px; }
-      .section-header { padding: 16px 24px; }
-      .project-card { grid-template-columns: 1fr; }
-      .project-sidebar { border-left: none; border-top: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; }
-      .skills-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nicholas McBride — Quantitative Research</title>
+<meta name="description" content="Mathematician and quantitative researcher. Systematic research and live execution in prediction markets; published work in metric geometry and topological data analysis." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/terminal.css" />
+<style>
+  /* ── Index-only layout ─────────────────────────────────────────────── */
+  main { padding-bottom: 40px; }
+
+  .hero { padding: 76px 0 56px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+  #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.85; }
+  .hero > *:not(#hero-canvas) { position: relative; }
+
+  .hero-name {
+    font-family: var(--font-mono);
+    font-size: clamp(34px, 5.5vw, 58px);
+    font-weight: 600; color: #fff;
+    letter-spacing: -0.025em; line-height: 1.06; margin-bottom: 10px;
+  }
+  .hero-title {
+    font-size: clamp(11px, 1.6vw, 13px); color: var(--text-dim); font-weight: 400;
+    letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 34px;
+  }
+  .hero-bio {
+    font-family: var(--font-sans); font-size: 17px; color: var(--text-mid);
+    max-width: 60ch; line-height: 1.75; font-weight: 300;
+  }
+  .hero-bio + .hero-bio { margin-top: 16px; }
+  .hero-bio strong { color: var(--text); font-weight: 500; }
+  .hero-links { display: flex; flex-wrap: wrap; margin-top: 36px; }
+  .hero-links a {
+    color: var(--text-dim); text-decoration: none; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 9px 20px; border: 1px solid var(--border); margin: 0 -1px -1px 0;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .hero-links a:hover, .hero-links a:focus-visible {
+    color: var(--amber); border-color: var(--amber);
+    background: rgba(255,179,0,0.05); position: relative; z-index: 1;
+  }
+
+  .section-header { padding: 22px 0 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .section-header h2 {
+    font-size: 10px; font-weight: 500; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin: 0; padding: 0; border: none; display: block;
+  }
+  .section-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .cards { padding: 0 0 24px; }
+
+  .card {
+    border: 1px solid var(--border); margin-top: 24px;
+    display: grid; grid-template-columns: 3fr 1fr;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .card-main { padding: 30px 32px; }
+  .card:hover { border-color: var(--amber); }
+  .card:hover .card-main { background: rgba(255,179,0,0.02); }
+  .card:hover .card-arrow { color: var(--amber); }
+
+  .card-id { font-size: 10px; color: var(--amber-dim); letter-spacing: 0.15em; margin-bottom: 12px; text-transform: uppercase; }
+  .card-title { font-size: 19px; font-weight: 500; color: #fff; margin-bottom: 7px; letter-spacing: -0.015em; line-height: 1.3; }
+  .card-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; margin-bottom: 18px; text-transform: uppercase; }
+  .card-desc { font-family: var(--font-sans); font-size: 15px; color: var(--text-mid); line-height: 1.7; max-width: 62ch; font-weight: 300; }
+  .card-desc strong { color: var(--text); font-weight: 500; }
+  .card-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+  .tag { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; border: 1px solid var(--border); color: var(--text-dim); }
+  .tag.hl { border-color: var(--amber-dim); color: var(--amber); }
+  .tag.hl-purple { border-color: #5b4a90; color: var(--purple); }
+  .tag.hl-teal   { border-color: #1a6b60; color: var(--teal); }
+
+  .card-side { border-left: 1px solid var(--border); padding: 30px 22px; display: flex; flex-direction: column; gap: 18px; }
+  .m-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 3px; }
+  .m-value { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; color: var(--green); }
+  .m-value.amber { color: var(--amber); } .m-value.cyan { color: var(--cyan); }
+  .m-value.purple { color: var(--purple); } .m-value.teal { color: var(--teal); }
+  .m-value.sm { font-size: 13px; }
+  .card-arrow { margin-top: auto; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); transition: color .15s; }
+
+  .card-lead { border-color: var(--amber-dim); }
+  .card-case { border-left: 2px solid var(--amber-dim); }
+  .card-umap:hover  { border-color: var(--purple); }
+  .card-umap:hover .card-arrow { color: var(--purple); }
+  .card-umap:hover .card-main { background: rgba(167,139,250,0.02); }
+  .card-paper:hover { border-color: var(--teal); }
+  .card-paper:hover .card-arrow { color: var(--teal); }
+  .card-paper:hover .card-main { background: rgba(45,212,191,0.02); }
+
+  .card.pending { opacity: 0.72; }
+  .card.pending:hover { border-color: var(--border); }
+  .card.pending .card-title { color: var(--text-mid); }
+
+  @media (max-width: 820px) {
+    .card { grid-template-columns: 1fr; }
+    .card-main { padding: 24px 20px; }
+    .card-side { border-left: none; border-top: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; gap: 22px; padding: 20px; }
+    .card-arrow { margin-top: 0; width: 100%; }
+    .hero { padding: 48px 0 40px; }
+    .hero-bio { font-size: 16px; }
+  }
+</style>
 </head>
 <body>
 
-  <nav>
-    <div class="nav-logo">NM <span>/ Portfolio</span></div>
-    <div class="nav-links">
-      <a href="#projects">Projects</a>
-      <a href="about.html">About Me</a>
-    </div>
-  </nav>
+<nav>
+  <a class="nav-logo" href="index.html">NM <span>/ Portfolio</span></a>
+  <div class="nav-links">
+    <a href="#work">Work</a>
+    <a href="platform/index.html">Platform</a>
+    <a href="about.html">About</a>
+  </div>
+</nav>
 
-  <main>
-    <!-- Hero -->
-    <section class="hero">
-      <canvas id="hero-canvas"></canvas>
-      <div class="hero-tag">Quantitative Research</div>
-      <div class="hero-name fade-in">Nicholas<br/>McBride</div>
-      <div class="hero-title fade-in">M.A. Mathematics · UC Santa Cruz · Quantitative Research</div>
-      <p class="hero-bio fade-in">
-        Mathematician turned quant researcher. My graduate work at UC Santa Cruz focused on
-        <strong>algebraic topology</strong>, culminating in a thesis extending
-        <strong>UMAP</strong> — a manifold learning algorithm grounded in topological data analysis.
-        I now apply that foundation to <strong>derivatives pricing</strong> and volatility modeling,
-        building end-to-end research infrastructure from raw market data to calibrated stochastic models.
+<main>
+  <section class="hero">
+    <canvas id="hero-canvas" aria-hidden="true"></canvas>
+    <div class="wrap-wide">
+      <div class="eyebrow">Quantitative Research</div>
+      <h1 class="hero-name">Nicholas<br/>McBride</h1>
+      <div class="hero-title">M.A. Mathematics · UC Santa Cruz · Quantitative Research</div>
+      <p class="hero-bio">
+        Mathematician working in quantitative research. My graduate work was in
+        <strong>algebraic topology</strong> and <strong>topological data analysis</strong>,
+        with published results on the Gromov–Hausdorff distance and a thesis on the
+        theoretical foundations of manifold learning.
       </p>
-      <div class="hero-links fade-in">
-        <a href="https://github.com/mokan8" target="_blank">GitHub</a>
-        <a href="https://www.linkedin.com/in/nicholas-mcbride189/" target="_blank">LinkedIn</a>
-        <a href="about.html">About Me</a>
+      <p class="hero-bio">
+        I now build and run a <strong>systematic research and execution platform for
+        prediction markets</strong> — hypothesis to pre-registration to sealed
+        out-of-sample test to live orders on Kalshi, and to a written retirement when
+        the evidence says so. Six strategy families have been through that loop. The
+        two case studies below are the ones worth reading, and both of them are
+        negative results.
+      </p>
+      <div class="hero-links">
+        <a href="platform/index.html">Research Platform</a>
+        <a href="https://github.com/mokan8" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/nicholas-mcbride189/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="about.html">About</a>
       </div>
-    </section>
-
-    <!-- Projects -->
-    <div class="section-header" id="projects">
-      <h2>Research Projects</h2>
     </div>
+  </section>
 
-    <section class="projects">
+  <div class="wrap-wide">
+    <div class="section-header" id="work"><h2>Quantitative Research</h2></div>
 
-      <!-- ── Card 1: Heston ── -->
-      <a class="surface-card" href="heston/index.html">
-        <div class="surface-canvas-wrap">
-          <canvas id="vol-surface-canvas"></canvas>
-          <div class="canvas-label">Heston IV Surface · SPY · Live Calibration</div>
-          <div class="canvas-axes">Strike →<br/>Expiry ↗<br/>IV ↑</div>
-        </div>
-        <div class="surface-info">
-          <div class="project-id">PRJ-001 · Derivatives Pricing</div>
-          <div class="project-title">Heston Stochastic Volatility Model</div>
-          <div class="project-subtitle">Live Calibration · SPY · Greeks Engine</div>
-          <p class="project-desc">
-            End-to-end derivatives research platform calibrated to live SPY options data.
-            Fits all five Heston parameters to 1,542 market contracts via two-stage
-            differential evolution, then prices arbitrary options and computes full
-            Greeks across the volatility surface using Gil-Pelaez Fourier inversion.
+    <section class="cards">
+
+      <a class="card card-lead" href="platform/index.html">
+        <div class="card-main">
+          <div class="card-id">PRJ-001 · Systematic research &amp; execution</div>
+          <div class="card-title">Prediction-Market Research Platform</div>
+          <div class="card-sub">Kalshi · Live execution · Pre-registration · TCA</div>
+          <p class="card-desc">
+            End-to-end platform: WebSocket order-book capture, a research engine built
+            around pre-registration and one-shot out-of-sample testing, live IOC order
+            execution, transaction-cost analysis against real fills, and calibrated risk
+            controls. <strong>Six strategy families have run the full lifecycle and all
+            six are retired</strong> — each with a written verdict. The falsification
+            record is the deliverable, not a return figure.
           </p>
-          <div class="surface-metrics">
-            <div class="surface-metric"><div class="surface-metric-label">RMSE (IV)</div><div class="surface-metric-value green">3.11 pts</div></div>
-            <div class="surface-metric"><div class="surface-metric-label">Init Vol</div><div class="surface-metric-value amber">24.09%</div></div>
-            <div class="surface-metric"><div class="surface-metric-label">Contracts</div><div class="surface-metric-value cyan">1,542</div></div>
-            <div class="surface-metric"><div class="surface-metric-label">Expiries</div><div class="surface-metric-value cyan">19</div></div>
+          <div class="card-tags">
+            <span class="tag hl">Prediction Markets</span>
+            <span class="tag hl">Live Trading</span>
+            <span class="tag">Pre-registration</span>
+            <span class="tag">Block Bootstrap</span>
+            <span class="tag">CUSUM</span>
+            <span class="tag">Python · Postgres</span>
           </div>
-          <div class="surface-tags">
-            <span class="tag highlight">Heston Model</span>
-            <span class="tag highlight">Vol Surface</span>
-            <span class="tag">Fourier Pricing</span>
-            <span class="tag">Greeks Engine</span>
-          </div>
-          <div class="project-arrow" style="margin-top:auto;padding-top:16px;font-size:18px;color:var(--text-dim)">→ View Project</div>
+        </div>
+        <div class="card-side">
+          <div><div class="m-label">Families tested</div><div class="m-value amber">6</div></div>
+          <div><div class="m-label">Live fills</div><div class="m-value cyan">45</div></div>
+          <div><div class="m-label">Depth archive</div><div class="m-value cyan sm">~592 hrs</div></div>
+          <div class="card-arrow">→ View platform</div>
         </div>
       </a>
 
-      <!-- ── Card 2: UMAP Thesis ── -->
-      <a class="project-card card-umap" href="umap/index.html">
-        <div class="project-main">
-          <div class="project-id" style="color:#5b4a90">PRJ-002 · M.A. Thesis · UC Santa Cruz</div>
-          <div class="project-title">UMAP: Uniform Manifold Approximation &amp; Projection</div>
-          <div class="project-subtitle">Topology · Manifold Learning · Dimensionality Reduction</div>
-          <p class="project-desc">
-            Graduate thesis building rigorous theoretical foundations for UMAP —
-            connecting Riemannian geometry, fuzzy simplicial sets, and topological
-            data analysis. Establishes formal guarantees on topological faithfulness
-            of embeddings and bounds embedding quality via Gromov–Hausdorff distance.
-            Includes interactive point-cloud visualizations and comparison against PCA and t-SNE.
+      <a class="card card-case" href="platform/mlb-carry.html">
+        <div class="card-main">
+          <div class="card-id">CASE-001 · Complete strategy lifecycle</div>
+          <div class="card-title">A strategy that made money and still had to be killed</div>
+          <div class="card-sub">MLB late-favourite carry · Deployed · Halted · Retired</div>
+          <p class="card-desc">
+            Pre-registration through sealed out-of-sample validation, deployment,
+            <strong>45 real fills on Kalshi</strong>, and a retirement thirteen days later
+            while the sleeve was up 2.4%. The validating backtest entered on
+            minutes-to-expiry — a quantity anchored on realised settlement time, and
+            therefore not computable at decision time. Includes the full TCA, the honest
+            interval, and why a sealed out-of-sample split structurally cannot catch this.
           </p>
-          <div class="project-tags">
-            <span class="tag highlight-purple">Topology</span>
-            <span class="tag highlight-purple">Manifold Learning</span>
+          <div class="card-tags">
+            <span class="tag hl">Case Study</span>
+            <span class="tag">Lookahead Bias</span>
+            <span class="tag">IS / OOS</span>
+            <span class="tag">TCA</span>
+            <span class="tag">Live P&amp;L</span>
+          </div>
+        </div>
+        <div class="card-side">
+          <div><div class="m-label">Net P&amp;L</div><div class="m-value">+$12.20</div></div>
+          <div><div class="m-label">95% CI</div><div class="m-value sm" style="color:var(--red)">[−1.6, +14.3]¢</div></div>
+          <div><div class="m-label">Effective n</div><div class="m-value sm" style="color:var(--red)">4 losses</div></div>
+          <div class="card-arrow">→ Read case study</div>
+        </div>
+      </a>
+
+      <a class="card card-case" href="platform/fee-audit.html">
+        <div class="card-main">
+          <div class="card-id">CASE-002 · Self-audit</div>
+          <div class="card-title">The cost model was wrong in form, not in value</div>
+          <div class="card-sub">Kalshi fee schedule · Rounding · Blast radius</div>
+          <p class="card-desc">
+            On a venue with no drift, the fee function is one side of the only inequality
+            that matters. Mine applied the exchange's round-up <strong>per contract
+            instead of per order</strong>, overstating cost by 1.14× at the money and up
+            to 14× in the tails — with <strong>24 passing unit tests</strong> pinning the
+            error in place. What found it was not a test, but the exchange's own published
+            worked example. Includes a statement of exactly which prior conclusions it voids.
+          </p>
+          <div class="card-tags">
+            <span class="tag hl">Case Study</span>
+            <span class="tag">Cost Modelling</span>
+            <span class="tag">Microstructure</span>
+            <span class="tag">Numerical Precision</span>
+          </div>
+        </div>
+        <div class="card-side">
+          <div><div class="m-label">Overstated, ATM</div><div class="m-value sm" style="color:var(--red)">1.14×</div></div>
+          <div><div class="m-label">Overstated, tails</div><div class="m-value sm" style="color:var(--red)">up to 14×</div></div>
+          <div><div class="m-label">Tests encoding it</div><div class="m-value sm" style="color:var(--red)">24</div></div>
+          <div class="card-arrow">→ Read case study</div>
+        </div>
+      </a>
+    </section>
+
+    <div class="section-header"><h2>Mathematics</h2></div>
+
+    <section class="cards">
+
+      <a class="card card-paper" href="paper/index.html">
+        <div class="card-main">
+          <div class="card-id" style="color:#1a6b60">PUB-001 · Discrete &amp; Computational Geometry · Springer 2025</div>
+          <div class="card-title">Bounding the Gromov–Hausdorff Distance by the Hausdorff Distance</div>
+          <div class="card-sub">McBride · Adams · Frick · Majhi</div>
+          <p class="card-desc">
+            Published research establishing sharp bounds between the Gromov–Hausdorff
+            distance and the simpler Hausdorff distance for compact metric spaces —
+            computable, tight two-sided certificates for metric-space similarity, with
+            applications to topological data analysis and shape comparison.
+          </p>
+          <div class="card-tags">
+            <span class="tag hl-teal">Published</span>
+            <span class="tag hl-teal">Metric Geometry</span>
+            <span class="tag">GH Distance</span>
+            <span class="tag">TDA</span>
+          </div>
+        </div>
+        <div class="card-side">
+          <div><div class="m-label">Journal</div><div class="m-value teal sm">Disc. &amp; Comp. Geom.</div></div>
+          <div><div class="m-label">Publisher</div><div class="m-value teal sm">Springer</div></div>
+          <div><div class="m-label">Main result</div><div class="m-value teal sm">d_GH ≤ d_H</div></div>
+          <div class="card-arrow">→ View paper</div>
+        </div>
+      </a>
+
+      <div class="card pending">
+        <div class="card-main">
+          <div class="card-id" style="color:#1a6b60">PUB-002 · In preparation</div>
+          <div class="card-title">Čech Winding Fractions</div>
+          <div class="card-sub">Extending winding-fraction invariants to Čech complexes</div>
+          <p class="card-desc">
+            Second paper, extending winding-fraction invariants from Vietoris–Rips to
+            Čech complexes. Page and preprint link will be added on arXiv upload.
+          </p>
+          <div class="card-tags">
+            <span class="tag">Algebraic Topology</span>
+            <span class="tag">Čech Complexes</span>
+            <span class="tag">Winding Fractions</span>
+          </div>
+        </div>
+        <div class="card-side">
+          <div><div class="m-label">Status</div><div class="m-value teal sm">arXiv pending</div></div>
+          <div class="card-arrow">Coming soon</div>
+        </div>
+      </div>
+
+      <a class="card card-umap" href="umap/index.html">
+        <div class="card-main">
+          <div class="card-id" style="color:#5b4a90">PRJ-002 · M.A. Thesis · UC Santa Cruz</div>
+          <div class="card-title">UMAP: Uniform Manifold Approximation &amp; Projection</div>
+          <div class="card-sub">Topology · Manifold Learning · Dimensionality Reduction</div>
+          <p class="card-desc">
+            Graduate thesis building rigorous theoretical foundations for UMAP —
+            connecting Riemannian geometry, fuzzy simplicial sets and topological data
+            analysis, establishing formal guarantees on the topological faithfulness of
+            embeddings and bounding embedding quality via Gromov–Hausdorff distance.
+            Includes interactive point-cloud visualisations and comparison against PCA and t-SNE.
+          </p>
+          <div class="card-tags">
+            <span class="tag hl-purple">Topology</span>
+            <span class="tag hl-purple">Manifold Learning</span>
             <span class="tag">Fuzzy Simplicial Sets</span>
             <span class="tag">TDA</span>
             <span class="tag">Riemannian Geometry</span>
           </div>
         </div>
-        <div class="project-sidebar">
-          <div class="metric"><div class="metric-label">Method</div><div class="metric-value purple" style="font-size:14px">Fuzzy Sets</div></div>
-          <div class="metric"><div class="metric-label">Complexity</div><div class="metric-value purple">O(n log n)</div></div>
-          <div class="metric"><div class="metric-label">Topology</div><div class="metric-value purple" style="font-size:14px">H₀ · H₁</div></div>
-          <div class="metric"><div class="metric-label">Dim reduction</div><div class="metric-value purple" style="font-size:14px">ℝⁿ → ℝ²</div></div>
-          <div class="project-arrow">→ View Thesis</div>
-        </div>
-      </a>
-
-      <!-- ── Card 3: Published Paper ── -->
-      <a class="project-card card-paper" href="paper/index.html">
-        <div class="project-main">
-          <div class="project-id" style="color:#1a6b60">PUB-001 · Discrete &amp; Computational Geometry · Springer 2025</div>
-          <div class="project-title">Bounding the Gromov–Hausdorff Distance by the Hausdorff Distance</div>
-          <div class="project-subtitle">Nicholas McBride · Henry Adams · Florian Frick · Sushovan Majhi</div>
-          <p class="project-desc">
-            Published research establishing sharp bounds between the Gromov–Hausdorff distance
-            and the simpler Hausdorff distance for compact metric spaces. Provides computable,
-            tight two-sided certificates for metric space similarity — with direct applications
-            to topological data analysis, shape comparison, and certifying UMAP embedding quality.
-          </p>
-          <div class="project-tags">
-            <span class="tag highlight-teal">Published</span>
-            <span class="tag highlight-teal">Metric Geometry</span>
-            <span class="tag">GH Distance</span>
-            <span class="tag">TDA</span>
-            <span class="tag">Discrete Geometry</span>
-          </div>
-        </div>
-        <div class="project-sidebar">
-          <div class="metric"><div class="metric-label">Journal</div><div class="metric-value teal" style="font-size:11px">Disc. &amp; Comp. Geom.</div></div>
-          <div class="metric"><div class="metric-label">Publisher</div><div class="metric-value teal" style="font-size:13px">Springer</div></div>
-          <div class="metric"><div class="metric-label">Main Result</div><div class="metric-value teal" style="font-size:11px">d_GH ≤ d_H</div></div>
-          <div class="metric"><div class="metric-label">Co-authors</div><div class="metric-value teal" style="font-size:11px">Adams · Frick · Majhi</div></div>
-          <div class="project-arrow">→ View Paper</div>
+        <div class="card-side">
+          <div><div class="m-label">Method</div><div class="m-value purple sm">Fuzzy Sets</div></div>
+          <div><div class="m-label">Complexity</div><div class="m-value purple sm">O(n log n)</div></div>
+          <div><div class="m-label">Dim reduction</div><div class="m-value purple sm">ℝⁿ → ℝ²</div></div>
+          <div class="card-arrow">→ View thesis</div>
         </div>
       </a>
 
     </section>
 
-  </main>
-
-  <div class="statusbar">
-    <span><span class="status-dot"></span>System Online</span>
-    <span class="divider">|</span>
-    <span id="clock"></span>
-    <span class="divider">|</span>
-    <span>SPY · $672.38</span>
-    <span class="divider">|</span>
-    <span>VIX · 24.09</span>
-    <span class="divider">|</span>
-    <span>RFR · 3.57%</span>
+    <footer>
+      <div class="foot-row">
+        <span>Nicholas McBride</span>
+        <span>·</span>
+        <a href="mailto:mcbridenk@gmail.com">mcbridenk@gmail.com</a>
+        <a href="https://github.com/mokan8" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/nicholas-mcbride189/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="about.html">About</a>
+      </div>
+    </footer>
   </div>
+</main>
 
-  <script>
-    // ── Hero Canvas — Flowing Contour Lines ────────────────────────────────
+<script>
+if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     (function initHeroCanvas(){
       const canvas = document.getElementById('hero-canvas');
       if(!canvas) return;
@@ -877,233 +571,8 @@
       resize();
       requestAnimationFrame(animate);
     })();
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('clock').textContent =
-        now.toUTCString().replace('GMT','UTC').slice(0,-4);
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
+}
+</script>
 
-    // ── Heston IV Surface — 3D Wireframe Renderer ──────────────────────────
-    // Uses calibrated params: v0=0.05805, kappa=5.3277, theta=0.04895,
-    // sigma=0.72219, rho=-0.95, spot=672.38
-    // IV computed via Black-Scholes Newton-Raphson inversion of Heston price
-
-    const canvas = document.getElementById('vol-surface-canvas');
-    const ctx    = canvas.getContext('2d');
-
-    // Surface grid dimensions
-    const NX = 18;  // strikes
-    const NY = 14;  // expiries
-
-    // Parameter ranges matching calibration
-    const SPOT    = 672.38;
-    const strikes  = Array.from({length:NX}, (_,i) => SPOT * (0.82 + i * 0.022));
-    const expiries = Array.from({length:NY}, (_,i) => (7 + i * 22) / 365);
-
-    // Heston IV approximation using calibrated params
-    // (semi-analytic: uses moneyness + term structure shape)
-    function hestonIVApprox(K, T) {
-      const v0=0.05805, kappa=5.3277, theta=0.04895, sigma=0.72219, rho=-0.95;
-      const F   = SPOT * Math.exp(0.0357 * T);
-      const x   = Math.log(F / K);                    // log-moneyness
-      const w   = theta + (v0 - theta) * (1 - Math.exp(-kappa * T)) / (kappa * T);
-      const vol = Math.sqrt(w);
-      // Gatheral SVI-inspired skew correction using rho and sigma
-      const skew  = rho * sigma / (2 * Math.sqrt(w * T + 1e-8));
-      const curv  = sigma * sigma / (4 * w);
-      const smile = vol * (1 + skew * x + curv * x * x);
-      return Math.max(0.08, Math.min(0.65, smile));
-    }
-
-    // Build surface grid [NY][NX]
-    const ivGrid = expiries.map(T => strikes.map(K => hestonIVApprox(K, T)));
-
-    // ── 3D projection ──────────────────────────────────────────────────────
-    let rotY = 0.42, rotX = 0.38;
-    let autoRotate = true;
-    const CAM_DIST = 3.2;
-
-    function project(x, y, z, W, H) {
-      // Rotate around Y then X
-      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
-      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-      let x1 = x * cosY - z * sinY;
-      let z1 = x * sinY + z * cosY;
-      let y1 = y * cosX - z1 * sinX;
-      let z2 = y * sinX + z1 * cosX;
-      // Perspective
-      const fov  = CAM_DIST / (CAM_DIST + z2 + 1.5);
-      const cx   = W * 0.5, cy = H * 0.46;
-      const scale = Math.min(W, H) * 0.72;
-      return {
-        sx: cx + x1 * scale * fov,
-        sy: cy - y1 * scale * fov,
-        z:  z2,
-      };
-    }
-
-    function ivToColor(iv, alpha=1) {
-      // Low IV = cool blue, mid = amber, high = red
-      const t = (iv - 0.10) / 0.45;
-      const c = Math.max(0, Math.min(1, t));
-      if (c < 0.5) {
-        const s = c * 2;
-        const r = Math.round(20  + s * 235);
-        const g = Math.round(100 + s * 79);
-        const b = Math.round(180 - s * 160);
-        return `rgba(${r},${g},${b},${alpha})`;
-      } else {
-        const s = (c - 0.5) * 2;
-        const r = Math.round(255);
-        const g = Math.round(179 - s * 129);
-        const b = Math.round(20  - s * 20);
-        return `rgba(${r},${g},${b},${alpha})`;
-      }
-    }
-
-    function drawSurface() {
-      const W = canvas.width, H = canvas.height;
-      ctx.clearRect(0, 0, W, H);
-
-      // Normalise grid coords to [-0.5, 0.5]
-      const pts = [];
-      for (let j = 0; j < NY; j++) {
-        pts[j] = [];
-        for (let i = 0; i < NX; i++) {
-          const x = (i / (NX-1)) - 0.5;
-          const z = (j / (NY-1)) - 0.5;
-          const y = (ivGrid[j][i] - 0.20) * 1.8;  // scale IV to y
-          pts[j][i] = { x, y, z, iv: ivGrid[j][i] };
-        }
-      }
-
-      // Project all points
-      const proj = pts.map(row => row.map(p => ({
-        ...project(p.x, p.y, p.z, W, H),
-        iv: p.iv,
-      })));
-
-      // Draw quads back-to-front (painter's algorithm — sort by avg z)
-      const quads = [];
-      for (let j = 0; j < NY-1; j++) {
-        for (let i = 0; i < NX-1; i++) {
-          const avgZ = (proj[j][i].z + proj[j][i+1].z +
-                        proj[j+1][i].z + proj[j+1][i+1].z) / 4;
-          const avgIV = (ivGrid[j][i] + ivGrid[j][i+1] +
-                         ivGrid[j+1][i] + ivGrid[j+1][i+1]) / 4;
-          quads.push({ j, i, avgZ, avgIV });
-        }
-      }
-      quads.sort((a,b) => b.avgZ - a.avgZ);
-
-      // Draw filled quads then wireframe
-      quads.forEach(({j, i, avgIV}) => {
-        const p00 = proj[j][i], p10 = proj[j][i+1];
-        const p01 = proj[j+1][i], p11 = proj[j+1][i+1];
-        ctx.beginPath();
-        ctx.moveTo(p00.sx, p00.sy);
-        ctx.lineTo(p10.sx, p10.sy);
-        ctx.lineTo(p11.sx, p11.sy);
-        ctx.lineTo(p01.sx, p01.sy);
-        ctx.closePath();
-        ctx.fillStyle = ivToColor(avgIV, 0.18);
-        ctx.fill();
-      });
-
-      // Wireframe lines
-      for (let j = 0; j < NY; j++) {
-        for (let i = 0; i < NX-1; i++) {
-          const p0 = proj[j][i], p1 = proj[j][i+1];
-          const iv = (p0.iv + p1.iv) / 2;
-          ctx.beginPath();
-          ctx.moveTo(p0.sx, p0.sy);
-          ctx.lineTo(p1.sx, p1.sy);
-          ctx.strokeStyle = ivToColor(iv, 0.55);
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        }
-      }
-      for (let i = 0; i < NX; i++) {
-        for (let j = 0; j < NY-1; j++) {
-          const p0 = proj[j][i], p1 = proj[j+1][i];
-          const iv = (p0.iv + p1.iv) / 2;
-          ctx.beginPath();
-          ctx.moveTo(p0.sx, p0.sy);
-          ctx.lineTo(p1.sx, p1.sy);
-          ctx.strokeStyle = ivToColor(iv, 0.35);
-          ctx.lineWidth = 0.6;
-          ctx.stroke();
-        }
-      }
-
-      // ATM ridge highlight
-      const atmI = Math.round(NX / 2);
-      ctx.beginPath();
-      for (let j = 0; j < NY; j++) {
-        const p = proj[j][atmI];
-        j === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
-      }
-      ctx.strokeStyle = 'rgba(255,179,0,0.6)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
-    // ── Resize handler ─────────────────────────────────────────────────────
-    function resizeCanvas() {
-      const wrap = canvas.parentElement;
-      canvas.width  = wrap.clientWidth;
-      canvas.height = wrap.clientHeight || 340;
-      drawSurface();
-    }
-
-    // ── Animation loop ─────────────────────────────────────────────────────
-    let lastTime = 0;
-    function animate(ts) {
-      if (autoRotate) {
-        rotY += (ts - lastTime) * 0.0003;
-      }
-      lastTime = ts;
-      drawSurface();
-      requestAnimationFrame(animate);
-    }
-
-    // ── Drag to rotate ─────────────────────────────────────────────────────
-    let dragging = false, lastMX = 0, lastMY = 0;
-    canvas.addEventListener('mousedown', e => {
-      dragging = true; autoRotate = false;
-      lastMX = e.clientX; lastMY = e.clientY;
-      e.preventDefault();
-    });
-    window.addEventListener('mousemove', e => {
-      if (!dragging) return;
-      rotY += (e.clientX - lastMX) * 0.008;
-      rotX += (e.clientY - lastMY) * 0.005;
-      rotX  = Math.max(-0.6, Math.min(0.9, rotX));
-      lastMX = e.clientX; lastMY = e.clientY;
-    });
-    window.addEventListener('mouseup', () => {
-      if (dragging) { dragging = false; autoRotate = true; }
-    });
-
-    // Touch support
-    canvas.addEventListener('touchstart', e => {
-      dragging = true; autoRotate = false;
-      lastMX = e.touches[0].clientX; lastMY = e.touches[0].clientY;
-    }, {passive:true});
-    canvas.addEventListener('touchmove', e => {
-      if (!dragging) return;
-      rotY += (e.touches[0].clientX - lastMX) * 0.008;
-      rotX += (e.touches[0].clientY - lastMY) * 0.005;
-      rotX  = Math.max(-0.6, Math.min(0.9, rotX));
-      lastMX = e.touches[0].clientX; lastMY = e.touches[0].clientY;
-    }, {passive:true});
-    canvas.addEventListener('touchend', () => { dragging = false; autoRotate = true; });
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    requestAnimationFrame(animate);
-  </script>
 </body>
 </html>

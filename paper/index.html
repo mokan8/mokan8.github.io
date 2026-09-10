@@ -17,8 +17,7 @@
       --font-mono:'IBM Plex Mono',monospace;--font-sans:'IBM Plex Sans',sans-serif;
     }
     html{scroll-behavior:smooth;}
-    body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:12px;line-height:1.6;min-height:100vh;cursor:crosshair;}
-    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:999;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;line-height:1.6;min-height:100vh;}
 
     nav{position:fixed;top:0;left:0;right:0;height:42px;background:rgba(8,11,15,0.0);backdrop-filter:none;border-bottom:1px solid rgba(30,45,61,0.4);display:flex;align-items:center;padding:0 24px;z-index:200;transition:background 0.3s;}
     .nav-back{color:var(--text-dim);text-decoration:none;font-size:11px;letter-spacing:0.08em;display:flex;align-items:center;gap:8px;transition:color 0.15s;}
@@ -75,7 +74,7 @@
     /* ── GH Visualizer ── */
     .gh-wrap{position:relative;background:var(--bg2);border:1px solid var(--border);overflow:hidden;}
     .gh-canvas-row{position:relative;height:420px;}
-    .gh-canvas-row canvas{display:block;width:100%;height:100%;cursor:crosshair;}
+    .gh-canvas-row canvas{display:block;width:100%;height:100%;}
     .gh-panel-label{position:absolute;top:14px;left:16px;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;pointer-events:none;}
     .gh-distance-bar{padding:14px 28px;border-top:1px solid var(--border);display:flex;align-items:center;gap:20px;}
     .gh-metric{display:flex;flex-direction:column;gap:3px;min-width:100px;}

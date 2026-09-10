@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Case Study: MLB Late-Favourite Carry — Nicholas McBride</title>
+<meta name="description" content="The complete lifecycle of a prediction-market strategy: pre-registration, sealed out-of-sample validation, live deployment on Kalshi, positive realised P&L, and retirement on a lookahead defect the out-of-sample test could not detect." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/terminal.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="../index.html">NM <span>/ Portfolio</span></a>
+  <div class="nav-links">
+    <a href="../index.html">Index</a>
+    <a href="index.html">Platform</a>
+    <a href="fee-audit.html">Fee Audit</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="eyebrow">Case Study 001 · Prediction Markets · Retired</div>
+    <h1>A strategy that made money<br/>and still had to be killed</h1>
+    <p class="dek">
+      MLB late-favourite carry ran live on Kalshi for fourteen days and finished
+      up 2.4% on a $500 research bankroll. It was retired anyway — not because it
+      lost, but because the backtest that justified it was conditioning on the
+      outcome, and forty-five markets could never have told the difference.
+    </p>
+    <div class="byline">Deployed 2026-06-28 · Halted 2026-07-11 · Retired 2026-07-11</div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Markets traded</div><div class="stat-value">45</div><div class="stat-note">260 contracts</div></div>
+    <div class="stat"><div class="stat-label">Settled YES</div><div class="stat-value cyan">91.1%</div><div class="stat-note">breakeven 84.4%</div></div>
+    <div class="stat"><div class="stat-label">Net P&amp;L</div><div class="stat-value green">+$12.20</div><div class="stat-note">+2.44% on bankroll</div></div>
+    <div class="stat"><div class="stat-label">Net per contract</div><div class="stat-value green">+4.69&cent;</div><div class="stat-note">gross +5.69&cent;</div></div>
+    <div class="stat"><div class="stat-label">Bootstrap 95% CI</div><div class="stat-value small red">[&minus;1.6, +14.3]&cent;</div><div class="stat-note">includes zero</div></div>
+    <div class="stat"><div class="stat-label">Effective n</div><div class="stat-value red">4</div><div class="stat-note">= number of losses</div></div>
+  </div>
+
+  <div class="prose">
+
+    <h2><span class="num">01</span> The claim</h2>
+
+    <p>
+      Kalshi lists a market on every MLB game that pays $1 if a named team wins and
+      $0 otherwise. Late in a game, a team that is comfortably ahead trades somewhere
+      around 0.75–0.88. The hypothesis, written down before any money moved:
+    </p>
+
+    <div class="callout">
+      <span class="callout-label">Pre-registered hypothesis</span>
+      <p>
+        Late in-game MLB favourites priced 0.75–0.88 settle YES more often than the
+        ask implies, so buying and holding to settlement is +EV net of the ask and
+        Kalshi's quadratic taker fee.
+      </p>
+      <p class="muted" style="font-size:13px;font-family:var(--font-mono);letter-spacing:0.04em;">
+        EDGE SOURCE behavioural &nbsp;·&nbsp; BAND mid 0.75–0.88 &nbsp;·&nbsp; EXIT hold to settlement
+      </p>
+    </div>
+
+    <p>
+      This is a deliberately humble claim. Event contracts resolve to 0 or 1 at a known
+      time, so the price is a <strong>bounded martingale</strong> — before costs,
+      <code>E[&Delta;price] = 0</code> by no-arbitrage. Any claimed edge is therefore a
+      strong claim: it has to beat a full round trip of frictions, and on Kalshi the
+      taker fee is quadratic in price, peaking at <code>p = 0.5</code>. Buy-and-hold
+      is the cheapest possible structure on this venue — it pays half a spread and one
+      fee, with no exit, no queue, and no latency requirement. If an edge cannot survive
+      there, it cannot survive anywhere on the venue.
+    </p>
+
+    <p>
+      The kill criterion was pre-registered too: <em>all-in live net must clear zero
+      with a bootstrap CI excluding it at a pre-registered sample size.</em> It is worth
+      noting up front that this is not the criterion that ended up killing the strategy.
+      Something better did.
+    </p>
+
+    <h2><span class="num">02</span> In-sample, robustness, and a sealed out-of-sample</h2>
+
+    <p>
+      The research followed the standard sequence. Entry candidates were defined on
+      minute candles with a non-anticipative liquidity gate — spread at or below the cap,
+      trailing five-minute volume above a floor, both computed only from information
+      available at the candle's close. Costs were charged at the ask, plus the Kalshi
+      taker fee. Outcomes were scored against settlement, never against the last candle
+      close (a loser's final print averages 0.16, not 0 — markets stop trading before
+      they resolve, and reading P&amp;L off the last print quietly inflates every loss).
+    </p>
+
+    <p>
+      Trades within one game are one bet, so all intervals are event-level block
+      bootstraps rather than per-trade t-statistics. The out-of-sample partition was
+      sealed and run <strong>once</strong>.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Sealed backtest results, as they stood at deployment</caption>
+        <thead>
+          <tr><th>Sleeve</th><th>In-sample</th><th>One-shot OOS</th><th>Robustness</th><th>Verdict at the time</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>MLB carry</td><td class="num pos">&mdash;</td><td class="num pos">+4.76&cent; gross / +3.36&cent; net</td><td class="num muted">passed</td><td class="muted">deploy at micro size</td></tr>
+          <tr><td>Tennis carry</td><td class="num pos">+11.56&cent;</td><td class="num pos">+9.84&cent; (CI +9.09, +10.59)</td><td class="num muted">27/27 perturbations positive</td><td class="muted">armed, not deployed</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Every gate passed. The tennis sibling passed them emphatically: twenty-seven of
+      twenty-seven parameter perturbations came back positive, and a sealed one-shot
+      out-of-sample confirmed the in-sample number almost exactly. At the time this read
+      as two independent confirmations of the same effect across two different sports.
+    </p>
+
+    <div class="callout">
+      <span class="callout-label">Worth holding onto</span>
+      <p>
+        A tight IS→OOS agreement and a clean robustness sweep are the two things a
+        research process is supposed to produce. Both were present here. Neither of
+        them can see the defect that eventually killed this strategy, and Section 05
+        explains why that is structural rather than bad luck.
+      </p>
+    </div>
+
+    <h2><span class="num">03</span> What actually shipped</h2>
+
+    <p>
+      The live scanner polls open MLB markets, filters to the validated band, checks the
+      entry trigger, re-quotes immediately before acting, and sends an
+      <strong>immediate-or-cancel limit order at the ask</strong>. One entry per game.
+      Micro size, scaled off a $500 bankroll. A risk gate runs before every scan, and a
+      single-writer fence prevents two scanner instances from double-entering the same
+      event.
+    </p>
+
+    <p>
+      Two guards are worth calling out because they are the difference between live
+      trading and a backtest replayed with real money. If the market leaves the band
+      between listing and re-quote, the entry is skipped and logged as
+      <code>requote_out</code> — an economically real miss, not a silent hole in the
+      sample. If the live spread exceeds the backtest's liquidity cap, the entry is
+      skipped as <code>wide_spread</code>: a wide live book is <em>outside the validated
+      sample</em>, however tempting the mid looks.
+    </p>
+
+    <div class="callout kill">
+      <span class="callout-label">The gap that mattered</span>
+      <p>
+        The backtest entered on <code>minutes_to_expiry &le; 30</code>. The live scanner
+        entered on <code>inning &ge; 8</code>.
+      </p>
+      <p>
+        They were meant to be the same condition expressed in two data sources — the
+        backtest had candles and a settlement timestamp, the live system had a play-by-play
+        feed. They are not the same condition, and the difference is the whole case study.
+        <strong>Minutes-to-expiry is not computable at decision time.</strong> A live
+        scanner cannot know when a game will end, so it cannot trade the rule that was
+        validated. That should have been the tell.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="prose">
+
+    <h2><span class="num">04</span> Fourteen days live</h2>
+
+    <p>
+      The strategy ran from 28 June to 11 July 2026. Every entry attempt was logged —
+      fills and no-fills alike — because a fill log alone cannot measure the cost of
+      the order structure.
+    </p>
+
+    <figure>
+      <div class="fig-head">
+        <div class="fig-title">Cumulative net P&amp;L, and the histories that did not happen</div>
+        <div class="fig-sub">45 settled markets · realised path against 400 bootstrap resamples of the same trades</div>
+      </div>
+      <div class="fig-body"><div id="pnl-chart"></div></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--chart-a)"></i>Realised path</span>
+        <span><i class="swatch band" style="background:rgba(0,165,189,0.30)"></i>Bootstrap 25–75%</span>
+        <span><i class="swatch band" style="background:rgba(0,165,189,0.13)"></i>Bootstrap 5–95%</span>
+      </div>
+      <figcaption>
+        The amber line is what happened. The blue fan is the same 45 trades resampled
+        with replacement — the range of outcomes this strategy could plausibly have
+        produced given its own realised distribution. <strong>17.7% of those alternate
+        histories end below zero.</strong> The realised +$12.20 sits comfortably inside
+        the noise of its own sample.
+      </figcaption>
+    </figure>
+
+    <h3>Execution quality</h3>
+
+    <p>
+      Transaction-cost analysis is where a live sleeve either earns the right to be
+      compared against its backtest or does not. This one earned it.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>TCA · 45 fills from 110 IOC attempts</caption>
+        <thead><tr><th>Measure</th><th>Value</th><th>Reading</th></tr></thead>
+        <tbody>
+          <tr><td>Fill rate</td><td class="num">40.9%</td><td class="muted">45 of 110 attempts</td></tr>
+          <tr><td>VWAP quoted ask</td><td class="num">0.8445</td><td class="muted">the price the model saw</td></tr>
+          <tr><td>VWAP fill</td><td class="num">0.8431</td><td class="muted">the price actually paid</td></tr>
+          <tr><td>Slippage vs quote</td><td class="num pos">&minus;0.27&cent;</td><td class="muted">39 at quote, 6 improved, <strong>0 worse</strong></td></tr>
+          <tr><td>Never-filled markets</td><td class="num">5</td><td class="muted">settled 4/5 &mdash; worse than the fills</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The IOC-at-ask structure did exactly what it was designed to do: it never paid
+      worse than the quote it acted on, and it picked up six price improvements. The
+      59% of attempts that went unfilled are a cost of the structure, not of the fills,
+      so they are measured separately — and the markets that got away settled 4-for-5,
+      slightly <em>worse</em> than the ones that filled. There is no evidence the
+      passive structure was leaving money on the table.
+    </p>
+
+    <h3>The size ramp, and what it exposed</h3>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Weekly · size increased as confidence increased</caption>
+        <thead><tr><th>Week</th><th>Markets</th><th>Contracts</th><th>Hit rate</th><th>Net</th></tr></thead>
+        <tbody>
+          <tr><td>Jun 28 – Jun 30</td><td class="num">9</td><td class="num">9</td><td class="num">100.0%</td><td class="num pos">+$1.52</td></tr>
+          <tr><td>Jul 1 – Jul 5</td><td class="num">18</td><td class="num">80</td><td class="num">94.4%</td><td class="num pos">+$9.14</td></tr>
+          <tr class="highlight"><td>Jul 8 – Jul 11</td><td class="num">18</td><td class="num">171</td><td class="num neg">83.3%</td><td class="num pos">+$1.54</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Two thirds of the contracts were traded in the final week, at a hit rate of 83.3%
+      against a breakeven of 84.4%. The sleeve was largest exactly when it was, for the
+      first time, losing money per contract. That is not a coincidence and it is not
+      bad luck — it is what position sizing driven by accumulating "confirmation" does
+      when the confirmation is noise. It is the mechanism by which a strategy with no
+      edge still manages to lose real money eventually.
+    </p>
+
+    <div class="callout kill">
+      <span class="callout-label">Why the P&amp;L could not settle anything</span>
+      <p>
+        41 wins and 4 losses. For a strategy that wins ~90% of the time, essentially all
+        the information about the edge lives in the losses — the wins are nearly
+        guaranteed and carry almost no signal about whether the ask was too low.
+        <strong>The effective sample size is 4, not 45.</strong>
+      </p>
+      <p>
+        This is also why a bootstrap CI has to be read carefully here: below a minimum
+        loss count, resampling a nearly loss-free sample produces intervals that are
+        provably overconfident, because many resamples contain no losses at all. The
+        honest interval on the per-market mean is <strong>[&minus;1.60&cent;, +14.27&cent;]</strong>,
+        which is 16 cents wide on a quantity whose entire plausible range is single digits.
+      </p>
+    </div>
+
+    <h2><span class="num">05</span> The audit</h2>
+
+    <p>
+      On 11 July the trigger definitions went under audit. The question asked was not
+      "does this backtest overfit?" but a different one: <em>what does this entry
+      condition condition on?</em>
+    </p>
+
+    <p>
+      <code>minutes_to_expiry</code> is computed against the market's <strong>realised
+      settlement time</strong>. So "entered within 30 minutes of expiry" is not a
+      statement about game state — it is a statement that the game ended shortly after
+      entry. For a team already leading, that is outcome information. Games that end
+      quickly from that state are disproportionately games the favourite closed out.
+      Comebacks and extra innings extend the clock, and are therefore silently excluded
+      from the entry set. The trigger was quietly filtering out precisely the losses it
+      was supposed to be measuring.
+    </p>
+
+    <p>
+      The test: re-run the strategy on a play-by-play join, using triggers that are
+      computable at decision time. <code>act_T</code> is a cumulative active-minutes
+      clock derived from the candles themselves; <code>inning &ge; 8</code> is the trigger
+      that actually shipped.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>MLB 2026 Apr–Jun, PBP-joined, n<sub>markets</sub> = 1,770 · buy at ask, hold to settlement, taker fee charged</caption>
+        <thead><tr><th>Trigger</th><th>n</th><th>Avg ask</th><th>Hit</th><th>Net</th><th>95% CI</th></tr></thead>
+        <tbody>
+          <tr><td>lookahead <code>mte &le; 30</code></td><td class="num">393</td><td class="num">0.831</td><td class="num">0.868</td><td class="num pos">+2.31&cent;</td><td class="num muted">[&minus;1.03, +5.65]</td></tr>
+          <tr class="highlight"><td><strong><code>inning &ge; 8</code> — what shipped</strong></td><td class="num">498</td><td class="num">0.827</td><td class="num">0.807</td><td class="num neg"><strong>&minus;3.45&cent;</strong></td><td class="num muted">[&minus;6.91, +0.01]</td></tr>
+          <tr><td><code>inning &ge; 9</code></td><td class="num">306</td><td class="num">0.831</td><td class="num">0.804</td><td class="num neg">&minus;4.15&cent;</td><td class="num muted">[&minus;8.56, +0.27]</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Late in-band MLB favourites are approximately <strong>fairly priced</strong>:
+      hit rate 0.807 against an average ask of 0.827, which is within noise of the
+      no-arbitrage prediction. After fees, the honest trigger is negative. The sealed
+      +4.76&cent; out-of-sample number was not optimistic — it was
+      <strong>inadmissible</strong>.
+    </p>
+
+    <p>
+      The tennis sibling was worse, and instructive about why. A tennis match ends
+      <em>because</em> someone won; baseball's fixed nine innings make "ends soon"
+      less outcome-informative, which is why MLB's artifact was the smaller of the two.
+      Substituting a non-anticipative activity clock that reaches the same median
+      lateness as the biased trigger (31 minutes vs 26) turns +11.55&cent; into
+      &minus;1.54&cent;. The entire measured edge was the conditioning.
+    </p>
+
+    <div class="callout kill">
+      <span class="callout-label">Why every gate passed anyway</span>
+      <p>
+        <strong>Robustness checks probe sensitivity to parameters. They cannot see a
+        defect in a trigger's definition.</strong> All 27 perturbations were positive
+        <em>around a biased trigger</em>; varying the threshold does not remove the
+        conditioning, it just moves it.
+      </p>
+      <p>
+        <strong>A sealed out-of-sample split cannot detect it either.</strong> The bias
+        lives in how the entry condition is <em>defined</em>, so both partitions inherit
+        it equally and in the same direction. Out-of-sample discipline protects against
+        overfitting to a particular sample; it offers no protection at all against a
+        rule that is not computable at decision time. Only asking "what does this
+        condition on?" finds this class of defect.
+      </p>
+      <p>
+        And the corollary that stung most: <strong>the MLB→tennis replication carried no
+        information.</strong> It varied the sport but not the component that could be
+        broken. A replication is evidence only if it varies the suspect component.
+      </p>
+    </div>
+
+    <h2><span class="num">06</span> Retirement, and the trap underneath it</h2>
+
+    <ul class="timeline">
+      <li class="mark">
+        <div class="tl-date">2026-06-28</div>
+        <div class="tl-body">First live fills. One contract per market, dry-run guard removed only after the order path was probed.</div>
+      </li>
+      <li>
+        <div class="tl-date">2026-07-08 → 07-11</div>
+        <div class="tl-body">Size ramps to 14 contracts. Hit rate slips below breakeven. <strong>Two scanner instances briefly duel</strong> — a forgotten laptop process against the deployed droplet — which is what motivated the single-writer fence.</div>
+      </li>
+      <li class="kill">
+        <div class="tl-date">2026-07-11</div>
+        <div class="tl-body"><strong>Lookahead audit. Live halted the same day.</strong> Tennis never deployed. MLB retired: the validating backtest is inadmissible, and the live ledger cannot distinguish &minus;3&cent; from +5&cent; at this fill count.</div>
+      </li>
+      <li>
+        <div class="tl-date">2026-07-30</div>
+        <div class="tl-body">Docs reconciled. Verdicts written into the registry in full, including the numbers that made the case.</div>
+      </li>
+    </ul>
+
+    <p>
+      Retiring a strategy is not a note in a file — it is a state change in a running
+      system, and this one had a sting in the tail. The platform runs a
+      <strong>CUSUM decay detector</strong> on settled outcomes: a one-sided cumulative
+      sum of log-likelihood ratios asking whether settlements are better explained by
+      H<sub>1</sub> (entry price plus the benchmark mispricing) or H<sub>0</sub> (the
+      market is calibrated). Carry's H<sub>1</sub> benchmark was seeded at
+      <strong>+4.76&cent;</strong> — the void number.
+    </p>
+
+    <div class="callout kill">
+      <span class="callout-label">A decay detector inherits the credibility of its benchmark</span>
+      <p>
+        The detector had been discriminating against a hypothesis that was already
+        disproven. It would have read "edge intact" indefinitely on a sleeve with
+        negative expected value, because the alternative it was testing was never real.
+        A void benchmark launders a dead prior into an all-clear.
+      </p>
+      <p>
+        Worse, nulling the database value was not sufficient. The scanner does a
+        <code>set-if-null</code> reseed from a hardcoded constant, so the void benchmark
+        would have returned the moment any scanner started. <strong>Clearing state is
+        only durable if you also remove whatever knows how to re-supply it.</strong>
+      </p>
+    </div>
+
+    <h2><span class="num">07</span> What it cost, and what it bought</h2>
+
+    <p>
+      Direct cost: nothing — the sleeve finished up $12.20. The real cost was five
+      weeks of research time spent building confidence in a number that could not have
+      been true, plus the opportunity cost of a tennis sleeve built on the same defect.
+    </p>
+
+    <p>What it bought:</p>
+
+    <ul>
+      <li>
+        <strong>A rule with teeth.</strong> Every entry condition must now be checked for
+        decision-time computability before anything else. If the live system cannot
+        compute the trigger, the backtest is not testing the strategy — and that gap is
+        now the first thing looked for, not the last.
+      </li>
+      <li>
+        <strong>A correction to what replication means.</strong> Varying the sport, the
+        season, or the parameter grid is not replication if the suspect component is
+        held fixed.
+      </li>
+      <li>
+        <strong>An honest estimator of live edge.</strong> The realised ledger, with an
+        interval that admits how little four losses can tell you, rather than a P&amp;L
+        number presented as a result.
+      </li>
+      <li>
+        <strong>The single-writer fence and the set-if-null lesson</strong>, both of which
+        came out of this fortnight and both of which are the sort of defect that only
+        shows up once real orders are in flight.
+      </li>
+    </ul>
+
+    <div class="callout good">
+      <span class="callout-label">The point</span>
+      <p>
+        A research process that only kills losing strategies is not a research process —
+        it is a P&amp;L stop. This one killed a strategy that was up 2.4%, on the
+        evidence rather than the returns, thirteen days after the first fill. That is
+        the behaviour the whole apparatus exists to produce, and it is the only
+        result from this sleeve worth putting on a résumé.
+      </p>
+    </div>
+
+    <h2><span class="num">08</span> Reproducibility</h2>
+
+    <p>
+      Every figure on this page traces to a source. The live numbers come from the
+      strategy's own execution log — one row per attempt, fills and no-fills, with
+      order IDs. Settlements were reconstructed independently by matching each market
+      ticker to its game and deriving the winner from the final score, then
+      cross-checked against Kalshi's own market endpoint on the subset it still serves:
+      <strong>18 of 18 agree, 0 disagreements</strong>. Backtest figures are quoted from
+      the audit document dated 2026-07-11.
+    </p>
+
+    <p>
+      Methodology and the runnable statistical utilities — the corrected fee model,
+      event-level block bootstrap, Wilson intervals for the loss-starved regime, and the
+      CUSUM detector — are published in the
+      <a href="https://github.com/mokan8/prediction-market-research">companion repository</a>.
+      Live strategy parameters and platform source are not.
+    </p>
+
+  </div>
+
+  <footer>
+    <div class="foot-row">
+      <span>Nicholas McBride</span>
+      <span>·</span>
+      <a href="../index.html">Index</a>
+      <a href="index.html">Research platform</a>
+      <a href="fee-audit.html">Case study 002</a>
+      <a href="https://github.com/mokan8">GitHub</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* ── Cumulative P&L chart ─────────────────────────────────────────────────
+   Single series (realised path) over a bootstrap uncertainty fan.
+   The fan is one hue at two opacities — it encodes magnitude of uncertainty,
+   not category, so it must not be two categorical colours.               */
+const PNL = {"actual":[0.11,0.23,0.45,0.65,0.81,1.02,1.18,1.34,1.52,1.63,2.13,2.63,2.84,3.16,3.52,4.5,5.18,6.08,6.88,7.8,8.92,9.82,10.41,11.38,9.03,9.7,10.66,12.07,13.15,14.61,10.6,12.1,13.56,14.97,15.98,17.58,19.15,20.72,21.85,23.55,18.74,19.87,21.06,22.63,12.2],"q05":[-4.05,-4.603,-8.663,-8.365,-8.148,-7.966,-8.466,-8.813,-9.872,-9.873,-9.585,-9.473,-9.444,-10.595,-10.735,-10.413,-10.016,-10.278,-10.175,-10.825,-10.287,-9.819,-9.84,-10.194,-11.707,-11.603,-11.458,-10.548,-11.099,-11.335,-11.272,-10.778,-10.957,-10.935,-10.222,-9.338,-10.75,-11.314,-11.243,-10.636,-11.054,-10.17,-9.504,-9.912,-9.967],"q25":[0.16,0.427,-0.818,-1.203,-1.31,-0.895,-0.798,-0.455,-1.945,-1.907,-1.357,-1.095,-0.92,-0.735,-0.785,-0.503,-0.012,-0.215,0.25,0.18,0.695,0.835,1.002,0.605,1.195,1.183,1.128,1.393,1.987,2.117,2.065,2.135,2.165,3.118,3.24,2.485,2.798,2.65,2.962,3.86,3.515,3.752,4.137,4.66,4.188],"q50":[0.68,1.3,1.875,2.32,2.78,3.105,3.185,3.42,3.55,4.07,4.415,4.74,4.92,4.965,5.305,5.455,5.46,6.095,6.245,6.565,6.61,6.965,7.375,7.715,8.16,8.51,8.65,8.96,9.555,9.03,9.76,9.88,10.55,11.165,11.275,11.86,12.15,12.32,12.51,12.225,12.765,13.265,13.47,13.87,14.285],"q75":[1.13,1.93,2.795,3.58,4.318,5.055,5.91,6.472,7.062,7.793,8.582,9.032,9.13,9.435,9.982,10.52,10.908,11.35,11.918,12.017,12.037,12.265,12.708,13.253,13.425,13.973,14.24,14.755,15.045,16.01,16.453,16.868,17.205,17.523,17.94,18.522,18.757,18.925,18.94,19.733,20.018,20.32,20.55,20.938,21.692],"q95":[1.57,2.73,3.751,4.652,5.592,6.811,7.772,8.574,9.424,10.271,11.382,12.3,12.823,13.371,14.38,15.04,15.806,16.52,17.43,18.132,18.651,19.002,19.582,19.79,20.754,21.394,22.244,22.927,23.55,24.23,24.605,25.367,26.165,26.515,26.595,26.921,27.458,27.815,28.203,29.03,29.395,30.32,31.128,31.797,32.765],"won":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,0],"qty":[1,1,1,1,1,1,1,1,1,1,3,3,1,2,3,7,3,8,5,7,7,6,3,8,3,4,6,10,5,13,5,10,12,10,6,10,14,14,5,14,6,5,6,14,12],"px":[0.88,0.87,0.76,0.78,0.82,0.77,0.82,0.83,0.8,0.88,0.82,0.82,0.77,0.83,0.87,0.85,0.76,0.88,0.83,0.86,0.83,0.84,0.79,0.87,0.77,0.82,0.83,0.85,0.77,0.88,0.79,0.84,0.87,0.85,0.82,0.83,0.88,0.88,0.76,0.87,0.79,0.76,0.79,0.88,0.86],"dates":["2026-06-28","2026-06-28","2026-06-28","2026-06-28","2026-06-28","2026-06-28","2026-06-28","2026-06-28","2026-06-28","2026-06-29","2026-06-30","2026-06-30","2026-06-30","2026-06-30","2026-06-30","2026-07-01","2026-07-01","2026-07-01","2026-07-01","2026-07-01","2026-07-02","2026-07-02","2026-07-02","2026-07-02","2026-07-03","2026-07-03","2026-07-05","2026-07-09","2026-07-09","2026-07-09","2026-07-09","2026-07-09","2026-07-09","2026-07-09","2026-07-10","2026-07-10","2026-07-10","2026-07-10","2026-07-11","2026-07-11","2026-07-11","2026-07-11","2026-07-11","2026-07-11","2026-07-11"]};
+
+(function drawPnl(){
+  const el = document.getElementById('pnl-chart');
+  if(!el || !PNL) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const n = PNL.actual.length;
+
+  function render(){
+    el.innerHTML = '';
+    const W = el.clientWidth || 760;
+    const H = Math.max(240, Math.min(340, W * 0.42));
+    const m = { t: 14, r: 74, b: 30, l: 50 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+
+    const all = PNL.q05.concat(PNL.q95, PNL.actual, [0]);
+    // snap the domain to round dollars so the ticks read cleanly
+    const step = 10;
+    let lo = Math.floor(Math.min(...all) / step) * step;
+    let hi = Math.ceil(Math.max(...all) / step) * step;
+
+    const X = i => m.l + (i / (n - 1)) * iw;
+    const Y = v => m.t + ih - ((v - lo) / (hi - lo)) * ih;
+
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label',
+      'Cumulative net profit and loss over 45 settled markets, ending at plus 12 dollars 20, '
+      + 'shown against a bootstrap fan in which 17.7 percent of resampled histories end below zero.');
+
+    const mk = (t, a) => { const e = document.createElementNS(NS, t);
+      for(const k in a) e.setAttribute(k, a[k]); return e; };
+
+    // y gridlines — solid hairlines, one shade off the surface
+    const ticks = Math.round((hi - lo) / step);
+    for(let i = 0; i <= ticks; i++){
+      const v = lo + (hi - lo) * i / ticks, y = Y(v);
+      svg.appendChild(mk('line', { x1: m.l, x2: m.l + iw, y1: y, y2: y,
+        stroke: '#16222e', 'stroke-width': 1 }));
+      const tx = mk('text', { x: m.l - 9, y: y + 4, fill: '#6b8496',
+        'font-size': 10, 'text-anchor': 'end',
+        'font-family': "'IBM Plex Mono', monospace", 'font-variant-numeric': 'tabular-nums' });
+      tx.textContent = (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(0);
+      svg.appendChild(tx);
+    }
+
+    const area = (a, b, fill) => {
+      let d = 'M' + X(0) + ',' + Y(a[0]);
+      for(let i = 1; i < n; i++) d += 'L' + X(i) + ',' + Y(a[i]);
+      for(let i = n - 1; i >= 0; i--) d += 'L' + X(i) + ',' + Y(b[i]);
+      svg.appendChild(mk('path', { d: d + 'Z', fill: fill, stroke: 'none' }));
+    };
+    area(PNL.q05, PNL.q95, 'rgba(0,165,189,0.13)');
+    area(PNL.q25, PNL.q75, 'rgba(0,165,189,0.30)');
+
+    // zero reference
+    svg.appendChild(mk('line', { x1: m.l, x2: m.l + iw, y1: Y(0), y2: Y(0),
+      stroke: '#6b8496', 'stroke-width': 1 }));
+
+    const line = (arr, stroke, w, opacity) => {
+      let d = 'M' + X(0) + ',' + Y(arr[0]);
+      for(let i = 1; i < n; i++) d += 'L' + X(i) + ',' + Y(arr[i]);
+      svg.appendChild(mk('path', { d: d, fill: 'none', stroke: stroke,
+        'stroke-width': w, 'stroke-linejoin': 'round', opacity: opacity || 1 }));
+    };
+    line(PNL.q50, '#00a5bd', 1, 0.55);
+    line(PNL.actual, '#e09a00', 2);
+
+    // endpoint marker + direct label (selective, not a value on every point)
+    const ex = X(n - 1), ey = Y(PNL.actual[n - 1]);
+    svg.appendChild(mk('circle', { cx: ex, cy: ey, r: 4.5, fill: '#e09a00',
+      stroke: '#0d1117', 'stroke-width': 2 }));
+    const lab = mk('text', { x: ex + 9, y: ey + 4, fill: '#e09a00', 'font-size': 12,
+      'font-family': "'IBM Plex Mono', monospace", 'font-weight': 500 });
+    lab.textContent = '+$12.20';
+    svg.appendChild(lab);
+
+    // x axis
+    [0, 14, 29, 44].forEach(i => {
+      const tx = mk('text', { x: X(i), y: m.t + ih + 19, fill: '#6b8496',
+        'font-size': 10, 'text-anchor': i === 0 ? 'start' : (i === 44 ? 'end' : 'middle'),
+        'font-family': "'IBM Plex Mono', monospace" });
+      tx.textContent = i === 0 ? 'Jun 28' : (i === 44 ? 'Jul 11' : 'market ' + (i + 1));
+      svg.appendChild(tx);
+    });
+
+    // hover layer
+    const hov = mk('g', { opacity: 0 });
+    const vline = mk('line', { y1: m.t, y2: m.t + ih, stroke: '#93aec2', 'stroke-width': 1 });
+    const dot = mk('circle', { r: 4, fill: '#e09a00', stroke: '#0d1117', 'stroke-width': 2 });
+    hov.appendChild(vline); hov.appendChild(dot);
+    svg.appendChild(hov);
+
+    const tip = document.createElement('div');
+    tip.style.cssText = 'position:absolute;pointer-events:none;opacity:0;transition:opacity .12s;'
+      + 'background:#0d1117;border:1px solid #1e2d3d;padding:9px 12px;font-size:11px;'
+      + "font-family:'IBM Plex Mono',monospace;color:#c8d8e8;white-space:nowrap;z-index:5;line-height:1.55";
+    el.style.position = 'relative';
+    el.appendChild(tip);
+
+    const hit = mk('rect', { x: m.l, y: m.t, width: iw, height: ih,
+      fill: 'transparent', style: 'cursor:crosshair' });
+    svg.appendChild(hit);
+
+    function move(evt){
+      const r = svg.getBoundingClientRect();
+      const px = (evt.touches ? evt.touches[0].clientX : evt.clientX) - r.left;
+      const sx = px * (W / r.width);
+      let i = Math.round(((sx - m.l) / iw) * (n - 1));
+      i = Math.max(0, Math.min(n - 1, i));
+      hov.setAttribute('opacity', 1);
+      vline.setAttribute('x1', X(i)); vline.setAttribute('x2', X(i));
+      dot.setAttribute('cx', X(i)); dot.setAttribute('cy', Y(PNL.actual[i]));
+      const won = PNL.won[i];
+      tip.innerHTML = '<b>Market ' + (i + 1) + '</b> &middot; ' + PNL.dates[i]
+        + '<br/>' + PNL.qty[i] + ' @ ' + PNL.px[i].toFixed(2)
+        + ' &middot; <span style="color:' + (won ? '#00e676' : '#ff5252') + '">'
+        + (won ? 'WON' : 'LOST') + '</span>'
+        + '<br/>cumulative <b>' + (PNL.actual[i] >= 0 ? '+' : '−')
+        + '$' + Math.abs(PNL.actual[i]).toFixed(2) + '</b>';
+      tip.style.opacity = 1;
+      const left = (X(i) / W) * r.width;
+      tip.style.left = Math.min(Math.max(left + 12, 4), r.width - 190) + 'px';
+      tip.style.top = ((Y(PNL.actual[i]) / H) * r.height - 12) + 'px';
+    }
+    function leave(){ hov.setAttribute('opacity', 0); tip.style.opacity = 0; }
+    hit.addEventListener('mousemove', move);
+    hit.addEventListener('mouseleave', leave);
+    hit.addEventListener('touchmove', move, { passive: true });
+    hit.addEventListener('touchend', leave);
+
+    el.insertBefore(svg, tip);
+  }
+
+  render();
+  let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(render, 150); });
+})();
+</script>
+
+</body>
+</html>

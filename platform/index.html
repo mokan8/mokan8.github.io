@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prediction-Market Research Platform — Nicholas McBride</title>
+<meta name="description" content="A systematic research and execution platform for prediction markets: pre-registration, sealed out-of-sample testing, live order execution on Kalshi, transaction-cost analysis, and a falsification record of six retired strategy families." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/terminal.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="../index.html">NM <span>/ Portfolio</span></a>
+  <div class="nav-links">
+    <a href="../index.html">Index</a>
+    <a href="mlb-carry.html">MLB Carry</a>
+    <a href="fee-audit.html">Fee Audit</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="eyebrow">Project 001 · Systematic Research &amp; Execution</div>
+    <h1>A falsification engine<br/>for prediction markets</h1>
+    <p class="dek">
+      An end-to-end platform that generates hypotheses about event-contract
+      mispricing, tests them under pre-registration and sealed out-of-sample
+      discipline, executes the survivors against real capital on Kalshi, and
+      retires them on written evidence. Six strategy families have been through
+      the full loop. All six are retired, and the reasons are the product.
+    </p>
+    <div class="byline">Built 2026 · Python · Postgres · WebSocket capture · Deployed on a single droplet</div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Families tested</div><div class="stat-value">6</div><div class="stat-note">full lifecycle each</div></div>
+    <div class="stat"><div class="stat-label">Retired</div><div class="stat-value amber">6</div><div class="stat-note">each with a written verdict</div></div>
+    <div class="stat"><div class="stat-label">Currently trading</div><div class="stat-value">0</div><div class="stat-note">by decision, not by outage</div></div>
+    <div class="stat"><div class="stat-label">Live orders placed</div><div class="stat-value cyan">45</div><div class="stat-note">real fills, real settlement</div></div>
+    <div class="stat"><div class="stat-label">Depth archive</div><div class="stat-value cyan">~592 hrs</div><div class="stat-note">full order-book messages</div></div>
+  </div>
+
+  <div class="prose">
+
+    <div class="callout">
+      <span class="callout-label">Read this first</span>
+      <p>
+        Nothing on this page is a track record. The platform is not currently trading
+        and I am not claiming a validated edge. What it demonstrates is a research
+        process that reaches negative conclusions quickly, records why, and does not
+        quietly recycle them — which is the part of quantitative work that is hard to
+        fake and hard to teach.
+      </p>
+    </div>
+
+    <h2><span class="num">01</span> Why prediction markets</h2>
+
+    <p>
+      An event contract pays $1 if a specified thing happens and $0 otherwise, and
+      resolves at a known time against a named source. Three properties follow, and
+      together they make the venue an unusually clean laboratory.
+    </p>
+
+    <ul>
+      <li>
+        <strong>The price is a probability.</strong> Not a discounted cash-flow
+        estimate, not a risk-neutral density to be extracted — a direct, bounded
+        probability statement with unambiguous settlement.
+      </li>
+      <li>
+        <strong>The truth arrives.</strong> Every position is scored against a
+        realised outcome within days or hours. Calibration against settlement, not
+        P&amp;L, becomes the regime-invariant measure of skill — and it is available
+        at a sample size that equities-style research would need years to reach.
+      </li>
+      <li>
+        <strong>There is no drift to hide behind.</strong> Before costs
+        <code>E[Δprice] = 0</code> by no-arbitrage. There is no buy-and-hold premium
+        lending a marginal strategy the benefit of the doubt. Every claimed edge is a
+        strong claim that must beat the full round-trip cost.
+      </li>
+    </ul>
+
+    <p>
+      The last one is the reason the <a href="fee-audit.html">cost model</a> gets its
+      own case study. On a venue with no drift, the fee function is one side of the
+      only inequality that matters.
+    </p>
+
+    <h2><span class="num">02</span> The research loop</h2>
+
+    <ol>
+      <li>
+        <strong>Pre-register.</strong> A falsifiable claim, a named edge source
+        (informational / behavioural / structural / risk-premium / liquidity-provision),
+        a prior probability that it is true, a test plan, and numeric success
+        <em>and</em> kill criteria — written before the data is touched, stamped with
+        the code commit and data window.
+      </li>
+      <li>
+        <strong>Test in-sample.</strong> Cost-aware expected value at the ask,
+        proper scoring against settlement (Brier, log-loss), event-level block
+        bootstrap, and an explicit count of how many variants were tried.
+      </li>
+      <li>
+        <strong>One-shot out-of-sample.</strong> Parameters freeze; the sealed
+        partition runs exactly once. The pairing is enforced by the data catalog
+        rather than by willpower.
+      </li>
+      <li>
+        <strong>Verdict to the registry.</strong> Validated or disproven, with the
+        reasoning either way. <strong>Disproven strategies are first-class results</strong>
+        and are written up in the same detail as survivors.
+      </li>
+    </ol>
+
+    <h2><span class="num">03</span> The statistical backbone</h2>
+
+    <p>
+      These are the pieces that decide whether a number means anything, and each of
+      them exists because something went wrong without it.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Design decisions and the failure each one prevents</caption>
+        <thead><tr><th>Discipline</th><th>What it prevents</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Effective n = rare events</strong></td><td class="muted">For a high-hit-rate strategy the information lives in the losses. Below a minimum loss count, bootstrap CIs are provably overconfident — a loss-free sample resamples loss-free — so intervals switch to Wilson on the win rate</td></tr>
+          <tr><td><strong>Event-level block bootstrap</strong></td><td class="muted">Trades within one event are one bet. Per-trade t-statistics on clustered outcomes manufacture significance</td></tr>
+          <tr><td><strong>Decision-time computability</strong></td><td class="muted">Lookahead lives in trigger <em>definitions</em>, and inflates in-sample and out-of-sample equally. OOS discipline offers no protection; only computability at decision time does</td></tr>
+          <tr><td><strong>Settlement-based outcomes</strong></td><td class="muted">A loser's final print averages 0.16, not 0. Reading P&amp;L off the last candle quietly shrinks every loss</td></tr>
+          <tr><td><strong>Calibrated risk thresholds</strong></td><td class="muted">Drawdown halts are set from a night-block bootstrap of healthy-edge variance, so the false-trip rate is known in advance rather than chosen by feel</td></tr>
+          <tr><td><strong>Measured CUSUM operating characteristics</strong></td><td class="muted">A sequential decay detector whose false-alarm rate and median detection delay were never measured is a light that may never turn on</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2><span class="num">04</span> Live execution and TCA</h2>
+
+    <p>
+      Per settled market, the platform decomposes realised performance into an exact
+      identity rather than reporting a single P&amp;L number:
+    </p>
+
+    <div class="callout">
+      <p style="font-family:var(--font-mono);font-size:13.5px;color:var(--text);line-height:1.9;">
+        live_net = (won &minus; vwap_quoted_ask)&nbsp;&nbsp;&nbsp;<span style="color:#6b8496">mispricing at the quote seen</span><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (vwap_quoted_ask &minus; vwap_fill)&nbsp;&nbsp;&nbsp;<span style="color:#6b8496">price improvement (IOC ⇒ ≥ 0)</span><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&minus; fees_per_contract
+      </p>
+    </div>
+
+    <p>
+      The point of the identity is that it separates <em>being right about the price</em>
+      from <em>getting a good fill</em>, and separates both from the cost of the order
+      structure. Attempts that never fill are logged alongside fills, because a fill log
+      on its own cannot measure what the passive structure gave up — and the markets
+      that got away are joined to their settlements to check whether they would have
+      been worth having.
+    </p>
+
+    <h2><span class="num">05</span> The scoreboard</h2>
+
+    <p>
+      Six families, six retirements. The verdicts are more useful than a return figure
+      would be, so they are stated in full.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Strategy families, in order of retirement</caption>
+        <thead><tr><th>Family</th><th>Retired</th><th>Killed by</th></tr></thead>
+        <tbody>
+          <tr class="highlight"><td><strong><a href="mlb-carry.html">MLB late-favourite carry</a></strong></td><td class="muted">2026-07-11</td><td class="muted">Lookahead in the trigger definition. Traded live and profitably first — <a href="mlb-carry.html">full case study</a></td></tr>
+          <tr><td>Tennis match-winner carry</td><td class="muted">2026-07-11</td><td class="muted">Same defect, larger. Passed 27/27 robustness perturbations and a sealed OOS <em>around a biased trigger</em>. Never deployed</td></tr>
+          <tr><td>Perpetual-futures reversion</td><td class="muted">2026-07-26</td><td class="muted">Cost, not statistics. Raw autocorrelation of &minus;0.119 was ~80% wide-quote artifact; the survivor failed White's reality check over 32 cells; the best cell was 3.8&times; too small for the fee tier</td></tr>
+          <tr><td>BTC hourly pricer vs market</td><td class="muted">2026-07-26</td><td class="muted">A 59-second lookahead — one venue timestamps bucket <em>starts</em>, the other bucket <em>ends</em>. &Delta;Brier +0.0004 (worse) once aligned</td></tr>
+          <tr><td>Weather fade</td><td class="muted">2026</td><td class="muted">No edge net of costs</td></tr>
+          <tr><td>Cross-series relative value</td><td class="muted">2026</td><td class="muted">Pre-registered as expected-to-fail; a market-making problem even on success</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout kill">
+      <span class="callout-label">The finding that matters more than any of them</span>
+      <p>
+        Every one of the six was <strong>intra-event, high-frequency, on a flagship
+        series</strong> — which is simultaneously the hardest place on the venue to find
+        surviving inefficiency, the place where the quadratic taker fee is worst (it
+        peaks at p = 0.5, exactly where in-game sports and at-the-money crypto live),
+        and the place where a small account's only real advantages — patience,
+        willingness to hold to settlement, willingness to trade obscure things — are
+        worth nothing.
+      </p>
+      <p>
+        <strong>The falsification engine had been working perfectly and returning the
+        same answer six times. That is not six observations about the venue. It is one
+        observation about one urn.</strong>
+      </p>
+      <p>
+        Recognising that changed the research programme from "find a seventh strategy"
+        to "sample a different urn": neglected, long-dated, low-volume markets held to
+        settlement, where the cost bar is decidable before any statistics are run.
+      </p>
+    </div>
+
+    <h2><span class="num">06</span> Architecture</h2>
+
+    <p>
+      Components are identified by a permanent label for a <em>responsibility</em>, not
+      for a file — <code>CST-1</code> means "the thing that answers what a trade costs"
+      whether that lives in one module today or four next year. IDs are cited in commit
+      messages, pre-registrations and the state document. They are never renumbered and
+      never reused, because an ID that changes meaning turns every commit message that
+      cites it into a small lie.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Subsystems</caption>
+        <thead><tr><th>Layer</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr><td><strong>ING</strong> · Ingress</td><td class="muted">Streaming depth, trades and lifecycle over WebSocket; reference data; account truth (fills, balances, fees actually charged); daily universe cross-section. The only layer permitted to know the word "Kalshi"</td></tr>
+          <tr><td><strong>STO</strong> · Storage</td><td class="muted">An append-only immutable landing zone and a derived, rebuildable curated store — two stores with deliberately opposite properties</td></tr>
+          <tr><td><strong>MOD</strong> · Instrument model</td><td class="muted">Venue ticker ↔ a claim with a payoff. Book reconstruction from raw messages; lifecycle, relists and settlements</td></tr>
+          <tr><td><strong>CST</strong> · Cost &amp; microstructure</td><td class="muted">What a trade actually costs. <a href="fee-audit.html">Case study 002</a> is an audit of this layer</td></tr>
+          <tr><td><strong>RSK</strong> · Risk</td><td class="muted">Circuit breaker before every scan, calibrated drawdown halts, CUSUM decay detection on settled outcomes, capital sleeves and Kelly-fraction sizing</td></tr>
+          <tr><td><strong>EXE</strong> · Execution</td><td class="muted">IOC limit orders at the quote, one entry per event, a single-writer fence against duplicate scanners, per-attempt logging for TCA</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Two operational details are worth naming because both were paid for. A
+      <strong>single-writer fence</strong>: every heartbeat records instance and git SHA,
+      and if the previous writer of the heartbeat is not the current process, both sides
+      stand down — a mutual standoff that self-clears. This exists because a forgotten
+      laptop process once duelled with the deployed instance over the same account. And
+      an <strong>immutable landing zone</strong>: raw capture is never rewritten, because
+      market data is not revisable and alternative data is, and a study that reads the
+      latest revision of a forecast is reading the future.
+    </p>
+
+    <h2><span class="num">07</span> Case studies</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Study</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td><strong><a href="mlb-carry.html">001 · MLB late-favourite carry</a></strong></td><td class="muted">The complete lifecycle, end to end: pre-registration, sealed OOS, deployment, 45 real fills, positive realised P&amp;L, halt, audit, retirement. Killed on evidence while profitable</td></tr>
+          <tr><td><strong><a href="fee-audit.html">002 · Auditing my own cost model</a></strong></td><td class="muted">Finding that the platform's most load-bearing function was wrong in form, that 24 passing unit tests were pinning the error in place, and stating what it invalidates</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Methodology and the runnable statistical utilities are published in the
+      <a href="https://github.com/mokan8/prediction-market-research">companion
+      repository</a>. Live strategy parameters, series names and platform source are not.
+    </p>
+
+  </div>
+
+  <footer>
+    <div class="foot-row">
+      <span>Nicholas McBride</span>
+      <span>·</span>
+      <a href="../index.html">Index</a>
+      <a href="mlb-carry.html">Case study 001</a>
+      <a href="fee-audit.html">Case study 002</a>
+      <a href="https://github.com/mokan8">GitHub</a>
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>

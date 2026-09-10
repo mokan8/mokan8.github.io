@@ -35,18 +35,6 @@
       font-size: 13px;
       line-height: 1.6;
       min-height: 100vh;
-      cursor: crosshair;
-    }
-
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background: repeating-linear-gradient(
-        0deg, transparent, transparent 2px,
-        rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
-      );
-      pointer-events: none;
-      z-index: 1000;
     }
 
     /* ── Nav ── */
@@ -350,7 +338,8 @@
 <nav>
   <a class="nav-logo" href="index.html">NM <span>/ Portfolio</span></a>
   <div class="nav-links">
-    <a href="index.html#projects">Projects</a>
+    <a href="index.html#work">Work</a>
+    <a href="platform/index.html">Platform</a>
     <a href="about.html" class="active">About Me</a>
   </div>
 </nav>
@@ -427,12 +416,21 @@
             directly into quantitative research.
           </p>
           <p>
-            I am now applying this foundation to <strong>financial mathematics</strong>,
-            with a focus on derivatives pricing and volatility modeling. My current
-            project calibrates the Heston stochastic volatility model to live SPY
-            options data, building the full pipeline from market data ingestion
-            through implied volatility extraction, model calibration, and a
-            semi-analytic Greeks engine.
+            I now work in <strong>prediction markets</strong>, where I build and run a
+            systematic research and execution platform on Kalshi. Event contracts
+            settle to 0 or 1 against a named source at a known time, so the price is a
+            bounded probability and every position is scored against a realised
+            outcome — which makes calibration, not P&amp;L, the measure of whether a
+            model is any good.
+          </p>
+          <p>
+            The platform runs the full loop: order-book capture, pre-registered
+            hypotheses, sealed one-shot out-of-sample tests, live IOC execution,
+            transaction-cost analysis against real fills, and a written retirement when
+            the evidence calls for one. Six strategy families have been through it and
+            all six are retired. Two of those retirements are written up as
+            <a href="platform/index.html">case studies</a>, and both are negative
+            results — including one strategy that was profitable when I killed it.
           </p>
         </div>
       </div>
