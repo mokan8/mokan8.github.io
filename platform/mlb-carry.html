@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Case Study: MLB Late-Favourite Carry — Nicholas McBride</title>
-<meta name="description" content="The complete lifecycle of a prediction-market strategy: pre-registration, sealed out-of-sample validation, live deployment on Kalshi, positive realised P&L, and retirement on a lookahead defect the out-of-sample test could not detect." />
+<meta name="description" content="The complete lifecycle of a prediction-market strategy: pre-registration, sealed out-of-sample validation, live deployment on Kalshi, positive realised P&L, and retirement on a lookahead defect the out-of-sample test could not detect, plus an audit of the cost model the whole verdict rests on." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
@@ -17,7 +17,7 @@
   <div class="nav-links">
     <a href="../index.html">Index</a>
     <a href="index.html">Platform</a>
-    <a href="fee-audit.html">Fee Audit</a>
+    <a href="#cost-model">Cost Model</a>
   </div>
 </nav>
 
@@ -398,7 +398,133 @@
       </p>
     </div>
 
-    <h2><span class="num">07</span> What it cost, and what it bought</h2>
+    <h2 id="cost-model"><span class="num">07</span> The cost model underneath all of this</h2>
+
+    <p>
+      Every number above is a comparison against a cost bar, so the bar deserves its
+      own scrutiny. In September, two months after this strategy was retired, I audited
+      the fee function and found it wrong &mdash; not mistuned, but wrong in
+      <strong>form</strong>.
+    </p>
+
+    <p>
+      The exchange charges <code>roundup(0.07 &times; C &times; P &times; (1&minus;P))</code>,
+      with the round-up applied <strong>once to the whole order</strong>. My pricer
+      applied it <em>per contract</em> and then multiplied by the contract count. The
+      exchange's own published worked example settles which is right: 100 contracts at
+      $0.50 is documented as <strong>$1.75</strong>. The per-order form gives $1.75.
+      Mine gave $2.00.
+    </p>
+
+    <figure>
+      <div class="fig-head">
+        <div class="fig-title">Taker fee per contract, by price</div>
+        <div class="fig-sub">Order of 100 contracts &middot; the shaded band is the 0.75&ndash;0.88 entry band</div>
+      </div>
+      <div class="fig-body"><div id="fee-chart"></div></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:#00a5bd"></i>Per-order ceiling (correct)</span>
+        <span><i class="swatch" style="background:#e09a00"></i>Per-contract ceiling (what I had)</span>
+      </div>
+      <figcaption>
+        The correct fee is a smooth quadratic; mine was a <strong>staircase</strong> sitting
+        above it that never falls below a cent. The step from 2&cent; to 1&cent; lands at
+        <strong>p = 0.8273</strong> &mdash; inside this strategy's entry band. Just under half
+        the entries were priced below that step and charged a full 2&cent; against a true
+        cost of about 1&cent;.
+      </figcaption>
+    </figure>
+
+    <h3>What it does to expected value per contract</h3>
+
+    <p>
+      Expected value per contract, buying at ask <em>p</em> and holding to settlement, is
+      <code>EV = (settle rate) &minus; p &minus; fee</code>. So the correction moves EV by
+      exactly the amount it moves the fee &mdash; and that amount depends on order size,
+      which is the part that surprised me:
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Effect of the correction, at the prices this strategy actually traded</caption>
+        <thead>
+          <tr><th>Order size</th><th>Fee as implemented</th><th>Fee corrected</th><th>EV change</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 contract</td><td class="num">1.46&cent;</td><td class="num">1.46&cent;</td><td class="num muted">none &mdash; the models agree</td></tr>
+          <tr><td>5 contracts</td><td class="num">1.46&cent;</td><td class="num">1.09&cent;</td><td class="num pos">+0.38&cent;</td></tr>
+          <tr><td>10 contracts</td><td class="num">1.46&cent;</td><td class="num">1.04&cent;</td><td class="num pos">+0.43&cent;</td></tr>
+          <tr><td>50 contracts</td><td class="num">1.46&cent;</td><td class="num">1.00&cent;</td><td class="num pos">+0.46&cent;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <strong>At one contract per market the two models are identical.</strong> A
+      backtest that prices one contract at a time cannot see this bug at all &mdash;
+      which is exactly why it survived. The gap only opens once real orders carry more
+      than one contract, because the round-up that should be charged once per order was
+      being charged on every contract in it.
+    </p>
+
+    <h3>Does it change the verdict?</h3>
+
+    <p>No, and it is worth being precise about that in both directions.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>EV per contract, before and after the correction</caption>
+        <thead><tr><th></th><th>Gross</th><th>Fee (impl.)</th><th>EV (impl.)</th><th>Fee (corrected)</th><th>EV (corrected)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Realised sleeve</strong><br/><span class="muted">45 fills, actual sizes</span></td>
+              <td class="num pos">+5.69&cent;</td><td class="num">1.25&cent;</td><td class="num pos">+4.45&cent;</td>
+              <td class="num">1.00&cent;</td><td class="num pos"><strong>+4.69&cent;</strong></td></tr>
+          <tr class="highlight"><td><strong>Honest trigger</strong><br/><span class="muted">backtest, <code>inning &ge; 8</code></span></td>
+              <td class="num neg">&minus;2.91&cent;</td><td class="num">1.46&cent;</td><td class="num neg">&minus;4.38&cent;</td>
+              <td class="num">1.00&cent;</td><td class="num neg"><strong>&minus;3.91&cent;</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      On the realised sleeve the correction is worth <strong>+0.25&cent; per contract</strong>
+      &mdash; $0.64 across 260 contracts, about 5% of gross P&amp;L. On the honest trigger it
+      moves EV from &minus;4.38&cent; to &minus;3.91&cent;. <strong>Still decisively
+      negative.</strong> The retirement stands, and it stands for the reason it was made:
+      the trigger was inadmissible, not merely expensive.
+    </p>
+
+    <div class="callout kill">
+      <span class="callout-label">The part I keep coming back to</span>
+      <p>
+        Eight test functions covered that fee, carrying twenty-three assertions between
+        them, and every one passed. They asserted the quadratic shape, the symmetry about
+        the midpoint, the clipping outside [0,&nbsp;1] &mdash; every property the
+        implementation actually had. One was named
+        <code>test_taker_fee_peaks_at_two_cents_atm</code> and asserted
+        <code>fee(0.5) == 0.02</code>. That is the bug, written down as a requirement and
+        defended by a green check mark.
+      </p>
+      <p>
+        <strong>A test suite written from the implementation cannot falsify the
+        implementation.</strong> What found this was not a test &mdash; it was recomputing
+        the exchange's published worked example and getting a different number. One
+        external anchor, checked against the source rather than against my own reading of
+        it. That example is now the first test in the
+        <a href="https://github.com/mokan8/prediction-market-research/blob/main/tests/test_fees.py">corrected implementation</a>.
+      </p>
+    </div>
+
+    <p>
+      This matters beyond one strategy. A cost model that errs high is the comfortable
+      kind of wrong: it produces conservative verdicts, kills marginal strategies, and
+      never announces itself. Conclusions of the form &ldquo;this effect is real but too
+      small to trade&rdquo; are exactly the ones it corrupts, and this project has made
+      several of them. Those are being re-run.
+      <a href="https://github.com/mokan8/prediction-market-research/blob/main/docs/cost-model.md">Full write-up and the corrected module</a>.
+    </p>
+
+    <h2><span class="num">08</span> What it cost, and what it bought</h2>
 
     <p>
       Direct cost: nothing — the sleeve finished up $12.20. The real cost was five
@@ -443,7 +569,7 @@
       </p>
     </div>
 
-    <h2><span class="num">08</span> Reproducibility</h2>
+    <h2><span class="num">09</span> Reproducibility</h2>
 
     <p>
       Every figure on this page traces to a source. The live numbers come from the
@@ -471,7 +597,7 @@
       <span>·</span>
       <a href="../index.html">Index</a>
       <a href="index.html">Research platform</a>
-      <a href="fee-audit.html">Case study 002</a>
+      <a href="https://github.com/mokan8/prediction-market-research">Companion repo</a>
       <a href="https://github.com/mokan8">GitHub</a>
     </div>
   </footer>
@@ -622,6 +748,80 @@ const PNL = {"actual":[0.11,0.23,0.45,0.65,0.81,1.02,1.18,1.34,1.52,1.63,2.13,2.
 
   render();
   let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(render, 150); });
+})();
+</script>
+
+<script>
+/* ── Fee model: staircase vs quadratic ──────────────────────────────────── */
+const FEE = {"p":[0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19,0.2,0.21,0.22,0.23,0.24,0.25,0.26,0.27,0.28,0.29,0.3,0.31,0.32,0.33,0.34,0.35,0.36,0.37,0.38,0.39,0.4,0.41,0.42,0.43,0.44,0.45,0.46,0.47,0.48,0.49,0.5,0.51,0.52,0.53,0.54,0.55,0.56,0.57,0.58,0.59,0.6,0.61,0.62,0.63,0.64,0.65,0.66,0.67,0.68,0.69,0.7,0.71,0.72,0.73,0.74,0.75,0.76,0.77,0.78,0.79,0.8,0.81,0.82,0.83,0.84,0.85,0.86,0.87,0.88,0.89,0.9,0.91,0.92,0.93,0.94,0.95,0.96,0.97,0.98,0.99],"correct":[0.07,0.14,0.21,0.27,0.34,0.4,0.46,0.52,0.58,0.63,0.69,0.74,0.8,0.85,0.9,0.95,0.99,1.04,1.08,1.12,1.17,1.21,1.24,1.28,1.32,1.35,1.38,1.42,1.45,1.47,1.5,1.53,1.55,1.58,1.6,1.62,1.64,1.65,1.67,1.68,1.7,1.71,1.72,1.73,1.74,1.74,1.75,1.75,1.75,1.75,1.75,1.75,1.75,1.74,1.74,1.73,1.72,1.71,1.7,1.68,1.67,1.65,1.64,1.62,1.6,1.58,1.55,1.53,1.5,1.47,1.45,1.42,1.38,1.35,1.32,1.28,1.24,1.21,1.17,1.12,1.08,1.04,0.99,0.95,0.9,0.85,0.8,0.74,0.69,0.63,0.58,0.52,0.46,0.4,0.34,0.27,0.21,0.14,0.07],"buggy":[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]};
+
+(function drawFee(){
+  const el = document.getElementById('fee-chart');
+  if(!el || !FEE) return;
+  const NS='http://www.w3.org/2000/svg';
+  const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const MONO="'IBM Plex Mono', monospace";
+
+  function render(){
+    el.innerHTML='';
+    const W=el.clientWidth||760, H=Math.max(220,Math.min(290,W*0.36));
+    const m={t:14,r:20,b:46,l:54}, iw=W-m.l-m.r, ih=H-m.t-m.b;
+    const hi=2.5, lo=0, step=0.5;
+    const X=p=>m.l+p*iw, Y=v=>m.t+ih-((v-lo)/(hi-lo))*ih;
+
+    const svg=mk('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H,role:'img'});
+    svg.setAttribute('aria-label','Taker fee per contract against price. The correct per-order model is a smooth quadratic peaking at 1.75 cents. The per-contract model is a staircase that sits above it everywhere, stepping from 2 cents down to 1 cent at a price of 0.827, which falls inside the strategy entry band of 0.75 to 0.88.');
+
+    // entry band
+    svg.appendChild(mk('rect',{x:X(0.75),y:m.t,width:X(0.88)-X(0.75),height:ih,
+      fill:'rgba(255,179,0,0.055)'}));
+    const bl=mk('text',{x:(X(0.75)+X(0.88))/2,y:m.t+13,fill:'#996b00','font-size':9,
+      'letter-spacing':'0.12em','text-anchor':'middle','font-family':MONO});
+    bl.textContent='ENTRY BAND';
+    svg.appendChild(bl);
+
+    for(let v=lo; v<=hi+1e-9; v+=step){
+      const y=Y(v);
+      svg.appendChild(mk('line',{x1:m.l,x2:m.l+iw,y1:y,y2:y,stroke:'#16222e','stroke-width':1}));
+      const t=mk('text',{x:m.l-9,y:y+4,fill:'#6b8496','font-size':10,'text-anchor':'end',
+        'font-family':MONO,'font-variant-numeric':'tabular-nums'});
+      t.textContent=v.toFixed(2)+'\u00A2';
+      svg.appendChild(t);
+    }
+    [0,0.25,0.5,0.75,1].forEach(p=>{
+      const t=mk('text',{x:X(p),y:m.t+ih+20,fill:'#6b8496','font-size':10,
+        'text-anchor':p===0?'start':(p===1?'end':'middle'),'font-family':MONO});
+      t.textContent='$'+p.toFixed(2);
+      svg.appendChild(t);
+    });
+    const ax=mk('text',{x:m.l+iw/2,y:H-6,fill:'#6b8496','font-size':9,
+      'letter-spacing':'0.14em','text-anchor':'middle','font-family':MONO});
+    ax.textContent='CONTRACT PRICE';
+    svg.appendChild(ax);
+
+    // the step, marked
+    svg.appendChild(mk('line',{x1:X(0.827),x2:X(0.827),y1:m.t,y2:m.t+ih,
+      stroke:'#ff5252','stroke-width':1,opacity:0.55}));
+    const sl=mk('text',{x:X(0.827)-7,y:m.t+ih-8,fill:'#ff5252','font-size':10,
+      'text-anchor':'end','font-family':MONO});
+    sl.textContent='step at 0.827';
+    svg.appendChild(sl);
+
+    [['buggy','#e09a00','per contract',62,-10,'start'],
+     ['correct','#00a5bd','per order',49,17,'middle']].forEach(([k,col,lab,li,dy,anc])=>{
+      let d='M'+X(FEE.p[0])+','+Y(FEE[k][0]);
+      for(let i=1;i<FEE.p.length;i++) d+='L'+X(FEE.p[i])+','+Y(FEE[k][i]);
+      svg.appendChild(mk('path',{d:d,fill:'none',stroke:col,'stroke-width':2,
+        'stroke-linejoin':'round','stroke-linecap':'round'}));
+      const t=mk('text',{x:X(FEE.p[li])+(anc==='start'?6:0),y:Y(FEE[k][li])+dy,fill:col,
+        'font-size':11,'font-family':MONO,'font-weight':500,'text-anchor':anc});
+      t.textContent=lab;
+      svg.appendChild(t);
+    });
+    el.appendChild(svg);
+  }
+  render();
+  let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(render,150);});
 })();
 </script>
 

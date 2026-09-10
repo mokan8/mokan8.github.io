@@ -17,7 +17,7 @@
   <div class="nav-links">
     <a href="../index.html">Index</a>
     <a href="mlb-carry.html">MLB Carry</a>
-    <a href="fee-audit.html">Fee Audit</a>
+    <a href="mlb-carry.html">Case Study</a>
   </div>
 </nav>
 
@@ -86,8 +86,8 @@
     </ul>
 
     <p>
-      The last one is the reason the <a href="fee-audit.html">cost model</a> gets its
-      own case study. On a venue with no drift, the fee function is one side of the
+      The last one is the reason the <a href="mlb-carry.html#cost-model">cost model</a> gets its own
+      section of the case study, and its own audit. On a venue with no drift, the fee function is one side of the
       only inequality that matters.
     </p>
 
@@ -228,7 +228,7 @@
           <tr><td><strong>ING</strong> · Ingress</td><td class="muted">Streaming depth, trades and lifecycle over WebSocket; reference data; account truth (fills, balances, fees actually charged); daily universe cross-section. The only layer permitted to know the word "Kalshi"</td></tr>
           <tr><td><strong>STO</strong> · Storage</td><td class="muted">An append-only immutable landing zone and a derived, rebuildable curated store — two stores with deliberately opposite properties</td></tr>
           <tr><td><strong>MOD</strong> · Instrument model</td><td class="muted">Venue ticker ↔ a claim with a payoff. Book reconstruction from raw messages; lifecycle, relists and settlements</td></tr>
-          <tr><td><strong>CST</strong> · Cost &amp; microstructure</td><td class="muted">What a trade actually costs. <a href="fee-audit.html">Case study 002</a> is an audit of this layer</td></tr>
+          <tr><td><strong>CST</strong> · Cost &amp; microstructure</td><td class="muted">What a trade actually costs. <a href="mlb-carry.html#cost-model">&sect;07 of the case study</a> is an audit of this layer</td></tr>
           <tr><td><strong>RSK</strong> · Risk</td><td class="muted">Circuit breaker before every scan, calibrated drawdown halts, CUSUM decay detection on settled outcomes, capital sleeves and Kelly-fraction sizing</td></tr>
           <tr><td><strong>EXE</strong> · Execution</td><td class="muted">IOC limit orders at the quote, one entry per event, a single-writer fence against duplicate scanners, per-attempt logging for TCA</td></tr>
         </tbody>
@@ -246,14 +246,14 @@
       latest revision of a forecast is reading the future.
     </p>
 
-    <h2><span class="num">07</span> Case studies</h2>
+    <h2><span class="num">07</span> Case study</h2>
 
     <div class="table-wrap">
       <table>
         <thead><tr><th>Study</th><th>What it shows</th></tr></thead>
         <tbody>
           <tr><td><strong><a href="mlb-carry.html">001 · MLB late-favourite carry</a></strong></td><td class="muted">The complete lifecycle, end to end: pre-registration, sealed OOS, deployment, 45 real fills, positive realised P&amp;L, halt, audit, retirement. Killed on evidence while profitable</td></tr>
-          <tr><td><strong><a href="fee-audit.html">002 · Auditing my own cost model</a></strong></td><td class="muted">Finding that the platform's most load-bearing function was wrong in form, that 23 passing assertions were pinning the error in place, and stating what it invalidates</td></tr>
+          <tr><td><strong><a href="mlb-carry.html#cost-model">&sect;07 · Auditing my own cost model</a></strong></td><td class="muted">The cost bar every verdict above is measured against, found wrong in form. What it does to expected value per contract, why one contract per market hides the bug entirely, and why the retirement stands anyway</td></tr>
         </tbody>
       </table>
     </div>
@@ -272,7 +272,7 @@
       <span>·</span>
       <a href="../index.html">Index</a>
       <a href="mlb-carry.html">Case study 001</a>
-      <a href="fee-audit.html">Case study 002</a>
+      <a href="mlb-carry.html#cost-model">Cost model audit</a>
       <a href="https://github.com/mokan8">GitHub</a>
     </div>
   </footer>

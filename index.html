@@ -136,9 +136,9 @@
         I now build and run a <strong>systematic research and execution platform for
         prediction markets</strong> — hypothesis to pre-registration to sealed
         out-of-sample test to live orders on Kalshi, and to a written retirement when
-        the evidence says so. Six strategy families have been through that loop. The
-        two case studies below are the ones worth reading, and both of them are
-        negative results.
+        the evidence says so. Six strategy families have been through that loop and all
+        six are retired. The case study below is the one worth reading, and it is a
+        negative result: a strategy I killed while it was profitable.
       </p>
       <div class="hero-links">
         <a href="platform/index.html">Research Platform</a>
@@ -195,7 +195,10 @@
             while the sleeve was up 2.4%. The validating backtest entered on
             minutes-to-expiry — a quantity anchored on realised settlement time, and
             therefore not computable at decision time. Includes the full TCA, the honest
-            interval, and why a sealed out-of-sample split structurally cannot catch this.
+            interval, why a sealed out-of-sample split structurally cannot catch this,
+            and an audit of the <strong>cost model the whole verdict rests on</strong>,
+            which turned out to be wrong in form and is re-derived here with the
+            expected-value effect stated before and after.
           </p>
           <div class="card-tags">
             <span class="tag hl">Case Study</span>
@@ -203,6 +206,7 @@
             <span class="tag">IS / OOS</span>
             <span class="tag">TCA</span>
             <span class="tag">Live P&amp;L</span>
+            <span class="tag">Cost Modelling</span>
           </div>
         </div>
         <div class="card-side">
@@ -213,33 +217,6 @@
         </div>
       </a>
 
-      <a class="card card-case" href="platform/fee-audit.html">
-        <div class="card-main">
-          <div class="card-id">CASE-002 · Self-audit</div>
-          <div class="card-title">The cost model was wrong in form, not in value</div>
-          <div class="card-sub">Kalshi fee schedule · Rounding · Blast radius</div>
-          <p class="card-desc">
-            On a venue with no drift, the fee function is one side of the only inequality
-            that matters. Mine applied the exchange's round-up <strong>per contract
-            instead of per order</strong>, overstating cost by 1.14× at the money and up
-            to 14× in the tails — with <strong>23 passing assertions</strong> pinning the
-            error in place — one of them named <code>test_taker_fee_peaks_at_two_cents_atm</code>. What found it was not a test, but the exchange's own published
-            worked example. Includes a statement of exactly which prior conclusions it voids.
-          </p>
-          <div class="card-tags">
-            <span class="tag hl">Case Study</span>
-            <span class="tag">Cost Modelling</span>
-            <span class="tag">Microstructure</span>
-            <span class="tag">Numerical Precision</span>
-          </div>
-        </div>
-        <div class="card-side">
-          <div><div class="m-label">Overstated, ATM</div><div class="m-value sm" style="color:var(--red)">1.14×</div></div>
-          <div><div class="m-label">Overstated, tails</div><div class="m-value sm" style="color:var(--red)">up to 14×</div></div>
-          <div><div class="m-label">Assertions encoding it</div><div class="m-value sm" style="color:var(--red)">23</div></div>
-          <div class="card-arrow">→ Read case study</div>
-        </div>
-      </a>
     </section>
 
     <div class="section-header"><h2>Mathematics</h2></div>

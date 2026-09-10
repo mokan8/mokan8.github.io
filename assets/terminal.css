@@ -235,6 +235,9 @@ tbody tr:hover td { background: rgba(255,179,0,0.03); }
 td.num { font-variant-numeric: tabular-nums; }
 .pos { color: var(--green); }
 .neg { color: var(--red); }
+/* emphasis must not repaint a semantically coloured figure: .prose strong sets
+   its own colour, which silently defeated the green/red in comparison tables */
+.pos strong, .neg strong, td.pos strong, td.neg strong { color: inherit; }
 .muted { color: var(--text-dim); }
 tr.highlight td { background: rgba(255,82,82,0.06); }
 tr.highlight:hover td { background: rgba(255,82,82,0.09); }
