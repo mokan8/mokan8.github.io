@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Case Study: Auditing My Own Cost Model — Nicholas McBride</title>
-<meta name="description" content="A self-audit of a live trading platform's fee model, which was wrong in form rather than in value: the rounding was applied per contract instead of per order, overstating cost by 1.14x at the money and up to 14x in the tails, with 24 unit tests encoding the error." />
+<meta name="description" content="A self-audit of a live trading platform's fee model, which was wrong in form rather than in value: the rounding was applied per contract instead of per order, overstating cost by 1.14x at the money and up to 14x in the tails, with 23 passing assertions encoding the error." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
@@ -31,7 +31,7 @@
       September 2026 I found that the cost bar itself was miscomputed — not by a
       mistuned parameter, but by applying a rounding step in the wrong place. It made
       trading look more expensive than it is, by 1.14&times; at the money and up to
-      14&times; in the tails, and twenty-four unit tests were pinning the error in place.
+      14&times; in the tails, and my own test suite was pinning the error in place.
     </p>
     <div class="byline">Found 2026-09-08 · Kalshi taker fee schedule · Affects every net-of-cost conclusion in the repo</div>
   </header>
@@ -40,7 +40,7 @@
     <div class="stat"><div class="stat-label">Error class</div><div class="stat-value small amber">Form, not value</div><div class="stat-note">rounding misplaced</div></div>
     <div class="stat"><div class="stat-label">Overstatement, ATM</div><div class="stat-value red">1.14&times;</div><div class="stat-note">at p = 0.50</div></div>
     <div class="stat"><div class="stat-label">Overstatement, tails</div><div class="stat-value red">up to 14&times;</div><div class="stat-note">at p = 0.99</div></div>
-    <div class="stat"><div class="stat-label">Tests encoding it</div><div class="stat-value red">24</div><div class="stat-note">all passing, all wrong</div></div>
+    <div class="stat"><div class="stat-label">Assertions encoding it</div><div class="stat-value red">23</div><div class="stat-note">across 8 tests, all passing</div></div>
   </div>
 
   <div class="prose">
@@ -132,7 +132,7 @@
           <tr><td>0.10</td><td class="num">0.63&cent;</td><td class="num">1.00&cent;</td><td class="num neg">1.59&times;</td></tr>
           <tr><td>0.25</td><td class="num">1.32&cent;</td><td class="num">2.00&cent;</td><td class="num neg">1.52&times;</td></tr>
           <tr class="highlight"><td><strong>0.50</strong></td><td class="num"><strong>1.75&cent;</strong></td><td class="num"><strong>2.00&cent;</strong></td><td class="num neg"><strong>1.14&times;</strong></td></tr>
-          <tr><td>0.85</td><td class="num">0.90&cent;</td><td class="num">1.00&cent;</td><td class="num neg">1.12&times;</td></tr>
+          <tr><td>0.85</td><td class="num">0.90&cent;</td><td class="num">1.00&cent;</td><td class="num neg">1.11&times;</td></tr>
           <tr><td>0.95</td><td class="num">0.34&cent;</td><td class="num">1.00&cent;</td><td class="num neg">2.94&times;</td></tr>
           <tr><td>0.99</td><td class="num">0.07&cent;</td><td class="num">1.00&cent;</td><td class="num neg">14.29&times;</td></tr>
         </tbody>
@@ -229,7 +229,7 @@
           <tr class="highlight"><td>&ldquo;The wings are uneconomic&rdquo;</td><td class="neg">Void &mdash; must be re-run</td><td class="muted">made against a bar up to 3&times; too harsh</td></tr>
           <tr><td>MLB carry retirement</td><td class="pos">Unaffected</td><td class="muted">killed on admissibility, not on cost</td></tr>
           <tr><td>Maker-side numbers in the crypto pricer</td><td class="neg">Void independently</td><td class="muted">the maker fee is wrong in form too</td></tr>
-          <tr><td>24 unit tests over the fee function</td><td class="neg">Encode the wrong model</td><td class="muted">passing tests pinned the bug in place</td></tr>
+          <tr><td>8 fee tests / 23 assertions</td><td class="neg">Encode the wrong model</td><td class="muted">passing tests pinned the bug in place</td></tr>
         </tbody>
       </table>
     </div>
@@ -245,10 +245,17 @@
     <h2><span class="num">06</span> What the tests were doing</h2>
 
     <p>
-      The detail I find most worth keeping is that twenty-four unit tests covered this
-      function and all of them passed. They were not weak tests. They asserted the
-      quadratic shape, the peak at p = 0.5, the symmetry about the midpoint, monotonicity
-      on each side — every property the implementation actually had.
+      The detail I find most worth keeping is that eight test functions covered this
+      function, carrying twenty-three assertions between them, and every one passed.
+      They were not weak tests. They asserted the quadratic shape, the symmetry about
+      the midpoint, clipping outside [0, 1], and that the vectorised path matched the
+      scalar one — every property the implementation actually had.
+    </p>
+
+    <p>
+      One of them was named <code>test_taker_fee_peaks_at_two_cents_atm</code>, and it
+      asserted <code>fee(0.5) == 0.02</code>. That is the bug, written down as a
+      requirement and defended by a green check mark. The correct answer is 1.75&cent;.
     </p>
 
     <div class="callout kill">

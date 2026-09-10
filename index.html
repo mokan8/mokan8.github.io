@@ -69,7 +69,7 @@
   .card-id { font-size: 10px; color: var(--amber-dim); letter-spacing: 0.15em; margin-bottom: 12px; text-transform: uppercase; }
   .card-title { font-size: 19px; font-weight: 500; color: #fff; margin-bottom: 7px; letter-spacing: -0.015em; line-height: 1.3; }
   .card-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; margin-bottom: 18px; text-transform: uppercase; }
-  .card-desc { font-family: var(--font-sans); font-size: 15px; color: var(--text-mid); line-height: 1.7; max-width: 62ch; font-weight: 300; }
+  .card-desc { font-family: var(--font-sans); font-size: 15px; color: var(--text-mid); line-height: 1.7; max-width: 62ch; font-weight: 300; overflow-wrap: anywhere; }
   .card-desc strong { color: var(--text); font-weight: 500; }
   .card-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
   .tag { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; border: 1px solid var(--border); color: var(--text-dim); }
@@ -222,8 +222,8 @@
             On a venue with no drift, the fee function is one side of the only inequality
             that matters. Mine applied the exchange's round-up <strong>per contract
             instead of per order</strong>, overstating cost by 1.14× at the money and up
-            to 14× in the tails — with <strong>24 passing unit tests</strong> pinning the
-            error in place. What found it was not a test, but the exchange's own published
+            to 14× in the tails — with <strong>23 passing assertions</strong> pinning the
+            error in place — one of them named <code>test_taker_fee_peaks_at_two_cents_atm</code>. What found it was not a test, but the exchange's own published
             worked example. Includes a statement of exactly which prior conclusions it voids.
           </p>
           <div class="card-tags">
@@ -236,7 +236,7 @@
         <div class="card-side">
           <div><div class="m-label">Overstated, ATM</div><div class="m-value sm" style="color:var(--red)">1.14×</div></div>
           <div><div class="m-label">Overstated, tails</div><div class="m-value sm" style="color:var(--red)">up to 14×</div></div>
-          <div><div class="m-label">Tests encoding it</div><div class="m-value sm" style="color:var(--red)">24</div></div>
+          <div><div class="m-label">Assertions encoding it</div><div class="m-value sm" style="color:var(--red)">23</div></div>
           <div class="card-arrow">→ Read case study</div>
         </div>
       </a>
